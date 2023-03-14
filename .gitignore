@@ -30,3 +30,14 @@
 *.exe
 *.out
 *.app
+
+#Visual Studio Code
+.vscode
+
+# Build files
+build/*
+!build/NOTICE.md
+!build/clean.sh
+
+#Mac files
+.DS_Store
