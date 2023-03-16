@@ -22,6 +22,7 @@
 
 #pragma once
 
+#include <optional>
 #include <functional>
 #include "carrier/node_info.h"
 #include "messages/message.h"

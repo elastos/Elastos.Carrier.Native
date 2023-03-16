@@ -82,7 +82,7 @@ $ make && make install
 *Here is an example of the command with all options included:*
 
 ```shell
-$ cmake -DCMAKE_INSTALL_PREFIX=dist -DENABLE_CRARRIER_DEVELOPEMENT=TRUE -DCMAKE_BUILD_TYPE=Debug ../..
+$ cmake -DCMAKE_INSTALL_PREFIX=dist -DENABLE_CARRIER_DEVELOPMENT=TRUE -DCMAKE_BUILD_TYPE=Debug ../..
 ```
 
 ### 4. Cross-Compiling for iOS: A Comprehensive Guide
@@ -100,7 +100,7 @@ So, recommend you to use the following commands to build a distribution for ipho
 $ cd build
 $ mkdir iphoneos
 $ cd iphoneos
-$ cmake -DCMAKE_INSTALL_PREFIX=dist -DIOS_PLATFORM=iphoneos -DCMAKE_TOOLCHAIN_FILE=../../cmake/iOSToolchain.cmake -DENABLE_CARRIER_DEVELOPEMENT=TRUE ../..
+$ cmake -DCMAKE_INSTALL_PREFIX=dist -DIOS_PLATFORM=iphoneos -DCMAKE_TOOLCHAIN_FILE=../../cmake/iOSToolchain.cmake -DENABLE_CARRIER_DEVELOPMENT=TRUE ../..
 $ make && make install
 ```
 
