@@ -230,6 +230,8 @@ void ActiveProxy::_connect() noexcept
         this->serverPk = serverPk;
         this->nonce = nonce;
         this->relayPort = port;
+
+        this->box = CryptoBox{serverPk, this->sessionKey.privateKey() };
     });
 
     connection->onOpened([this](ProxyConnection *c) {
@@ -240,9 +242,7 @@ void ActiveProxy::_connect() noexcept
 
     connection->onOpenFailed([this](ProxyConnection *c) {
         // reset server failed related variables
-        if (serverFails < 7)
-            reconnectInterval = (1 << serverFails) * 1000;
-
+        reconnectInterval = (1 << (serverFails < 7 ? serverFails : 6)) * 1000;
         serverFails++;
     });
 

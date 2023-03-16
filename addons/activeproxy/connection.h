@@ -103,7 +103,7 @@ protected:
     void sendDisconnectRequest() noexcept;
     void sendDataRequest(const uint8_t* data, size_t size) noexcept;
 
-    void onRelayRead() noexcept;
+    void onRelayRead(const uint8_t* data, size_t size) noexcept;
     void processRelayPacket(const uint8_t* packet, size_t size) noexcept;
 
     void onAuthenticateResponse(const uint8_t* packet, size_t size) noexcept;
@@ -113,8 +113,8 @@ protected:
     void onDisconnectRequest(const uint8_t* packet, size_t size) noexcept;
     void onDataRequest(const uint8_t* packet, size_t size) noexcept;
 
-    void connectUpstream() noexcept;
-    void disconnectUpstream() noexcept;
+    void openUpstream() noexcept;
+    void closeUpstream() noexcept;
     void startReadUpstream() noexcept;
 
     void onAuthorized(const CryptoBox::PublicKey& serverPk, const CryptoBox::Nonce& nonce, uint16_t port) noexcept {
@@ -157,11 +157,7 @@ private:
     uv_tcp_t relay { 0 };
     uv_tcp_t upstream { 0 };
 
-    size_t relayReadStickyBytes { 0 };
-    std::vector<uint8_t> relayReadBuffer {};
-    std::vector<uint8_t> relayWriteBuffer {};
-    std::vector<uint8_t> upstreamReadBuffer {};
-    std::vector<uint8_t> upstreamWriteBuffer {};
+    std::vector<uint8_t> stickyBuffer {};
 
     uv_timer_t keepAliveTimer { 0 };
     uint64_t keepAliveTimestamp;
