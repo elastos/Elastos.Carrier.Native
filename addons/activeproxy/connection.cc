@@ -51,6 +51,8 @@ static const size_t MAX_DATA_PACKET_SIZE = 0x7FFF;      // 32767
 static const size_t MAX_CONTROL_PACKET_SIZE = 0x1000;   // 4096
 static const size_t MAX_UPSTREAM_READ_BUFFER_SIZE = MAX_DATA_PACKET_SIZE - PACKET_HEADER_BYTES - CryptoBox::MAC_BYTES;
 
+static const size_t MAX_RELAY_WRITE_QUEUE_SIZE = 2 * 1024 * 1024; // 2M bytes
+
 static uint32_t lastConnectionId = 0;
 
 struct ConnectRequest {
@@ -570,6 +572,12 @@ void ProxyConnection::sendDataRequest(const uint8_t* data, size_t _size) noexcep
             pc->close();
         }
 
+        if (pc->upstreamPaused && uv_stream_get_write_queue_size((uv_stream_t*)&pc->relay) <= (MAX_RELAY_WRITE_QUEUE_SIZE >> 2)) {
+            pc->upstreamPaused = false;
+            pc->startReadUpstream();
+            log->debug("Connection {} resume the upstream reading", pc->id);
+        }
+
         delete request;
     });
     if (rc < 0) {
@@ -577,6 +585,13 @@ void ProxyConnection::sendDataRequest(const uint8_t* data, size_t _size) noexcep
                 id, proxy.serverEndpoint(), rc, uv_strerror(rc));
         delete request;
         close();
+        return;
+    }
+
+    if (uv_stream_get_write_queue_size((uv_stream_t*)&relay) >= MAX_RELAY_WRITE_QUEUE_SIZE) {
+        upstreamPaused = true;
+        uv_read_stop((uv_stream_t*)&upstream);
+        log->debug("Connection {} paused the upstream reading due to the server buffer limit.", id);
     }
 }
 
