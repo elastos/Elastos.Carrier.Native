@@ -55,12 +55,17 @@ public:
     int connectServer() noexcept;
     void close() noexcept;
 
+    std::string status() const noexcept;
+    
     ProxyConnection* ref() noexcept {
         ++refCount;
         return this;
     }
 
-    void unref() noexcept;
+    void unref() noexcept {
+    if (--refCount == 0)
+        delete this;
+    }
 
     ProxyConnection& onAuthorized(AuthorizedHandle handle) noexcept {
         authorizedHandle = handle;
@@ -149,7 +154,7 @@ protected:
 
 private:
     uint32_t id;
-    uint32_t refCount { 0 };
+    uint32_t refCount { 1 };
 
     ActiveProxy& proxy;
     ConnectionState state { ConnectionState::Connecting };
