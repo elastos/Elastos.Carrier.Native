@@ -28,6 +28,7 @@
 #include <vector>
 #include <memory>
 #include <cstdint>
+#include <thread>
 
 #include "carrier.h"
 
@@ -223,6 +224,8 @@ private:
     uint32_t inFlights { 0 };
 
     std::vector<ProxyConnection*> connections;
+
+    std::thread runner;
 };
 
 } // namespace activeproxy
