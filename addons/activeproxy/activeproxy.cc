@@ -38,7 +38,8 @@ namespace activeproxy {
 using Logger = elastos::carrier::Logger;
 
 static std::shared_ptr<Logger> log = Logger::get("AcriveProxy");
-static const uint32_t MAX_IDLE_TIME = 300000;
+static const uint32_t IDLE_CHECK_INTERVAL = 60000;  // 1 minute
+static const uint32_t MAX_IDLE_TIME = 300000;       // 3 minutes
 
 ActiveProxy::ActiveProxy(const Node& node, const Id& serverId,
         const std::string& serverHost, uint16_t serverPort,
@@ -50,7 +51,7 @@ ActiveProxy::ActiveProxy(const Node& node, const Id& serverId,
     assert(!serverHost.empty() && serverPort != 0);
     assert(!upstreamHost.empty() && upstreamPort != 0);
 
-    log->setLevel(Level::Trace);
+    log->setLevel(Level::Info);
 
     auto addrs = SocketAddress::resolve(serverHost, serverPort);
     serverAddr = addrs[0];
@@ -75,14 +76,20 @@ void ActiveProxy::onStop() noexcept
 
     uv_close((uv_handle_t*)&reconnectTimer, nullptr);
 
-    uv_idle_stop(&idleHandle);
-    uv_close((uv_handle_t *)&idleHandle, nullptr);
+    uv_timer_stop(&idleCheckTimer);
+    uv_close((uv_handle_t*)&idleCheckTimer, nullptr);
 
-    uv_close((uv_handle_t *)&stopHandle, nullptr);
+    uv_idle_stop(&idleHandle);
+    uv_close((uv_handle_t*)&idleHandle, nullptr);
+
+    uv_close((uv_handle_t*)&stopHandle, nullptr);
 
     // close all connections
-    for (auto c : connections)
+    for (auto c : connections) {
+        c->onClosed(nullptr);
         c->close();
+        c->unref();
+    }
 
     connections.clear();
 }
@@ -104,24 +111,39 @@ bool ActiveProxy::needsNewConnection() const noexcept
     return false;
 }
 
-bool ActiveProxy::needsCloseConnection() const noexcept
-{
-    if (inFlights != 0 || idleTimestamp == 0 || connections.size() <= 1)
-        return false;
-
-    return (uv_now(&loop) - idleTimestamp) >= MAX_IDLE_TIME;
-}
-
 void ActiveProxy::onIteration() noexcept
 {
     if (needsNewConnection()) {
         connect();
     }
+}
 
-    if (needsCloseConnection()) {
-        log->info("ActiveProxy close the redundant connections due to long time idle...");
-        connections.resize(1);
+void ActiveProxy::idleCheck() noexcept
+{
+    // Dump the current status: should change the log level to debug later
+    log->info("STATUS: Connections = {}, inFlights = {}, idle = {}",
+            connections.size(), inFlights, 
+            idleTimestamp == MAX_IDLE_TIME ? 0 : (uv_now(&loop) - idleTimestamp) / 1000);
+    for (auto c : connections)
+        log->info("STATUS: {}", c->status());
+
+    if (idleTimestamp == UINT64_MAX)
+        return;
+
+    if ((uv_now(&loop) - idleTimestamp) < MAX_IDLE_TIME)
+        return;
+
+    if (inFlights != 0 || connections.size() <= 1)
+        return;
+
+    log->info("ActiveProxy closing the redundant connections due to long time idle...");
+    for (auto c = connections.end() - 1; c > connections.begin(); --c) {
+        (*c)->onClosed(nullptr);
+        (*c)->close();
+        (*c)->unref();
     }
+
+    connections.resize(1);
 }
 
 void ActiveProxy::start()
@@ -135,8 +157,8 @@ void ActiveProxy::start()
     }
 
     // init the stop handle
-    rc = uv_async_init(&loop, &stopHandle, [](uv_async_t *handle) {
-        ActiveProxy *ap = (ActiveProxy *)handle->data;
+    rc = uv_async_init(&loop, &stopHandle, [](uv_async_t* handle) {
+        ActiveProxy* ap = (ActiveProxy*)handle->data;
         ap->onStop();
     });
     stopHandle.data = this;
@@ -150,31 +172,49 @@ void ActiveProxy::start()
     uv_idle_init(&loop, &idleHandle); // always success
     idleHandle.data = this;
     uv_idle_start(&idleHandle, [](uv_idle_t* handle) {
-        ActiveProxy *ap = (ActiveProxy *)handle->data;
+        ActiveProxy* ap = (ActiveProxy*)handle->data;
         ap->onIteration();
     });
     if (rc < 0) {
         log->error("ActiveProxy failed to start the iteration handle({}): {}", rc, uv_strerror(rc));
-        uv_close((uv_handle_t *)&idleHandle, nullptr);
-        uv_close((uv_handle_t *)&stopHandle, nullptr);
+        uv_close((uv_handle_t*)&idleHandle, nullptr);
+        uv_close((uv_handle_t*)&stopHandle, nullptr);
+        uv_loop_close(&loop);
+        throw networking_error(uv_strerror(rc));
+    }
+
+    uv_timer_init(&loop, &idleCheckTimer); // always success
+    idleCheckTimer.data = this;
+    rc = uv_timer_start(&idleCheckTimer, [](uv_timer_t* handle) {
+        ActiveProxy* self = (ActiveProxy*)handle->data;
+        self->idleCheck();
+    }, IDLE_CHECK_INTERVAL, IDLE_CHECK_INTERVAL);
+    if (rc < 0) {
+        log->error("ActiveProxy failed to start the idle check timer({}): {}", rc, uv_strerror(rc));
+        uv_close((uv_handle_t*)&idleHandle, nullptr);
+        uv_close((uv_handle_t*)&stopHandle, nullptr);
+        uv_close((uv_handle_t*)&idleCheckTimer, nullptr);
         uv_loop_close(&loop);
         throw networking_error(uv_strerror(rc));
     }
 
     uv_timer_init(&loop, &reconnectTimer); // always success
 
-    idleTimestamp = uv_now(&loop);
+    idleTimestamp = UINT64_MAX;
 
     // Start the loop
+    log->info("ActiveProxy started.");
     running = true;
     rc = uv_run(&loop, UV_RUN_DEFAULT);
     if (rc < 0) {
         log->error("ActiveProxy failed to start the event loop({}): {}", rc, uv_strerror(rc));
         running = false;
         uv_idle_stop(&idleHandle);
-        uv_close((uv_handle_t *)&idleHandle, nullptr);
-        uv_close((uv_handle_t *)&stopHandle, nullptr);
-        uv_close((uv_handle_t *)&reconnectTimer, nullptr);
+        uv_close((uv_handle_t*)&idleHandle, nullptr);
+        uv_close((uv_handle_t*)&stopHandle, nullptr);
+        uv_timer_stop(&idleCheckTimer);
+        uv_close((uv_handle_t*)&idleCheckTimer, nullptr);
+        uv_close((uv_handle_t*)&reconnectTimer, nullptr);
         uv_loop_close(&loop);
         throw networking_error(uv_strerror(rc));
     }
@@ -195,21 +235,19 @@ void ActiveProxy::connect() noexcept
 {
     assert(running);
 
-    if (reconnectInterval == 0) {
+    if (serverFails == 0) {
         _connect();
         return;
     }
 
-    log->debug("ActiveProxy try to reconnect after {} seconeds.", reconnectInterval / 1000);
+    reconnectInterval = (1 << (serverFails <= 6 ? serverFails : 6)) * 1000;
+    log->info("ActiveProxy try to reconnect after {} seconeds.", reconnectInterval / 1000);
     reconnectTimer.data = this;
     auto rc = uv_timer_start(&reconnectTimer, [](uv_timer_t* handle) {
-        ActiveProxy *self = (ActiveProxy *)handle->data;
+        ActiveProxy* self = (ActiveProxy*)handle->data;
         handle->data = nullptr; // For timer status checking
         uv_timer_stop(handle);
-        try {
-            self->_connect();
-        } catch (...) {
-        }
+        self->_connect();
     }, reconnectInterval, 0);
     if (rc < 0) {
         log->error("ActiveProxy failed to start the reconnect timer({}): {}", rc, uv_strerror(rc));
@@ -222,8 +260,7 @@ void ActiveProxy::_connect() noexcept
     log->debug("ActiveProxy try to create a new connectoin.");
 
     ProxyConnection* connection = new ProxyConnection {*this};
-    connection->ref();
-    connections.emplace_back(connection);
+    connections.push_back(connection);
 
     connection->onAuthorized([this](ProxyConnection* c, const CryptoBox::PublicKey& serverPk,
             const CryptoBox::Nonce& nonce, uint16_t port) {
@@ -234,19 +271,15 @@ void ActiveProxy::_connect() noexcept
         this->box = CryptoBox{serverPk, this->sessionKey.privateKey() };
     });
 
-    connection->onOpened([this](ProxyConnection *c) {
-        // reset server failed related variables
+    connection->onOpened([this](ProxyConnection* c) {
         serverFails = 0;
-        reconnectInterval = 0;
     });
 
-    connection->onOpenFailed([this](ProxyConnection *c) {
-        // reset server failed related variables
-        reconnectInterval = (1 << (serverFails < 7 ? serverFails : 6)) * 1000;
+    connection->onOpenFailed([this](ProxyConnection* c) {
         serverFails++;
     });
 
-    connection->onClosed([this](ProxyConnection *c) {
+    connection->onClosed([this](ProxyConnection* c) {
         auto it = connections.begin();
 
         for (; it != connections.end(); ++it) {
@@ -261,18 +294,21 @@ void ActiveProxy::_connect() noexcept
         c->unref();
     });
 
-    connection->onBusy([this](ProxyConnection *c) {
+    connection->onBusy([this](ProxyConnection* c) {
         ++inFlights;
-        idleTimestamp = 0;
+        idleTimestamp = UINT64_MAX;
     });
 
-    connection->onIdle([this](ProxyConnection *c) {
-        if (--inFlights)
+    connection->onIdle([this](ProxyConnection* c) {
+        if (--inFlights == 0)
             idleTimestamp = uv_now(&loop);
     });
 
-    if (connection->connectServer() < 0)
+    if (connection->connectServer() < 0)  {
+        serverFails++;
         connections.pop_back();
+        connection->unref();
+    }
 }
 
 } // namespace activeproxy

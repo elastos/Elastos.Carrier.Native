@@ -40,10 +40,11 @@ namespace activeproxy {
 
 using Logger = elastos::carrier::Logger;
 
-static std::shared_ptr<Logger> log = Logger::get("ProxyConnection");
+static std::shared_ptr<Logger> log = Logger::get("AcriveProxy");
 
 const static size_t PACKET_HEADER_BYTES = sizeof(uint16_t) + sizeof(uint8_t);
 const static uint32_t KEEP_ALIVE_INTERVAL = 60000;      // 60 seconds
+const static uint32_t MAX_KEEP_ALIVE_RETRY = 3;
 static const uint32_t KEEP_ALIVE_CHECK_INTERVAL = 5000; // 5 seconds
 
 static const size_t MAX_DATA_PACKET_SIZE = 0x7FFF;      // 32767
@@ -108,8 +109,6 @@ struct ShutdownRequest {
 ProxyConnection::ProxyConnection(ActiveProxy& proxy) noexcept :
         id(lastConnectionId++), proxy(proxy)
 {
-    log->setLevel(Level::Trace);
-
     log->trace("Connection {} created.", id);
 }
 
@@ -118,11 +117,25 @@ ProxyConnection::~ProxyConnection() noexcept
     log->trace("Connection {} destoried.", id);
 }
 
-void ProxyConnection::unref() noexcept {
-    if (--refCount == 0) {
-        log->debug("Connection {} closed.", id);
-        delete this;
-    }
+static const std::string StateNames[] = {
+    "Connecting",
+    "Authenticating",
+    "Idling",
+    "Relaying",
+    "Closed"
+};
+
+std::string ProxyConnection::status() const noexcept 
+{
+    std::string s;
+    s.reserve(128);
+
+    s.append("Connection[").append(std::to_string(id)).append("]: ");
+    s.append("ref=").append(std::to_string(refCount)).append(", ");
+    s.append("state=").append(StateNames[(int)state]).append(", ");
+    s.append("lastReceive=").append(std::to_string((uv_now(proxy.getLoop())-keepAliveTimestamp)/1000)).append("s, ");
+
+    return s;
 }
 
 void ProxyConnection::close() noexcept
@@ -142,7 +155,7 @@ void ProxyConnection::close() noexcept
 
     if (keepAliveTimer.data) {
         uv_timer_stop(&keepAliveTimer);
-        uv_close((uv_handle_t*)&keepAliveTimer, [](uv_handle_t *handle) {
+        uv_close((uv_handle_t*)&keepAliveTimer, [](uv_handle_t* handle) {
             ProxyConnection* pc = (ProxyConnection*)handle->data;
             handle->data = nullptr;
             pc->unref(); // keepAliveTimer.data
@@ -151,7 +164,7 @@ void ProxyConnection::close() noexcept
 
     if (upstream.data) {
         uv_read_stop((uv_stream_t*)&upstream);
-        uv_close((uv_handle_t *)&upstream, [](uv_handle_t *handle) {
+        uv_close((uv_handle_t*)&upstream, [](uv_handle_t* handle) {
             ProxyConnection* pc = (ProxyConnection*)handle->data;
             handle->data = nullptr;
             pc->unref(); // upstream.data
@@ -160,9 +173,10 @@ void ProxyConnection::close() noexcept
 
     if (relay.data) {
         uv_read_stop((uv_stream_t*)&relay);
-        uv_close((uv_handle_t *)&relay, [](uv_handle_t *handle) {
+        uv_close((uv_handle_t*)&relay, [](uv_handle_t* handle) {
             ProxyConnection* pc = (ProxyConnection*)handle->data;
             handle->data = nullptr;
+            log->info("Connection {} closed.", pc->id);
             pc->unref(); // relay.data
         });
     }
@@ -185,9 +199,9 @@ int ProxyConnection::connectServer() noexcept
     relay.data = (void*)ref(); // release in close()
 
     ConnectRequest* request = new ConnectRequest(this);
-    rc = uv_tcp_connect((uv_connect_t*)request, &relay, proxy.serverAddress().addr(), [](uv_connect_t *req, int status) {
+    rc = uv_tcp_connect((uv_connect_t*)request, &relay, proxy.serverAddress().addr(), [](uv_connect_t* req, int status) {
         ConnectRequest* request = (ConnectRequest*)req;
-        ProxyConnection *pc = request->connection();
+        ProxyConnection* pc = request->connection();
 
         if (status < 0) {
             log->error("Connection {} connect to server {} failed({}): {}",
@@ -203,6 +217,7 @@ int ProxyConnection::connectServer() noexcept
     if (rc < 0) {
         log->error("Connection {} connect to server {} failed({}): {}", id, rc, uv_strerror(rc));
         delete request;
+        unref(); // relay.data
         return rc;
     }
 
@@ -227,7 +242,7 @@ void ProxyConnection::establish() noexcept {
     keepAliveTimer.data = (void*)ref(); // release in close()
 
     // we make sure timer should start success
-    uv_timer_start(&keepAliveTimer, [](uv_timer_t *handle) {
+    uv_timer_start(&keepAliveTimer, [](uv_timer_t* handle) {
         ProxyConnection* pc = (ProxyConnection*)handle->data;
         pc->keepAlive();
     }, KEEP_ALIVE_CHECK_INTERVAL, KEEP_ALIVE_CHECK_INTERVAL);
@@ -235,8 +250,8 @@ void ProxyConnection::establish() noexcept {
     state = ConnectionState::Authenticating;
 
     log->trace("Connection {} start reading from the server.", id);
-    auto rc = uv_read_start((uv_stream_t*)&relay, [](uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf) {
-        ProxyConnection *pc = (ProxyConnection*)handle->data;
+    auto rc = uv_read_start((uv_stream_t*)&relay, [](uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf) {
+        ProxyConnection* pc = (ProxyConnection*)handle->data;
 
         if (pc->state != ConnectionState::Relaying) {
             suggested_size = MAX_CONTROL_PACKET_SIZE;
@@ -247,10 +262,10 @@ void ProxyConnection::establish() noexcept {
 
         buf->base = (char*)new char[suggested_size];
         buf->len = buf->base ? suggested_size : 0;
-    }, [](uv_stream_t *handle, ssize_t nread, const uv_buf_t *buf) {
-        ProxyConnection *pc = (ProxyConnection *)handle->data;
+    }, [](uv_stream_t* handle, ssize_t nread, const uv_buf_t* buf) {
+        ProxyConnection* pc = (ProxyConnection*)handle->data;
         if (nread > 0) {
-            pc->onRelayRead((const uint8_t *)buf->base, nread);
+            pc->onRelayRead((const uint8_t*)buf->base, nread);
         } else if (nread < 0) {
             if (nread == UV_EOF) {
                 log->info("Connection {} closed by the server.", pc->id);
@@ -282,7 +297,7 @@ void ProxyConnection::establish() noexcept {
 void ProxyConnection::keepAlive() noexcept
 {
     // Dead connection check
-    if (uv_now(proxy.getLoop()) - keepAliveTimestamp >= 3 * KEEP_ALIVE_INTERVAL) {
+    if (uv_now(proxy.getLoop()) - keepAliveTimestamp >= MAX_KEEP_ALIVE_RETRY * KEEP_ALIVE_INTERVAL) {
         log->warn("Connection {} is dead.", id);
         close();
         return;
@@ -332,7 +347,7 @@ void ProxyConnection::sendAuthenticateRequest() noexcept
     Random::buffer(ptr, padding);
 
     log->debug("Connection {} send AUTH to server {}.", id, proxy.serverEndpoint());
-    auto rc = uv_write((uv_write_t*)request, (uv_stream_t*)(&relay), &request->buf, 1, [](uv_write_t *req, int status) {
+    auto rc = uv_write((uv_write_t*)request, (uv_stream_t*)(&relay), &request->buf, 1, [](uv_write_t* req, int status) {
         WriteRequest* request = (WriteRequest*)req;
         ProxyConnection* pc = request->connection();
 
@@ -379,7 +394,7 @@ void ProxyConnection::sendAttachRequest() noexcept
     Random::buffer(ptr, padding);
 
     log->debug("Connection {} send ATTACH to server {}.", id, proxy.serverEndpoint());
-    auto rc = uv_write((uv_write_t*)request, (uv_stream_t*)(&relay), &request->buf, 1, [](uv_write_t *req, int status) {
+    auto rc = uv_write((uv_write_t*)request, (uv_stream_t*)(&relay), &request->buf, 1, [](uv_write_t* req, int status) {
         WriteRequest* request = (WriteRequest*)req;
         ProxyConnection* pc = request->connection();
 
@@ -416,7 +431,7 @@ void ProxyConnection::sendPingRequest() noexcept
     Random::buffer(ptr, padding);
 
     log->debug("Connection {} send PING to server {}.", id, proxy.serverEndpoint());
-    auto rc = uv_write((uv_write_t*)request, (uv_stream_t*)(&relay), &request->buf, 1, [](uv_write_t *req, int status) {
+    auto rc = uv_write((uv_write_t*)request, (uv_stream_t*)(&relay), &request->buf, 1, [](uv_write_t* req, int status) {
         WriteRequest* request = (WriteRequest*)req;
         ProxyConnection* pc = request->connection();
 
@@ -462,7 +477,7 @@ void ProxyConnection::sendConnectResponse(bool success) noexcept
     Random::buffer(ptr, padding);
 
     log->debug("Connection {} send CONNECT ACK({}) to server {}.", id, success, proxy.serverEndpoint());
-    auto rc = uv_write((uv_write_t*)request, (uv_stream_t*)(&relay), &request->buf, 1, [](uv_write_t *req, int status) {
+    auto rc = uv_write((uv_write_t*)request, (uv_stream_t*)(&relay), &request->buf, 1, [](uv_write_t* req, int status) {
         WriteRequest* request = (WriteRequest*)req;
         ProxyConnection* pc = request->connection();
 
@@ -509,7 +524,7 @@ void ProxyConnection::sendDisconnectRequest() noexcept
     Random::buffer(ptr, padding);
 
     log->debug("Connection {} send DISCONNECT to server {}.", id, proxy.serverEndpoint());
-    auto rc = uv_write((uv_write_t*)request, (uv_stream_t*)(&relay), &request->buf, 1, [](uv_write_t *req, int status) {
+    auto rc = uv_write((uv_write_t*)request, (uv_stream_t*)(&relay), &request->buf, 1, [](uv_write_t* req, int status) {
         WriteRequest* request = (WriteRequest*)req;
         ProxyConnection* pc = request->connection();
 
@@ -544,8 +559,8 @@ void ProxyConnection::sendDataRequest(const uint8_t* data, size_t _size) noexcep
     // encrypted: data
     proxy.encrypt(ptr, _size + CryptoBox::MAC_BYTES, data, _size);
 
-    log->trace("Connection {} send DATA({} bytes) to server {}.", id, size, proxy.serverEndpoint());
-    auto rc = uv_write((uv_write_t*)request, (uv_stream_t*)(&relay), &request->buf, 1, [](uv_write_t *req, int status) {
+    // log->trace("Connection {} send DATA({} bytes) to server {}.", id, size, proxy.serverEndpoint());
+    auto rc = uv_write((uv_write_t*)request, (uv_stream_t*)(&relay), &request->buf, 1, [](uv_write_t* req, int status) {
         WriteRequest* request = (WriteRequest*)req;
         ProxyConnection* pc = request->connection();
 
@@ -632,15 +647,15 @@ void ProxyConnection::processRelayPacket(const uint8_t* packet, size_t size) noe
     bool ack = PacketFlag::isAck(flag);
     uint8_t type = PacketFlag::getType(flag);
 
-    log->trace("Connection {} got packet from server {}: type={}, ack={}, size={}",
-            proxy.serverEndpoint(), id, type, ack, size);
+    // log->trace("Connection {} got packet from server {}: type={}, ack={}, size={}",
+    //        proxy.serverEndpoint(), id, type, ack, size);
 
     if (type == PacketFlag::ERROR) {
         size_t len = size - PACKET_HEADER_BYTES - CryptoBox::MAC_BYTES;
         uint8_t* plain = (uint8_t*)alloca(len);
         proxy.decrypt(plain, len, packet + PACKET_HEADER_BYTES, size - PACKET_HEADER_BYTES);
         int code = ntohs(*(uint16_t*)plain);
-        char *msg = (char *)plain + sizeof(uint16_t);
+        char* msg = (char*)plain + sizeof(uint16_t);
         log->error("Connection {} got ERROR response from the server {}, error({}): {}",
                 id, proxy.serverEndpoint(), code, msg);
         close();
@@ -689,6 +704,9 @@ void ProxyConnection::processRelayPacket(const uint8_t* packet, size_t size) noe
             return;
         } else if (!ack && type == PacketFlag::DISCONNECT) {
             onDisconnectRequest(packet, size);
+            return;
+        } else if (ack && type == PacketFlag::PING) {
+            onPingResponse(packet, size);
             return;
         } else {
             log->error("Connection {} got a wrong packet, DATA or DISCONNECT expected.", id);
@@ -790,14 +808,14 @@ void ProxyConnection::onDisconnectRequest(const uint8_t* packet, size_t size) no
 
 void ProxyConnection::onDataRequest(const uint8_t* packet, size_t size) noexcept
 {
-    log->trace("Connection {} got DATA({}) from server {}", id, size, proxy.serverEndpoint());
+    // log->trace("Connection {} got DATA({}) from server {}", id, size, proxy.serverEndpoint());
 
     WriteRequest* request = new WriteRequest{this, size - PACKET_HEADER_BYTES - CryptoBox::MAC_BYTES};
 
     proxy.decrypt((uint8_t*)request->buf.base, request->buf.len, packet + PACKET_HEADER_BYTES, size - PACKET_HEADER_BYTES);
 
-    log->trace("Connection {} sending {} bytes data to upstream {}", id, request->buf.len, proxy.upstreamEndpoint());
-    auto rc = uv_write((uv_write_t*)request, (uv_stream_t*)(&upstream), &request->buf, 1, [](uv_write_t *req, int status) {
+    // log->trace("Connection {} sending {} bytes data to upstream {}", id, request->buf.len, proxy.upstreamEndpoint());
+    auto rc = uv_write((uv_write_t*)request, (uv_stream_t*)(&upstream), &request->buf, 1, [](uv_write_t* req, int status) {
         WriteRequest* request = (WriteRequest*)req;
         ProxyConnection* pc = request->connection();
 
@@ -821,7 +839,7 @@ void ProxyConnection::onDataRequest(const uint8_t* packet, size_t size) noexcept
 
 void ProxyConnection::openUpstream() noexcept
 {
-    log->debug("Connection {} connecting to the upstream server {}...", id, proxy.upstreamEndpoint());
+    log->debug("Connection {} connecting to the upstream {}...", id, proxy.upstreamEndpoint());
 
     auto rc = uv_tcp_init(proxy.getLoop(), &upstream);
     if (rc < 0) {
@@ -833,15 +851,15 @@ void ProxyConnection::openUpstream() noexcept
     upstream.data = (void*)ref(); // release in closeUpstream() or close()
 
     ConnectRequest* request = new ConnectRequest{this};
-    rc = uv_tcp_connect((uv_connect_t*)request, &upstream, proxy.upstreamAddress().addr(), [](uv_connect_t *req, int status) {
+    rc = uv_tcp_connect((uv_connect_t*)request, &upstream, proxy.upstreamAddress().addr(), [](uv_connect_t* req, int status) {
         ConnectRequest* request = (ConnectRequest*)req;
-        ProxyConnection *pc = request->connection();
+        ProxyConnection* pc = request->connection();
 
         if (status < 0) {
             log->error("Connection {} connect to upstream {} failed({}): {}",
                     pc->id, pc->proxy.upstreamEndpoint(), status, uv_strerror(status));
 
-            uv_close((uv_handle_t*)&pc->upstream, [](uv_handle_t *handle) {
+            uv_close((uv_handle_t*)&pc->upstream, [](uv_handle_t* handle) {
                 ProxyConnection* pc = (ProxyConnection*)handle->data;
 
                 // upstream.data
@@ -858,7 +876,7 @@ void ProxyConnection::openUpstream() noexcept
     if (rc < 0) {
         log->error("Connection {} connect to upstream {} failed({}): {}",
                 id, proxy.upstreamEndpoint(), rc, uv_strerror(rc));
-        uv_close((uv_handle_t*)&upstream, [](uv_handle_t *handle) {
+        uv_close((uv_handle_t*)&upstream, [](uv_handle_t* handle) {
             ProxyConnection* pc = (ProxyConnection*)handle->data;
 
             // upstream.data
@@ -882,32 +900,32 @@ void ProxyConnection::closeUpstream() noexcept
         return;
 
     ShutdownRequest* request = new ShutdownRequest{this};
-    auto rc = uv_shutdown((uv_shutdown_t*)request, (uv_stream_t*)&upstream, [](uv_shutdown_t *req, int status){
+    auto rc = uv_shutdown((uv_shutdown_t*)request, (uv_stream_t*)&upstream, [](uv_shutdown_t* req, int status){
         ShutdownRequest* request = (ShutdownRequest*)req;
-        ProxyConnection *pc = request->connection();
+        ProxyConnection* pc = request->connection();
 
-        uv_close((uv_handle_t*)&pc->upstream, [](uv_handle_t *handle) {
+        uv_close((uv_handle_t*)&pc->upstream, [](uv_handle_t* handle) {
             ProxyConnection* pc = (ProxyConnection*)handle->data;
             handle->data = nullptr;
             pc->unref(); // upstream.data
         });
 
-        log->debug("Connection {} closed upstream {}", pc->id, pc->proxy.upstreamEndpoint());
+        log->info("Connection {} closed upstream {}", pc->id, pc->proxy.upstreamEndpoint());
 
         pc->state = ConnectionState::Idling;
         pc->onIdle();
         delete request;
     });
     if (rc < 0) {
-        log->error("Connection {} shutdown upstream failed({}): {}, force to close.", id, rc, uv_strerror(rc));
+        log->warn("Connection {} shutdown upstream failed({}): {}, force to close.", id, rc, uv_strerror(rc));
 
-        uv_close((uv_handle_t*)&upstream, [](uv_handle_t *handle) {
+        uv_close((uv_handle_t*)&upstream, [](uv_handle_t* handle) {
             ProxyConnection* pc = (ProxyConnection*)handle->data;
             handle->data = nullptr;
             pc->unref(); // upstream.data
         });
 
-        log->debug("Connection {} closed upstream {}", id, proxy.upstreamEndpoint());
+        log->info("Connection {} closed upstream {}", id, proxy.upstreamEndpoint());
 
         state = ConnectionState::Idling;
         onIdle();
@@ -919,18 +937,18 @@ void ProxyConnection::startReadUpstream() noexcept
 {
     log->trace("Connection {} start reading from the upstream.", id);
 
-    auto rc = uv_read_start((uv_stream_t*)&upstream, [](uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf) {
-        ProxyConnection *pc = (ProxyConnection*)handle->data;
+    auto rc = uv_read_start((uv_stream_t*)&upstream, [](uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf) {
+        ProxyConnection* pc = (ProxyConnection*)handle->data;
 
        if (suggested_size > MAX_UPSTREAM_READ_BUFFER_SIZE)
             suggested_size = MAX_UPSTREAM_READ_BUFFER_SIZE;
 
         buf->base = new char[suggested_size];
         buf->len = buf->base ? suggested_size : 0;
-   }, [](uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
-        ProxyConnection *pc = (ProxyConnection *)stream->data;
+   }, [](uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
+        ProxyConnection* pc = (ProxyConnection*)stream->data;
         if (nread > 0) {
-            log->trace("Connection {} got {} bytes data from upstream {}", pc->id, nread, pc->proxy.upstreamEndpoint());
+            // log->trace("Connection {} got {} bytes data from upstream {}", pc->id, nread, pc->proxy.upstreamEndpoint());
             pc->sendDataRequest((const uint8_t*)buf->base, nread);
         } else if (nread < 0) {
             if (nread == UV_EOF) {

@@ -69,7 +69,7 @@ public:
     void start();
     void stop() noexcept;
 
-    uv_loop_t *getLoop() noexcept {
+    uv_loop_t* getLoop() noexcept {
         return &loop;
     }
 
@@ -180,8 +180,8 @@ protected:
     void onIteration() noexcept;
     void _connect() noexcept;
     void connect() noexcept;
+    void idleCheck() noexcept;
     bool needsNewConnection() const noexcept;
-    bool needsCloseConnection() const noexcept;
 
 private:
     const Node& node;
@@ -214,9 +214,10 @@ private:
     uv_timer_t reconnectTimer { 0 };
     uint32_t reconnectInterval { 0 };
 
-    bool running { false };
-
+    uv_timer_t idleCheckTimer { 0 };
     uint64_t idleTimestamp;
+
+    bool running { false };
 
     uint32_t maxConnections { 8 };
     uint32_t inFlights { 0 };

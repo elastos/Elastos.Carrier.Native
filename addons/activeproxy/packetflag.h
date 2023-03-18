@@ -151,6 +151,6 @@ private:
     }
 };
 
-}
-}
-}
+} // namespace activeproxy
+} // namespace carrier
+} // namespace elastos
