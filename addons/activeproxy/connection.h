@@ -161,6 +161,7 @@ private:
 
     uv_tcp_t relay { 0 };
     uv_tcp_t upstream { 0 };
+    bool upstreamPaused { false };
 
     std::vector<uint8_t> stickyBuffer {};
 
