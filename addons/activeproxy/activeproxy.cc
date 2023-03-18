@@ -25,6 +25,7 @@
 #include <memory>
 #include <algorithm>
 #include <list>
+#include <thread>
 #include <cassert>
 
 #include "activeproxy.h"
@@ -202,25 +203,28 @@ void ActiveProxy::start()
 
     idleTimestamp = UINT64_MAX;
 
-    // Start the loop
-    log->info("ActiveProxy started.");
-    running = true;
-    rc = uv_run(&loop, UV_RUN_DEFAULT);
-    if (rc < 0) {
-        log->error("ActiveProxy failed to start the event loop({}): {}", rc, uv_strerror(rc));
-        running = false;
-        uv_idle_stop(&idleHandle);
-        uv_close((uv_handle_t*)&idleHandle, nullptr);
-        uv_close((uv_handle_t*)&stopHandle, nullptr);
-        uv_timer_stop(&idleCheckTimer);
-        uv_close((uv_handle_t*)&idleCheckTimer, nullptr);
-        uv_close((uv_handle_t*)&reconnectTimer, nullptr);
-        uv_loop_close(&loop);
-        throw networking_error(uv_strerror(rc));
-    }
+    // Start the loop in thread
+    runner = std::thread([&]() {
+        log->info("ActiveProxy started.");
+        running = true;
+        rc = uv_run(&loop, UV_RUN_DEFAULT);
+        if (rc < 0) {
+            log->error("ActiveProxy failed to start the event loop({}): {}", rc, uv_strerror(rc));
+            running = false;
+            uv_idle_stop(&idleHandle);
+            uv_close((uv_handle_t*)&idleHandle, nullptr);
+            uv_close((uv_handle_t*)&stopHandle, nullptr);
+            uv_timer_stop(&idleCheckTimer);
+            uv_close((uv_handle_t*)&idleCheckTimer, nullptr);
+            uv_close((uv_handle_t*)&reconnectTimer, nullptr);
+            uv_loop_close(&loop);
+            throw networking_error(uv_strerror(rc));
+        }
 
-    uv_loop_close(&loop);
-    log->info("ActiveProxy stopped.");
+        running = false;
+        uv_loop_close(&loop);
+        log->info("ActiveProxy stopped.");
+    });
 }
 
 void ActiveProxy::stop() noexcept
@@ -228,6 +232,8 @@ void ActiveProxy::stop() noexcept
     if (running) {
         log->info("ActiveProxy stopping...");
         uv_async_send(&stopHandle);
+
+        runner.join();
     }
 }
 

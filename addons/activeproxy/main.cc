@@ -14,6 +14,7 @@ static const char *upstreamHost = "192.168.8.80";
 static uint16_t upstreamPort = 8080;
 
 ActiveProxy* __proxy__;
+bool stopped = false;
 
 int main(int argc, char *argv[])
 {
@@ -27,16 +28,19 @@ int main(int argc, char *argv[])
     Node node = Node(b.build());
     node.start();
 
-    std::cout << "Node Id: " << node.getId() << std::endl;
-
     ActiveProxy proxy{node, serverId, serverHost, serverPort, upstreamHost, upstreamPort};
     __proxy__ = &proxy;
 
     signal(SIGINT, [](int sig) {
+        stopped = true;
         __proxy__->stop();
     });
 
     proxy.start();
+
+    while (!stopped) {
+        sleep(1);
+    }
 
     return 0;
 }
