@@ -110,43 +110,29 @@ void ClosestCandidates::add(const std::list<Sp<NodeInfo>>& candidates) {
     }
 
     closest.merge(filtered, [&](const Sp<CandidateNode>& a, const Sp<CandidateNode>& b) {
-        return candidateOrder(a, b) < 0;
+        return target.threeWayCompare(a->getId(), b->getId()) < 0;
     });
 
-#if 1
     if (closest.size() > capacity) {
-        std::vector<Sp<CandidateNode>> toRemove;
-        toRemove.reserve(closest.size());
+        int count = 0;
+        std::list<Sp<CandidateNode>> toRemove {};
         for (const auto& item : closest) {
-            if (!item->isInFlight())
+            if (!item->isInFlight()) {
                 toRemove.push_back(item);
+            }
         }
 
-        std::sort(toRemove.begin(), toRemove.end(), [&](Sp<CandidateNode>& a, Sp<CandidateNode>& b) {
-            return candidateOrder(a, b) < 0;
-        });
+        if (toRemove.size() > capacity)  {
+            toRemove.sort([&](const Sp<CandidateNode>& a, const Sp<CandidateNode>& b) {
+                return candidateOrder(a, b) < 0;
+            });
 
-        auto it = toRemove.begin();
-        if (toRemove.size() > capacity)
-            std::advance(it, capacity);
-
-        for(; it != toRemove.end(); it++)
-            remove((*it)->getId());
-    }
-
-#else // TODO: check.
-    while (closest.size() > capacity) {
-        auto it = std::find_if(closest.begin(), closest.end(), [&](const Sp<CandidateNode>& cn) {
-            return !cn->isInFlight();
-        });
-
-        if (it != closest.end()) {
-            closest.erase(it);
-        } else {
-            break;
+            auto vi = toRemove.begin();
+            std::advance(vi, capacity);
+            for(; vi != toRemove.end(); vi++)
+                remove((*vi)->getId());
         }
     }
-#endif
 }
 
 } // namespace carrier
