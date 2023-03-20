@@ -335,5 +335,18 @@ bool RoutingTable::isHomeBucket(const Prefix& prefix) const {
     return prefix.isPrefixOf(dht.getNode().getId());
 }
 
+std::string RoutingTable::toString() const {
+    std::string str {};
+
+    auto buckets = getBuckets();
+    str.append("buckets: ").append(std::to_string(buckets.size())).append(" / entries: ").append(std::to_string(getNumBucketEntries()));
+    str.append(1, '\n');
+    for (auto& bucket : buckets) {
+        str.append(static_cast<std::string>(*bucket)).append(1, '\n');
+    }
+
+    return str;
+}
+
 }
 }

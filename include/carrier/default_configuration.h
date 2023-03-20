@@ -34,9 +34,9 @@ namespace carrier {
 class CARRIER_PUBLIC DefaultConfiguration final : public Configuration {
 public:
     DefaultConfiguration() = delete;
-    DefaultConfiguration(const std::string& ip4, const std::string& ip6, int port, bool v4, bool v6,
+    DefaultConfiguration(const std::string& ip4, const std::string& ip6, int port,
         std::string path, std::vector<Sp<NodeInfo>> nodes)
-        : enable4(v4), enable6(v6),  storagePath(path), bootstrapNodes(nodes) {
+        : storagePath(path), bootstrapNodes(nodes) {
             try {
                 addr4 = SocketAddress(ip4, port);
                 addr6 = SocketAddress(ip6, port);
@@ -50,13 +50,6 @@ public:
     }
     SocketAddress& ipv6Address() override {
         return addr6;
-    }
-
-    bool enableIpv4() override {
-        return enable4;
-    }
-    bool enableIpv6() override {
-        return enable6;
     }
 
     int listeningPort() override {
@@ -89,12 +82,10 @@ public:
 
         void setIPv4Address(const std::string& ip) {
             this->ip4 = ip;
-            this->enable4 = true;
         }
 
         void setIPv6Address(const std::string& ip) {
             this->ip6 = ip;
-            this->enable6 = true;
         }
 
         void setListeningPort(int port) {
@@ -132,11 +123,9 @@ public:
         bool autoAddr6 { false };
         std::string ip4 {};
         std::string ip6 {};
-        int port {};
+        int port = 39001;
         std::string storagePath {};
         std::vector<Sp<NodeInfo>> bootstrapNodes {};
-        bool enable4 {false};
-        bool enable6 {false};
     };
 
 private:
@@ -145,8 +134,6 @@ private:
 
     std::string storagePath {};
     std::vector<Sp<NodeInfo>> bootstrapNodes {};
-    bool enable4 { false };
-    bool enable6 { false };
 };
 
 } // namespace carrier

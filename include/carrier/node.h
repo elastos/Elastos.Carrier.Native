@@ -140,6 +140,7 @@ public:
     void encrypt(const Id& recipient, uint8_t* cipher, size_t cipherlen, const uint8_t *buf, size_t buflen) const;
     void decrypt(const Id& sender, uint8_t* plain, size_t plainlen, const uint8_t *buf, size_t buflen) const;
 
+    std::string toString() const;
 private:
     bool checkPersistence(const std::string&);
     void loadKey(const std::string&);

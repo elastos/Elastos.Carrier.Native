@@ -798,12 +798,12 @@ public:
     static void digest(uint8_t *hash, size_t hashLen, const uint8_t* data, size_t dataLen);
 
     template<typename HT, typename DT>
-    static void digest(HT& hash, const DT& data) {
+    static void _digest(HT& hash, const DT& data) {
         digest(hash.data(), hash.size(), data.data(), data.size());
     }
 
     template<typename T>
-    static std::vector<uint8_t> digest(const T& data) {
+    static std::vector<uint8_t> _digest(const T& data) {
         std::vector<uint8_t> hash(BYTES);
         digest(hash.data(), hash.size(), data.data(), data.size());
         return hash;

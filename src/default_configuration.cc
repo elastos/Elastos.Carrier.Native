@@ -23,6 +23,8 @@
 #include <fstream>
 #include <memory>
 #include <sys/stat.h>
+
+#include "utils/addr.h"
 #include "carrier/default_configuration.h"
 
 namespace elastos {
@@ -102,18 +104,22 @@ void Builder::load(const std::string& filePath) {
 
 void Builder::reset() {
     autoAddr4 = true;
-    autoAddr6 = true;
-    enable4 = false;
-    enable6 = false;
+    autoAddr6 = false;
     ip4 = {};
     ip6 = {};
-    port = 0;
+    port = 39001;
     storagePath = {};
     bootstrapNodes.clear();
 }
 
 Sp<Configuration> Builder::build() {
-    auto dataStorage = std::make_shared<DefaultConfiguration>(ip4, ip6,  port, enable4, enable6, storagePath, bootstrapNodes);
+    if (autoAddr4 && ip4.empty())
+        ip4 = getLocalIpAddresses();
+
+    if (autoAddr6 && ip6.empty())
+        ip6 = getLocalIpAddresses(false);
+
+    auto dataStorage = std::make_shared<DefaultConfiguration>(ip4, ip6,  port, normailize(storagePath), bootstrapNodes);
     return std::static_pointer_cast<Configuration>(dataStorage);
 }
 

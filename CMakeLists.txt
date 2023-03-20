@@ -27,6 +27,7 @@ endif()
 set(ENABLE_SHARED FALSE CACHE BOOL "Build shared library")
 set(ENABLE_STATIC TRUE CACHE BOOL "Build static library")
 set(ENABLE_ADDONS ${ENABLE_TESTS_DEFAULT} CACHE BOOL "Build addons")
+set(ENABLE_SHELL ${ENABLE_TESTS_DEFAULT} CACHE BOOL "Build tools")
 set(ENABLE_TESTS ${ENABLE_TESTS_DEFAULT} CACHE BOOL "Build test cases")
 set(ENABLE_DOCS FALSE CACHE BOOL "Build APIs documentation")
 set(ENABLE_CARRIER_DEVELOPMENT FALSE CACHE BOOL "Eanble carrier development mode")
@@ -40,6 +41,10 @@ endif()
 
 if(ENABLE_TESTS)
     add_subdirectory(tests)
+endif()
+
+if (ENABLE_SHELL)
+    add_subdirectory(shell)
 endif()
 
 if(ENABLE_DOCS)

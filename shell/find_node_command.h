@@ -19,34 +19,46 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
 #pragma once
 
-#include <list>
+#include <iostream>
+#include <string>
 
-#include "def.h"
-#include "types.h"
-#include "node_info.h"
-#include "socket_address.h"
+#include "command.h"
 
-namespace elastos {
-namespace carrier {
-
-class CARRIER_PUBLIC Configuration {
+class FindNodeCommand : public Command {
 public:
-    virtual SocketAddress& ipv4Address() = 0;
-    virtual SocketAddress& ipv6Address() = 0;
+    FindNodeCommand() : Command("findnode", "Find node and show the node info if exists.") {};
 
-    virtual int listeningPort() = 0;
+protected:
+    void setupOptions() override {
+        auto app = getApp();
 
-    /**
-     * If a Path that points to an existing, writable directory is returned then the routing table
-     * will be persisted to that directory periodically and during shutdown
-     */
-    virtual const std::string& getStoragePath() = 0;
+        app->add_option("-m, --mode", mode, "lookup mode: 0(arbitrary), 1(optimistic), 2(conservative).");
+        app->add_option("ID", id, "The target node id to be find.");
+        app->require_option(2, 2);
+    };
 
-    virtual std::vector<Sp<NodeInfo>>& getBootstrapNodes() = 0;
+    void execute() override {
+        if (mode > 2) {
+            std::cout << "Invalid mode: " << mode << std::endl;
+            return;
+        }
+
+        auto nodeid = Id(id);
+
+        LookupOption option {mode} ;
+        auto future = node->findNode(nodeid, option);
+        auto nodeinfos = future.get();
+        if (nodeinfos.empty()) {
+            std::cout << "Not found." << std::endl;
+        } else {
+            for (auto ni: nodeinfos)
+                std::cout << *ni << std::endl;
+        }
+    };
+
+private:
+    std::string id {};
+    int mode = 2;
 };
-
-} // namespace carrier
-} // namespace elastos

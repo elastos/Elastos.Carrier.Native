@@ -130,7 +130,7 @@ Node::Node(std::shared_ptr<Configuration> _config): config(_config)
 {
     log = Logger::get("node");
 
-    if (!config->enableIpv4() && !config->enableIpv6()) {
+    if (!config->ipv4Address() && !config->ipv6Address()) {
         log->error("No valid IPv4 or IPv6 address specified");
         throw std::invalid_argument("No listening address");
     }
@@ -197,12 +197,12 @@ void Node::start() {
     setStatus(NodeStatus::Stopped, NodeStatus::Initializing);
     log->info("Carrier node {} is starting...", static_cast<std::string>(id));
 
-    if (config->enableIpv4()) {
+    if (config->ipv4Address()) {
         dht4 = std::make_shared<DHT>(DHT::Type::IPV4, *this, config->ipv4Address());
         if (persistent)
             dht4->enablePersistence(storagePath + "/dht4.cache");
     }
-    if (config->enableIpv6()) {
+    if (config->ipv6Address()) {
         dht6 = std::make_shared<DHT>(DHT::Type::IPV6, *this, config->ipv6Address());
         if (persistent)
             dht6->enablePersistence(storagePath + "/dht6.cache");
@@ -544,6 +544,20 @@ Sp<Value> Node::updateValue(const Id& valueId, const std::vector<uint8_t>& data)
 
     return Value::updateValue(oldValue, data);
 }
+
+std::string Node::toString() const {
+    std::string str {};
+
+    str.append("Node: ").append(id).append(1, '\n');
+    if (dht4 != nullptr)
+        str.append(dht4->toString());
+
+    if (dht6 != nullptr)
+        str.append(dht6->toString());
+
+    return str;
+}
+
 
 }
 }
