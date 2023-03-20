@@ -75,7 +75,7 @@ public:
     SocketAddress(const std::string& ip, in_port_t port)
         :  SocketAddress(ip, std::to_string(port)) {}
 
-    SocketAddress(const char* ip, in_port_t port)
+    SocketAddress(const char* ip, in_port_t port = 0)
         :  SocketAddress(std::string(ip), std::to_string(port)) {}
 
     SocketAddress(const uint8_t* ip, size_t len, in_port_t port);

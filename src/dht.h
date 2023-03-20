@@ -147,6 +147,7 @@ public:
     void onSend(const Id& id);
 
     void onMessage(Sp<Message>);
+    std::string toString() const;
 
 private:
     void received(Sp<Message>);

@@ -128,6 +128,7 @@ public:
     void save(const std::string&);
 
     void tryPingMaintenance(Sp<KBucket> bucket, const std::vector<PingRefreshTask::Options>& options, const std::string& name);
+    std::string toString() const;
 
 private:
     void _put(const Sp<KBucketEntry>& entry);

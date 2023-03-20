@@ -19,34 +19,41 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
 #pragma once
 
-#include <list>
+#include <iostream>
+#include <string>
 
-#include "def.h"
-#include "types.h"
-#include "node_info.h"
-#include "socket_address.h"
+#include "command.h"
 
-namespace elastos {
-namespace carrier {
-
-class CARRIER_PUBLIC Configuration {
+class StoragePeerCommand : public Command {
 public:
-    virtual SocketAddress& ipv4Address() = 0;
-    virtual SocketAddress& ipv6Address() = 0;
+    StoragePeerCommand() : Command("peer", "Display peer info from the local storage.") {};
 
-    virtual int listeningPort() = 0;
+protected:
+    void setupOptions() override {
+        auto app = getApp();
 
-    /**
-     * If a Path that points to an existing, writable directory is returned then the routing table
-     * will be persisted to that directory periodically and during shutdown
-     */
-    virtual const std::string& getStoragePath() = 0;
+        app->add_option("-f, --family", family, "IP family: 4 for IPv4, 6 for IPv6, default both");
+        app->add_option("ID", id, "The peer id.");
+        app->require_option(1, 1);
+    };
 
-    virtual std::vector<Sp<NodeInfo>>& getBootstrapNodes() = 0;
+    void execute() override {
+        auto peerid = Id(id);
+
+        auto storage = node->getStorage();
+        auto peers = storage->getPeer(peerid, family, 0);
+        if (!peers.empty()) {
+            for (auto& peer : peers)
+                std::cout << static_cast<std::string>(*peer) << std::endl;
+            std::cout << "Total " << peers.size() << " peers." << std::endl;
+        } else {
+            std::cout << "Peer " << id << " not exists." << std::endl;
+        }
+    };
+
+private:
+    std::string id {};
+    int family = 10;
 };
-
-} // namespace carrier
-} // namespace elastos

@@ -19,34 +19,41 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
 #pragma once
 
-#include <list>
+#include <iostream>
+#include <string>
 
-#include "def.h"
-#include "types.h"
-#include "node_info.h"
-#include "socket_address.h"
+#include "command.h"
 
-namespace elastos {
-namespace carrier {
-
-class CARRIER_PUBLIC Configuration {
+class BootstrapCommand : public Command {
 public:
-    virtual SocketAddress& ipv4Address() = 0;
-    virtual SocketAddress& ipv6Address() = 0;
+    BootstrapCommand() : Command("bootstrap", "Bootstrap from the node.") {};
 
-    virtual int listeningPort() = 0;
+protected:
+    void setupOptions() override {
+        auto app = getApp();
 
-    /**
-     * If a Path that points to an existing, writable directory is returned then the routing table
-     * will be persisted to that directory periodically and during shutdown
-     */
-    virtual const std::string& getStoragePath() = 0;
+        app->add_option("ID", id, "The node id.");
+        app->add_option("ADDRESS", address, "The node address.");
+        app->add_option("PORT", port, "The node port.");
+        app->require_option(3, 3);
+    };
 
-    virtual std::vector<Sp<NodeInfo>>& getBootstrapNodes() = 0;
+    void execute() override {
+        if (port <= 0) {
+            std::cout << "Invalid port: " << port << std::endl;
+            return;
+        }
+
+        auto nodeid = Id(id);
+        auto ni = NodeInfo {nodeid, address, port};
+        node->bootstrap(ni);
+    };
+
+private:
+    std::string id {};
+    std::string address {};
+    int port = 0;
+
 };
-
-} // namespace carrier
-} // namespace elastos

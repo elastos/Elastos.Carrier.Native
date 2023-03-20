@@ -23,6 +23,14 @@ add_submodule(spdlog-setup
 add_submodule(libuv
     DEPENDS platform-specific)
 
+if (ENABLE_SHELL)
+    add_submodule(CLI11
+        DEPENDS platform-specific)
+
+    add_submodule(libutf8proc
+        DEPENDS platform-specific)
+endif()
+
 if (ENABLE_TESTS)
     add_submodule(CppUnit
         DEPENDS platform-specific)

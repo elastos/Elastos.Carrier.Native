@@ -19,34 +19,37 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
 #pragma once
 
-#include <list>
+#include <iostream>
+#include <string>
 
-#include "def.h"
-#include "types.h"
-#include "node_info.h"
-#include "socket_address.h"
+#include "../src/data_storage.h"
+#include "command.h"
 
-namespace elastos {
-namespace carrier {
-
-class CARRIER_PUBLIC Configuration {
+class StorageValueCommand : public Command {
 public:
-    virtual SocketAddress& ipv4Address() = 0;
-    virtual SocketAddress& ipv6Address() = 0;
+    StorageValueCommand() : Command("value", "Display value from the local storage.") {};
 
-    virtual int listeningPort() = 0;
+protected:
+    void setupOptions() override {
+        auto app = getApp();
 
-    /**
-     * If a Path that points to an existing, writable directory is returned then the routing table
-     * will be persisted to that directory periodically and during shutdown
-     */
-    virtual const std::string& getStoragePath() = 0;
+        app->add_option("ID", id, "The value id.");
+        app->require_option(1, 1);
+    };
 
-    virtual std::vector<Sp<NodeInfo>>& getBootstrapNodes() = 0;
+    void execute() override {
+        auto valueid = Id(id);
+
+        auto storage = node->getStorage();
+        auto value = storage->getValue(valueid);
+        if (value)
+            std::cout << static_cast<std::string>(*value) << std::endl;
+        else
+            std::cout << "Value " << valueid << " not exists.";
+    };
+
+private:
+    std::string id {};
 };
-
-} // namespace carrier
-} // namespace elastos

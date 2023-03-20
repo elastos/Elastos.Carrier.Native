@@ -31,10 +31,6 @@
 namespace elastos {
 namespace carrier {
 
-#if defined(__linux__)
-#define ntohll(x) htobe64(x)
-#endif
-
 class DhtException : public std::runtime_error {
 public:
     DhtException(const std::string &str = "") :

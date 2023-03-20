@@ -715,5 +715,15 @@ void DHT::populateClosestNodes(Sp<LookupResponse> response, const Id& target, in
     }
 }
 
+std::string DHT::toString() const {
+    std::string str {};
+
+    str.append("DHT: ").append(getTypeName()).append(1, '\n');
+    str.append("Address: ").append(addr.toString()).append(1, '\n');
+    str.append(routingTable.toString());
+
+    return str;
+}
+
 }
 }
