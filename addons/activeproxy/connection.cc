@@ -145,15 +145,16 @@ void ProxyConnection::close() noexcept
     if (state == ConnectionState::Closed)
         return;
 
+    ConnectionState old = state;
+    state = ConnectionState::Closed;
+
     log->debug("Connection {} is closing...", id);
 
-    if (state <= ConnectionState::Authenticating)
+    if (old <= ConnectionState::Authenticating)
         onOpenFailed();
 
-    if (state == ConnectionState::Relaying)
+    if (old == ConnectionState::Relaying)
         onIdle();
-
-    state = ConnectionState::Closed;
 
     if (keepAliveTimer.data) {
         uv_timer_stop(&keepAliveTimer);
@@ -298,6 +299,9 @@ void ProxyConnection::establish() noexcept {
 
 void ProxyConnection::keepAlive() noexcept
 {
+    if (state == ConnectionState::Relaying)
+        return;
+
     // Dead connection check
     if (uv_now(proxy.getLoop()) - keepAliveTimestamp >= MAX_KEEP_ALIVE_RETRY * KEEP_ALIVE_INTERVAL) {
         log->warn("Connection {} is dead.", id);
@@ -720,9 +724,6 @@ void ProxyConnection::processRelayPacket(const uint8_t* packet, size_t size) noe
         } else if (!ack && type == PacketFlag::DISCONNECT) {
             onDisconnectRequest(packet, size);
             return;
-        } else if (ack && type == PacketFlag::PING) {
-            onPingResponse(packet, size);
-            return;
         } else {
             log->error("Connection {} got a wrong packet, DATA or DISCONNECT expected.", id);
             close();
@@ -906,6 +907,9 @@ void ProxyConnection::openUpstream() noexcept
 
 void ProxyConnection::closeUpstream() noexcept
 {
+    if (state == ConnectionState::Closed)
+        return;
+
     log->debug("Connection {} closing upstream {}", id, proxy.upstreamEndpoint());
 
     // Stop reading
