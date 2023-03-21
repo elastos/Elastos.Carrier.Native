@@ -36,12 +36,15 @@ public:
     virtual Sp<Value> getValue(const Id& valueId) = 0;
     virtual Sp<Value> putValue(const Sp<Value>& value, int expectedSeq) = 0;
     virtual Sp<Value> putValue(const Sp<Value>& value) = 0;
+    virtual std::list<Id> listValueId() = 0;
 
     virtual std::list<Sp<PeerInfo>> getPeer(const Id& peerId, int family, int maxPeers) = 0;
     virtual Sp<PeerInfo> getPeer(const Id& peerId, int family, const Id& nodeId) = 0;
 
     virtual void putPeer(const Id& peerId, const std::list<Sp<PeerInfo>>& peers) = 0;
     virtual void putPeer(const Id& peerId, const Sp<PeerInfo>& peer) = 0;
+    virtual std::list<Id> listPeerId() = 0;
+
     virtual void close() = 0;
 };
 

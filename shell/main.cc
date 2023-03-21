@@ -39,6 +39,8 @@
 #include "storage_command.h"
 #include "storage_value_command.h"
 #include "storage_peer_command.h"
+#include "storage_listpeer_command.h"
+#include "storage_listvalue_command.h"
 #include "exit_command.h"
 
 static const std::string prompt = "Carrier $";
@@ -69,8 +71,10 @@ int main(int argc, char **argv)
     StoreValueCommand storeValueCommand;
     FindValueCommand findValueCommand;
     RoutingTableCommand routingtableCommand;
-    StorageValueCommand storageValueCommand;
-    StoragePeerCommand storagePeerCommand;
+    ValueCommand valueCommand;
+    PeerCommand peerCommand;
+    ListValueCommand listValueCommand;
+    ListPeerCommand listPeerCommand;
     StorageCommand storageCommand;
     ExitCommand exitCommand;
 
@@ -84,8 +88,10 @@ int main(int argc, char **argv)
     shell.addSubCommand(storeValueCommand);
     shell.addSubCommand(findValueCommand);
     shell.addSubCommand(routingtableCommand);
-    storageCommand.addSubCommand(storageValueCommand);
-    storageCommand.addSubCommand(storagePeerCommand);
+    storageCommand.addSubCommand(valueCommand);
+    storageCommand.addSubCommand(peerCommand);
+    storageCommand.addSubCommand(listValueCommand);
+    storageCommand.addSubCommand(listPeerCommand);
     shell.addSubCommand(storageCommand);
     shell.addSubCommand(exitCommand);
     shell.prepare();

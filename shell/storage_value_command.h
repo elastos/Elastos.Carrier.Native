@@ -27,9 +27,9 @@
 #include "../src/data_storage.h"
 #include "command.h"
 
-class StorageValueCommand : public Command {
+class ValueCommand : public Command {
 public:
-    StorageValueCommand() : Command("value", "Display value from the local storage.") {};
+    ValueCommand() : Command("value", "Display value from the local storage.") {};
 
 protected:
     void setupOptions() override {
