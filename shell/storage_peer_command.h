@@ -26,9 +26,9 @@
 
 #include "command.h"
 
-class StoragePeerCommand : public Command {
+class PeerCommand : public Command {
 public:
-    StoragePeerCommand() : Command("peer", "Display peer info from the local storage.") {};
+    PeerCommand() : Command("peer", "Display peer info from the local storage.") {};
 
 protected:
     void setupOptions() override {

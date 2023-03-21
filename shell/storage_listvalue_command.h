@@ -3,24 +3,21 @@
 
 #include "command.h"
 
-class StorageListValueCommand : public StorageCommand {
+class ListValueCommand : public Command {
 public:
-    StorageListValueCommand() : StorageCommand("listvalue", "List values from the local storage.") {};
+    ListValueCommand() : Command("listvalue", "List values from the local storage.") {};
 
 protected:
-    void setupOptions() override {
-        auto app = getApp();
-    };
-
     void execute() override {
         auto storage = node->getStorage();
-        auto value = storage->getValue(valueid);
-        if (value)
-            std::cout << *value << std::endl;
-        else
-            std::cout << "Value " << valueid << " not exists.";
-    };
+        auto valueIds = storage->listValueId();
+        if (!valueIds.empty()) {
+            for (auto& id : valueIds)
+                std::cout << static_cast<std::string>(id) << std::endl;
 
-private:
-    std::string id {};
+            std::cout << "Total " << valueIds.size() << " values." << std::endl;
+        } else {
+            std::cout << "No Value exists." << std::endl;
+        }
+    };
 };

@@ -20,6 +20,7 @@
  * SOFTWARE.
  */
 
+#include "carrier/id.h"
 #include "carrier/peer_info.h"
 #include "utils/hex.h"
 #include "constants.h"
@@ -62,6 +63,8 @@ static std::string CREATE_PEERS_INDEX =
 static std::string SELECT_VALUE = "SELECT * from valores \
     WHERE id = ? and timestamp >= ?";
 
+static std::string LIST_VALUE_ID = "SELECT DISTINCT id from valores ORDER BY id";
+
 static std::string UPSERT_VALUE = "INSERT INTO valores(\
     id, publicKey, privateKey, recipient, nonce, signature, sequenceNumber, data, timestamp) \
     VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET \
@@ -81,6 +84,8 @@ static std::string UPSERT_PEER = "INSERT INTO peers(\
     id, family, nodeId, ip, port, timestamp) \
     VALUES(?, ?, ?, ?, ?, ?) ON CONFLICT(id, family, nodeId) DO UPDATE SET \
     ip=excluded.ip, port=excluded.port, timestamp=excluded.timestamp";
+
+static std::string LIST_PEER_ID = "SELECT DISTINCT id from peers ORDER BY id";
 
 SqliteStorage::~SqliteStorage() {
     if (sqlite_store) {
@@ -247,6 +252,37 @@ Sp<Value> SqliteStorage::putValue(const Sp<Value>& value) {
     return putValue(value, -1);
 }
 
+std::list<Id> SqliteStorage::listValueId() {
+    std::list<Id> ids {};
+
+    sqlite3_stmt* pStmt {nullptr};
+    if (sqlite3_prepare_v2(sqlite_store, LIST_VALUE_ID.c_str(), strlen(LIST_VALUE_ID.c_str()), &pStmt, 0) != SQLITE_OK) {
+        sqlite3_finalize(pStmt);
+        throw std::runtime_error("Prepare sqlite failed.");;
+    }
+
+    while (sqlite3_step(pStmt) == SQLITE_ROW) {
+        int cNum = sqlite3_column_count(pStmt);
+        for (int i = 0; i < cNum; i++) {
+            const int cType = sqlite3_column_type(pStmt, i);
+            int len= 0;
+            const void *ptr = NULL;
+
+            if (cType == SQLITE_BLOB) {
+                len = sqlite3_column_bytes(pStmt, i);
+                ptr = sqlite3_column_blob(pStmt, i);
+
+                auto id = Id((uint8_t*)ptr, len);
+                ids.emplace_back(id);
+            }
+        }
+
+        sqlite3_finalize(pStmt);
+    }
+
+    return ids;
+}
+
 std::list<Sp<PeerInfo>> SqliteStorage::getPeer(const Id& peerId, int family, int maxPeers) {
     std::list<int> families = {};
 
@@ -394,6 +430,37 @@ void SqliteStorage::putPeer(const Id& peerId, const std::list<Sp<PeerInfo>>& pee
 
 void SqliteStorage::putPeer(const Id& peerId, const Sp<PeerInfo>& peer) {
     putPeer(peerId, std::list<Sp<PeerInfo>>{peer});
+}
+
+std::list<Id> SqliteStorage::listPeerId() {
+    std::list<Id> ids {};
+
+    sqlite3_stmt* pStmt {nullptr};
+    if (sqlite3_prepare_v2(sqlite_store, LIST_PEER_ID.c_str(), strlen(LIST_PEER_ID.c_str()), &pStmt, 0) != SQLITE_OK) {
+        sqlite3_finalize(pStmt);
+        throw std::runtime_error("Prepare sqlite failed.");;
+    }
+
+    while (sqlite3_step(pStmt) == SQLITE_ROW) {
+        int cNum = sqlite3_column_count(pStmt);
+        for (int i = 0; i < cNum; i++) {
+            const int cType = sqlite3_column_type(pStmt, i);
+            int len= 0;
+            const void *ptr = NULL;
+
+            if (cType == SQLITE_BLOB) {
+                len = sqlite3_column_bytes(pStmt, i);
+                ptr = sqlite3_column_blob(pStmt, i);
+
+                auto id = Id((uint8_t*)ptr, len);
+                ids.emplace_back(id);
+            }
+        }
+
+        sqlite3_finalize(pStmt);
+    }
+
+    return ids;
 }
 
 }

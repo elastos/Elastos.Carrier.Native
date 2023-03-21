@@ -32,10 +32,7 @@ public:
 
 protected:
     void setupOptions() override {
-    };
-
-    void execute() override {
-        std::cout << "Missing required subcommand" << std::endl
-                    << "Run with --help for more information." << std::endl;
+        auto app = getApp();
+        app->require_subcommand();
     };
 };
