@@ -100,6 +100,24 @@ void Builder::load(const std::string& filePath) {
             bootstrapNodes.emplace_back(node);
         }
     }
+
+    if (root.contains("services")) {
+        const auto _services = root["services"];
+        if (!_services.is_array())
+            throw std::invalid_argument("Config file error: services");
+
+        for (const auto& service: _services) {
+            if (!service.contains("name"))
+                throw std::invalid_argument("Config file error: service name");
+
+            if (!service.contains("configuration"))
+                throw std::invalid_argument("Config file error: service configuration");
+
+            auto name = service["name"].get<std::string>();
+            auto configuration = service["configuration"].get<nlohmann::json>();
+            services[name] = configuration;
+        }
+    }
 }
 
 void Builder::reset() {
@@ -110,6 +128,7 @@ void Builder::reset() {
     port = 39001;
     storagePath = {};
     bootstrapNodes.clear();
+    services.clear();
 }
 
 Sp<Configuration> Builder::build() {
@@ -119,7 +138,7 @@ Sp<Configuration> Builder::build() {
     if (autoAddr6 && ip6.empty())
         ip6 = getLocalIpAddresses(false);
 
-    auto dataStorage = std::make_shared<DefaultConfiguration>(ip4, ip6,  port, normailize(storagePath), bootstrapNodes);
+    auto dataStorage = std::make_shared<DefaultConfiguration>(ip4, ip6,  port, normailize(storagePath), bootstrapNodes, services);
     return std::static_pointer_cast<Configuration>(dataStorage);
 }
 

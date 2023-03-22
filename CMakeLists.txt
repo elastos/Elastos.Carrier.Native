@@ -41,6 +41,8 @@ if(ENABLE_ADDONS)
     add_subdirectory(addons)
 endif()
 
+add_subdirectory(launcher)
+
 if(ENABLE_TESTS)
     add_subdirectory(tests)
 endif()
