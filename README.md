@@ -124,6 +124,8 @@ Use the following command to run all of the testcases:
 $ ./tests/apitests
 ```
 
+***Notice**: The testcases need to be run with the compilation option -**DENABLE_CARRIER_DEVELOPMENT**.*
+
 ### 6.  API document for Developers
 
 The API documentation is currently lacking and it has been added to the TODO list, please stay tune for updates.
