@@ -1,5 +1,10 @@
 include(ProjectDefaults)
 
+check_include_file(sys/resource.h HAVE_SYS_RESOURCE_H)
+if(HAVE_SYS_RESOURCE_H)
+    add_definitions(-DHAVE_SYS_RESOURCE_H=1)
+endif()
+
 include_directories(
     .
     ../include
