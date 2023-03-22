@@ -45,6 +45,7 @@
 
 static const std::string prompt = "Carrier $";
 
+#ifdef HAVE_SYS_RESOURCE_H
 int sys_coredump_set(bool enable)
 {
     const struct rlimit rlim = {
@@ -54,6 +55,7 @@ int sys_coredump_set(bool enable)
 
     return setrlimit(RLIMIT_CORE, &rlim);
 }
+#endif
 
 void signal_handler(int signum)
 {
@@ -62,6 +64,8 @@ void signal_handler(int signum)
 
 int main(int argc, char **argv)
 {
+    sys_coredump_set(true);
+
     Shell shell;
     IdCommand idCommand;
     AnnouncePeerCommand announcePeerCommand;
