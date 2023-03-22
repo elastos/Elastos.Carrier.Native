@@ -21,5 +21,11 @@ else()
     set(CARRIER_LIB carrier-static)
 endif()
 
-add_executable(activeproxy ${ACTIVEPROXY_SOURCES})
+#add_executable(activeproxy ${ACTIVEPROXY_SOURCES})
+add_library(activeproxy ${ACTIVEPROXY_SOURCES})
 target_link_libraries(activeproxy LINK_PUBLIC ${CARRIER_LIB} uv_a pthread dl sodium)
+
+install(TARGETS activeproxy
+        RUNTIME DESTINATION "bin"
+        ARCHIVE DESTINATION "lib"
+        LIBRARY DESTINATION "lib")

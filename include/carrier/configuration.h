@@ -46,6 +46,8 @@ public:
     virtual const std::string& getStoragePath() = 0;
 
     virtual std::vector<Sp<NodeInfo>>& getBootstrapNodes() = 0;
+
+    virtual std::map<std::string, nlohmann::json>& getServices() = 0;
 };
 
 } // namespace carrier
