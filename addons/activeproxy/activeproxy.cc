@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Elastos Foundation
+ * Copyright (c) 2022 trinity-tech.io
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -123,7 +123,7 @@ void ActiveProxy::idleCheck() noexcept
 {
     // Dump the current status: should change the log level to debug later
     log->info("STATUS: Connections = {}, inFlights = {}, idle = {}",
-            connections.size(), inFlights, 
+            connections.size(), inFlights,
             idleTimestamp == MAX_IDLE_TIME ? 0 : (uv_now(&loop) - idleTimestamp) / 1000);
     for (auto c : connections)
         log->info("STATUS: {}", c->status());
