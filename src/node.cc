@@ -226,6 +226,8 @@ void Node::start() {
         cryptoContexts->handleExpiration();
     }, CryptoCache::EXPIRED_CHECK_INTERVAL, CryptoCache::EXPIRED_CHECK_INTERVAL);
 
+    server->start();
+
     auto nodes = config->getBootstrapNodes();
     if (dht4 != nullptr) {
         dht4->setServer(server);
@@ -240,7 +242,6 @@ void Node::start() {
         numDHTs++;
     }
 
-    server->start();
 }
 
 void Node::stop() {
