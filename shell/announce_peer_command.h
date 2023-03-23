@@ -42,7 +42,9 @@ protected:
 
     void execute() override {
         if (port <= 0) {
-            std::cout << "Invalid port: " << port << std::endl;
+            std::cout << "----------------------------------------------" << std::endl
+                      << "Invalid port: " << port << std::endl
+                      << "----------------------------------------------" << std::endl;
             return;
         }
 
@@ -55,8 +57,12 @@ protected:
 
         auto future = node->announcePeer(id, port);
         auto result = future.get();
+        std::cout << "----------------------------------------------" << std::endl;
         if (result)
-            std::cout << "Peer " << id << " announced." << std::endl;
+            std::cout << "Peer [" << id << "] announced." << std::endl;
+        else
+            std::cout << "Peer [" << id << "] announce failed." << std::endl;
+        std::cout << "----------------------------------------------" << port << std::endl;
     };
 
 private:

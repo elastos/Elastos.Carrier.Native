@@ -34,6 +34,9 @@ protected:
     void execute() override {
         auto id = node->getId();
 
-        std::cout << "Carrier id: " << id << std::endl;
+        std::cout << "----------------------------------------------" << std::endl
+                  << "Carrier id [" << id << "]" << std::endl
+                  << "----------------------------------------------" << std::endl;
+
     }
 };

@@ -32,6 +32,8 @@ public:
 
 protected:
     void execute() override {
-        std::cout << node->toString() << std::endl;
+        std::cout << "----------------------------------------------" << std::endl
+                  << node->toString() << std::endl
+                  << "----------------------------------------------" << std::endl;
     }
 };

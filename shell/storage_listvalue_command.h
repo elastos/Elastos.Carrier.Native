@@ -11,6 +11,8 @@ protected:
     void execute() override {
         auto storage = node->getStorage();
         auto valueIds = storage->listValueId();
+
+        std::cout << "----------------------------------------------" << std::endl;
         if (!valueIds.empty()) {
             for (auto& id : valueIds)
                 std::cout << static_cast<std::string>(id) << std::endl;
@@ -19,5 +21,6 @@ protected:
         } else {
             std::cout << "No Value exists." << std::endl;
         }
+        std::cout << "----------------------------------------------" << std::endl;
     };
 };

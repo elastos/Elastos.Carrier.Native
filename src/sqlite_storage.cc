@@ -276,10 +276,9 @@ std::list<Id> SqliteStorage::listValueId() {
                 ids.emplace_back(id);
             }
         }
-
-        sqlite3_finalize(pStmt);
     }
 
+    sqlite3_finalize(pStmt);
     return ids;
 }
 
@@ -456,10 +455,9 @@ std::list<Id> SqliteStorage::listPeerId() {
                 ids.emplace_back(id);
             }
         }
-
-        sqlite3_finalize(pStmt);
     }
 
+    sqlite3_finalize(pStmt);
     return ids;
 }
 

@@ -35,13 +35,15 @@ protected:
         auto app = getApp();
 
         app->add_option("-m, --mode", mode, "lookup mode: 0(arbitrary), 1(optimistic), 2(conservative).");
-        app->add_option("ID", id, "The target node id to be find.");
-        app->require_option(1, 1);
+        app->add_option("ID", id, "The target value id to be find.");
+        app->require_option(1, 2);
     };
 
     void execute() override {
         if (mode > 2) {
-            std::cout << "Invalid mode: " << mode << std::endl;
+            std::cout << "----------------------------------------------" << std::endl
+                      << "Invalid mode: " << mode << std::endl
+                      << "----------------------------------------------" << std::endl;
             return;
         }
 
@@ -49,14 +51,15 @@ protected:
         LookupOption option {mode};
         auto future = node->findValue(nodeid, option);
         auto value = future.get();
+        std::cout << "----------------------------------------------" << std::endl;
         if (value)
             std::cout << static_cast<std::string>(*value) << std::endl;
         else
-            std::cout << "Not found." << std::endl;
+            std::cout << " Not found value [" << static_cast<std::string>(id) << "]" << std::endl;
+        std::cout << "----------------------------------------------" << std::endl;
     };
 
 private:
     std::string id {};
     int mode = 2;
-
 };

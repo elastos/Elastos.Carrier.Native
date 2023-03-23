@@ -44,10 +44,12 @@ protected:
 
         auto storage = node->getStorage();
         auto value = storage->getValue(valueid);
+        std::cout << "----------------------------------------------" << std::endl;
         if (value)
             std::cout << static_cast<std::string>(*value) << std::endl;
         else
             std::cout << "Value " << valueid << " not exists.";
+        std::cout << "----------------------------------------------" << std::endl;
     };
 
 private:

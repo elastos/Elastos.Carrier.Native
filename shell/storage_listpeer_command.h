@@ -11,6 +11,7 @@ protected:
     void execute() override {
         auto storage = node->getStorage();
         auto peerIds = storage->listPeerId();
+        std::cout << "----------------------------------------------" << std::endl;
         if (!peerIds.empty()) {
             for (auto& id : peerIds)
                 std::cout << static_cast<std::string>(id) << std::endl;
@@ -19,5 +20,6 @@ protected:
         } else {
             std::cout << "No peer exists." << std::endl;
         }
+        std::cout << "----------------------------------------------" << std::endl;
     };
 };

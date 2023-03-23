@@ -42,7 +42,9 @@ protected:
 
     void execute() override {
         if (port <= 0) {
-            std::cout << "Invalid port: " << port << std::endl;
+            std::cout << "----------------------------------------------" << std::endl
+                      << "Invalid port: " << port << std::endl
+                      << "----------------------------------------------" << std::endl;
             return;
         }
 

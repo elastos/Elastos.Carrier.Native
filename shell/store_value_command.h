@@ -37,7 +37,8 @@ protected:
         app->add_flag("-m, --mutable", bMutable, "Mutable value, default is immutable value, no effect on update mode.");
         app->add_option("-r, --recipient", recipient, "The recipient id, no effect on imuutable values or update mode.");
         app->add_option("-u, --update-value", target, "Existing value id to be update.");
-        //app->require_option(1, 1);
+        app->add_option("VALUES", text, "The value text.");
+        app->require_option(1, 4);
     };
 
     void execute() override {
@@ -62,7 +63,13 @@ protected:
 
         auto future = node->storeValue(value);
         auto result = future.get();
-        std::cout << "Value" << value->getId() << " stored." << std::endl;
+        std::cout << "----------------------------------------------" << std::endl;
+        if (result)
+            std::cout << "Value [" << value->getId() << "] stored." << std::endl;
+        else
+            std::cout << "Value [" << value->getId() << "] store failed." << std::endl;
+
+        std::cout << "----------------------------------------------" << std::endl;
     };
 
 private:

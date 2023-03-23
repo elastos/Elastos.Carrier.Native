@@ -37,12 +37,14 @@ protected:
         app->add_option("-m, --mode", mode, "lookup mode: 0(arbitrary), 1(optimistic), 2(conservative).");
         app->add_option("-x, --expected-count", excepted, "expected number of peers.");
         app->add_option("NAME", name, "The service name to be find.");
-        app->require_option(1, 1);
+        app->require_option(1, 3);
     };
 
     void execute() override {
         if (mode > 2) {
-            std::cout << "Invalid mode: " << mode << std::endl;
+            std::cout << "----------------------------------------------" << std::endl
+                      << "Invalid mode: " << mode << std::endl
+                      << "----------------------------------------------" << std::endl;
             return;
         }
 
@@ -56,12 +58,14 @@ protected:
         LookupOption option {mode};
         auto future = node->findPeer(id, excepted, option);
         auto peers = future.get();
+        std::cout << "----------------------------------------------" << std::endl;
         if (peers.empty()) {
-            std::cout << "Not found." << std::endl;
+            std::cout<< " Not found peer [" << static_cast<std::string>(id) << "]" << std::endl;
         } else {
             for (auto& p : peers)
                 std::cout << static_cast<std::string>(*p) << std::endl;
         }
+        std::cout << "----------------------------------------------" << std::endl;
     };
 
 private:

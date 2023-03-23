@@ -151,16 +151,13 @@ Node::Node(std::shared_ptr<Configuration> _config): config(_config)
         struct stat _stat {};
         auto rc = stat(keyPath.c_str(), &_stat);
         if (rc == -1) {
-            // Not exist, then DO NOTHING.
+            initKey(keyPath);
         } else if (S_ISDIR(_stat.st_mode)) {
             log->warn("Key file path {} is an existing directory. DHT node will not be able to persist node key", keyPath);
         } else {
             loadKey(keyPath);
         }
     }
-
-    if (!keyPair) // no existing key
-        initKey(keyPath);
 
     id = Id(keyPair.publicKey());
     if (persistent) {

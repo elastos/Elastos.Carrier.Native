@@ -36,7 +36,7 @@ protected:
 
         app->add_option("-f, --family", family, "IP family: 4 for IPv4, 6 for IPv6, default both");
         app->add_option("ID", id, "The peer id.");
-        app->require_option(1, 1);
+        app->require_option(1, 2);
     };
 
     void execute() override {
@@ -44,6 +44,7 @@ protected:
 
         auto storage = node->getStorage();
         auto peers = storage->getPeer(peerid, family, 0);
+        std::cout << "----------------------------------------------" << std::endl;
         if (!peers.empty()) {
             for (auto& peer : peers)
                 std::cout << static_cast<std::string>(*peer) << std::endl;
@@ -51,6 +52,7 @@ protected:
         } else {
             std::cout << "Peer " << id << " not exists." << std::endl;
         }
+        std::cout << "----------------------------------------------" << std::endl;
     };
 
 private:
