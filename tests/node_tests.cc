@@ -151,7 +151,7 @@ void NodeTester::testLocalNode() {
 #ifdef TEST_JAVA
 void NodeTester::testJavaNode() {
     //Maybe set to java node ip
-    Id javaId("CWP5ezMFcTK5gMeQ4CnHQSYkMtxx9WMeW5kWeuU5L5x2");
+    Id javaId("MzDfxDmCpgX6J9DtvttUsXDyTDwNJKKAmWaUW4XGRfs");
     auto nij = NodeInfo {javaId, Utils::getLocalIpAddresses(), 39001};
     node1->bootstrap(nij);
 
@@ -159,10 +159,10 @@ void NodeTester::testJavaNode() {
     std::cout << "Trying to find Node " << javaId << std::endl;
     auto future = node1->findNode(javaId);
     auto ni2 = future.get();
-    std::cout << "ni2 size: " << ni2->size() << std::endl;
-    CPPUNIT_ASSERT_MESSAGE("Node not found!", ni2->size());
-    for (auto ni: *ni2) {
-        std::cout << "ni: " << ni->toString() << std::endl;
+    std::cout << "ni2 size: " << ni2.size() << std::endl;
+    CPPUNIT_ASSERT_MESSAGE("Node not found!", ni2.size());
+    for (auto ni: ni2) {
+        std::cout << "ni: " << *ni << std::endl;
     }
 #endif
 
@@ -216,9 +216,9 @@ void NodeTester::testJavaNode() {
 
     auto future4 = node3->findPeer(peerId, 1);
     auto peers = future4.get();
-    CPPUNIT_ASSERT_MESSAGE("Peer not found!", peers != nullptr && !peers->empty());
-    for (auto peer: *peers) {
-        std::cout << "Peer: " << peer->toString() << std::endl;
+    CPPUNIT_ASSERT_MESSAGE("Peer not found!", !peers.empty());
+    for (auto& peer: peers) {
+        std::cout << "Peer: " << peer << std::endl;
     }
 
     node3->stop();
