@@ -25,8 +25,6 @@
 
 #ifndef _MSC_VER
 #include <getopt.h>
-#include <readline/readline.h>
-#include <readline/history.h>
 #else
 #define SIGHUP 0
 #include "wingetopt.h"
@@ -75,7 +73,6 @@ static const constexpr struct option long_options[] = {
     {"version",     no_argument      ,  nullptr,    'v'},
     {nullptr,       0,                  nullptr,    0}
 };
-
 
 struct dht_params {
     bool help {false}; // print help and exit
@@ -169,39 +166,45 @@ static Sp<Node> initCarrierNode(Sp<Configuration> config) {
 }
 
 static bool loadServices(Sp<Node> node, Sp<Configuration> config) {
-    std::map<std::string, nlohmann::json>& services = config->getServices();
+    std::map<std::string, std::any>& services = config->getServices();
     if (services.empty())
         return true;
 
-    for (auto& [name, configure] : services) {
+    for (auto& [name, value] : services) {
         if (name == "ActiveProxy") {
-            if (!configure.contains("serverId")) {
+            if (value.type() != typeid(std::map<std::string, std::any>)) {
+                std::cout << "Service '" << name << "': invalid configure! " << std::endl;
+                return false;
+            }
+
+            auto configure = std::any_cast<std::map<std::string, std::any>>(value);
+            if (!configure.count("serverId")) {
                 std::cout << "Service '" << name << "': invalid serverId! " << std::endl;
                 return false;
             }
-            if (!configure.contains("serverHost")) {
+            if (!configure.count("serverHost")) {
                 std::cout << "Service '" << name << "': invalid serverHost! " << std::endl;
                 return false;
             }
-            if (!configure.contains("serverPort")) {
+            if (!configure.count("serverPort")) {
                 std::cout << "Service '" << name << "': invalid serverPort! " << std::endl;
                 return false;
             }
-            if (!configure.contains("upstreamHost")) {
+            if (!configure.count("upstreamHost")) {
                 std::cout << "Service '" << name << "': invalid upstreamHost! " << std::endl;
                 return false;
             }
-            if (!configure.contains("upstreamPort")) {
+            if (!configure.count("upstreamPort")) {
                 std::cout << "Service '" << name << "': invalid upstreamPort! " << std::endl;
                 return false;
             }
 
-            std::string serverId = configure.at("serverId").get<std::string>();
+            std::string serverId = std::any_cast<std::string>(configure["serverId"]);
             Id id(serverId);
-            std::string serverHost = configure.at("serverHost").get<std::string>();
-            uint16_t serverPort = configure.at("serverPort").get<uint16_t>();
-            std::string upstreamHost = configure.at("upstreamHost").get<std::string>();
-            uint16_t upstreamPort = configure.at("upstreamPort").get<uint16_t>();
+            std::string serverHost = std::any_cast<std::string>(configure["serverHost"]);
+            uint16_t serverPort = (uint16_t)std::any_cast<int64_t>(configure["serverPort"]);
+            std::string upstreamHost = std::any_cast<std::string>(configure["upstreamHost"]);
+            uint16_t upstreamPort = (uint16_t)std::any_cast<int64_t>(configure["upstreamPort"]);
 
             __proxy__ = std::make_unique<ActiveProxy>(*node, id, serverHost, serverPort, upstreamHost, upstreamPort);
             __proxy__->start();

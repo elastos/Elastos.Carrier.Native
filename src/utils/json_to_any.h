@@ -22,34 +22,18 @@
 
 #pragma once
 
-#include <list>
+#include <map>
+#include <vector>
 #include <any>
+#include <iostream>
 
-#include "def.h"
-#include "types.h"
-#include "node_info.h"
-#include "socket_address.h"
+#include <nlohmann/json.hpp>
 
-namespace elastos {
-namespace carrier {
+std::vector<std::any> jsonToVector(const nlohmann::json& j);
+std::map<std::string, std::any> jsonToMap(const nlohmann::json& j);
+std::any jsonToAny(const nlohmann::json& j);
 
-class CARRIER_PUBLIC Configuration {
-public:
-    virtual SocketAddress& ipv4Address() = 0;
-    virtual SocketAddress& ipv6Address() = 0;
+std::ostream& operator <<(std::ostream& o, std::any a);
+std::ostream& operator <<(std::ostream&o, std::map<std::string, std::any> m);
+std::ostream& operator <<(std::ostream&o, std::vector<std::any> v);
 
-    virtual int listeningPort() = 0;
-
-    /**
-     * If a Path that points to an existing, writable directory is returned then the routing table
-     * will be persisted to that directory periodically and during shutdown
-     */
-    virtual const std::string& getStoragePath() = 0;
-
-    virtual std::vector<Sp<NodeInfo>>& getBootstrapNodes() = 0;
-
-    virtual std::map<std::string, std::any>& getServices() = 0;
-};
-
-} // namespace carrier
-} // namespace elastos

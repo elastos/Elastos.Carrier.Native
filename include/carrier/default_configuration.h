@@ -35,7 +35,7 @@ class CARRIER_PUBLIC DefaultConfiguration final : public Configuration {
 public:
     DefaultConfiguration() = delete;
     DefaultConfiguration(const std::string& ip4, const std::string& ip6, int port,
-        std::string path, std::vector<Sp<NodeInfo>> nodes, std::map<std::string, nlohmann::json> _services)
+        std::string path, std::vector<Sp<NodeInfo>> nodes, std::map<std::string, std::any> _services)
         : storagePath(path), bootstrapNodes(nodes), services(_services) {
             try {
                 addr4 = SocketAddress(ip4, port);
@@ -63,7 +63,7 @@ public:
         return bootstrapNodes;
     }
 
-    std::map<std::string, nlohmann::json>& getServices() override {
+    std::map<std::string, std::any>& getServices() override {
         return services;
     }
 
@@ -130,7 +130,7 @@ public:
         int port = 39001;
         std::string storagePath {};
         std::vector<Sp<NodeInfo>> bootstrapNodes {};
-        std::map<std::string, nlohmann::json> services {};
+        std::map<std::string, std::any> services {};
     };
 
 private:
@@ -139,7 +139,7 @@ private:
 
     std::string storagePath {};
     std::vector<Sp<NodeInfo>> bootstrapNodes {};
-    std::map<std::string, nlohmann::json> services {};
+    std::map<std::string, std::any> services {};
 };
 
 } // namespace carrier

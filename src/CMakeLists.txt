@@ -18,6 +18,7 @@ list(APPEND CARRIER_SOURCES
     utils/log.cc
     utils/hex.cc
     utils/socket_address.cc
+    utils/json_to_any.cc
     crypto/crypto_core.cc
     crypto/base58.cc
     messages/message.cc

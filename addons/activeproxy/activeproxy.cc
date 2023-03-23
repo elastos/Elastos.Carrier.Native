@@ -207,7 +207,7 @@ void ActiveProxy::start()
     runner = std::thread([&]() {
         log->info("ActiveProxy started.");
         running = true;
-        rc = uv_run(&loop, UV_RUN_DEFAULT);
+        int rc = uv_run(&loop, UV_RUN_DEFAULT);
         if (rc < 0) {
             log->error("ActiveProxy failed to start the event loop({}): {}", rc, uv_strerror(rc));
             running = false;
