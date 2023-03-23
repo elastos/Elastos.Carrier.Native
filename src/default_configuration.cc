@@ -25,6 +25,7 @@
 #include <sys/stat.h>
 
 #include "utils/addr.h"
+#include "utils/json_to_any.h"
 #include "carrier/default_configuration.h"
 
 namespace elastos {
@@ -115,8 +116,9 @@ void Builder::load(const std::string& filePath) {
 
             auto name = service["name"].get<std::string>();
             auto configuration = service["configuration"].get<nlohmann::json>();
-            services[name] = configuration;
+            services[name] = jsonToAny(configuration);
         }
+
     }
 }
 
