@@ -23,6 +23,7 @@
 #include "carrier/value.h"
 #include "utils/misc.h"
 #include "utils/hex.h"
+#include "serializers.h"
 
 namespace elastos {
 namespace carrier {
@@ -163,6 +164,13 @@ bool Value::operator==(const Value& other) const {
     return (publicKey == other.publicKey && recipient == other.recipient &&
         signature == other.signature && nonce == other.nonce &&
         data == other.data && sequenceNumber == other.sequenceNumber);
+}
+
+void Value::setPublicKey(const nlohmann::json& object) {
+    from_json(object, this->publicKey);
+}
+void Value::setRecipient(const nlohmann::json& object) {
+    from_json(object, this->recipient);
 }
 
 Value::operator std::string() const {

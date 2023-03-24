@@ -21,6 +21,7 @@
 */
 
 #include "lookup_response.h"
+#include "serializers.h"
 
 namespace elastos {
 namespace carrier {

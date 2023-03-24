@@ -87,9 +87,6 @@ struct CARRIER_PUBLIC NodeInfo {
     operator std::string() const;
     friend std::ostream& operator<< (std::ostream& s, const NodeInfo& ni);
 
-    friend void to_json(nlohmann::json& json, const NodeInfo& ni);
-    friend void from_json(const nlohmann::json& json, NodeInfo& ni);
-
 protected:
     void setVersion(int version) {
         this->version = version;

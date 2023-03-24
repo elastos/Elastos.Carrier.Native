@@ -145,9 +145,6 @@ public:
 
     friend std::ostream& operator<< (std::ostream& os, const Id& id);
 
-    friend void to_json(nlohmann::json& json, const Id& id);
-    friend void from_json(const nlohmann::json& json, Id& id);
-
 protected:
     std::array<uint8_t, ID_BYTES>& getData() { return bytes; }
 

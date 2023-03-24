@@ -27,6 +27,7 @@
 #include <carrier/peer_info.h>
 
 #include "utils.h"
+#include "../src/serializers.h"
 #include "peerinfo_tests.h"
 
 using namespace elastos::carrier;

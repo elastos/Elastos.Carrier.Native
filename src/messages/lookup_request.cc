@@ -20,6 +20,7 @@
  * SOFTWARE.
  */
 
+#include "serializers.h"
 #include "lookup_request.h"
 
 namespace elastos {

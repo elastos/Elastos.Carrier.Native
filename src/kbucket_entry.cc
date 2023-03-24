@@ -20,7 +20,7 @@
 * SOFTWARE.
 */
 
-#include "utils/json_serializers.h"
+#include "serializers.h"
 #include "kbucket_entry.h"
 
 namespace elastos {

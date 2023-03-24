@@ -163,14 +163,6 @@ int Id::getLeadingZeros() {
     return msb;
 }
 
-void to_json(nlohmann::json& json, const Id& id) {
-    json = nlohmann::json::binary_t {std::vector<std::uint8_t>(id.data(), id.data() + id.size())};
-}
-
-void from_json(const nlohmann::json& json, Id& id) {
-    id = Id(json.get_binary());
-}
-
 bool Id::operator<(const Id& other) const {
     return std::lexicographical_compare(bytes.begin(), bytes.end(), other.bytes.begin(), other.bytes.end());
 }

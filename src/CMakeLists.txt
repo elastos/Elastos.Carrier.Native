@@ -40,6 +40,7 @@ list(APPEND CARRIER_SOURCES
     task/node_lookup.cc
     task/ping_refresh_task.cc
     task/closest_candidates.cc
+    serializers.cc
     id.cc
     node_info.cc
     peer_info.cc

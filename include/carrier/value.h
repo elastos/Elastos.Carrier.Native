@@ -129,12 +129,8 @@ private: // internal methods used in friend class.
     }
 
     // internal setts used in FindValueResponse and StoreValueRequest types.
-    void setPublicKey(const nlohmann::json& object) {
-        from_json(object, this->publicKey);
-    }
-    void setRecipient(const nlohmann::json& object) {
-        from_json(object, this->recipient);
-    }
+    void setPublicKey(const nlohmann::json& object);
+    void setRecipient(const nlohmann::json& object);
     void setSignature(const nlohmann::json& object) {
         this->signature = object.get_binary();
     }

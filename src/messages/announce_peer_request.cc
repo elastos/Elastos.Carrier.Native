@@ -22,6 +22,7 @@
 
 #include <string>
 #include "announce_peer_request.h"
+#include "serializers.h"
 
 namespace elastos {
 namespace carrier {
