@@ -20,6 +20,7 @@
  * SOFTWARE.
  */
 
+#include "serializers.h"
 #include "find_peer_response.h"
 
 namespace elastos {

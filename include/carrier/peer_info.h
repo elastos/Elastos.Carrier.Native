@@ -73,9 +73,6 @@ struct CARRIER_PUBLIC PeerInfo {
     operator std::string() const;
     friend std::ostream& operator<< (std::ostream& s, const PeerInfo& pi);
 
-    friend void to_json(nlohmann::json& json, const PeerInfo& pi);
-    friend void from_json(const nlohmann::json& json, PeerInfo& pi);
-
 private:
     friend class SqliteStorage;
     void setNodeId(const Blob& blob) {

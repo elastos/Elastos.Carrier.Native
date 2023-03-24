@@ -42,24 +42,5 @@ std::ostream& operator<< (std::ostream& os, const NodeInfo& ni) {
     return os;
 }
 
-void to_json(nlohmann::json& json, const NodeInfo& ni) {
-    auto addr = nlohmann::json::binary_t {
-        std::vector<std::uint8_t>(ni.sockaddr.inaddr(), ni.sockaddr.inaddr() + ni.sockaddr.inaddrLength())
-    };
-
-    json = nlohmann::json::array();
-    json.push_back(ni.nodeId);
-    json.push_back(addr);
-    json.push_back(ni.sockaddr.port());
-}
-
-void from_json(const nlohmann::json& json, NodeInfo& ni) {
-    auto id = json[0].get_binary();
-    auto ip = json[1].get_binary();
-    auto port = json[2].get<int>();
-
-    ni = NodeInfo(id, ip, port);
-}
-
 }
 }
