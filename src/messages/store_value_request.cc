@@ -21,6 +21,7 @@
 */
 
 #include "utils/hex.h"
+#include "serializers.h"
 #include "store_value_request.h"
 
 namespace elastos {
@@ -55,21 +56,22 @@ void StoreValueRequest::parse(const std::string& fieldName, nlohmann::json& obje
 
     for (const auto& [key, object] : object.items()) {
         if (key == Message::KEY_REQ_PUBLICKEY) {
-            value->setPublicKey(object);
+            value->publicKey = object.get<Id>();
         } else if (key == Message::KEY_REQ_RECIPIENT) {
-            value->setRecipient(object);
+            value->recipient = object.get<Id>();
         } else if (key == Message::KEY_REQ_NONCE) {
-            value->setNonce(object);
+            auto _nonce = object.get_binary();
+            value->nonce = CryptoBox::Nonce(_nonce.data(), _nonce.size());
         } else if (key == Message::KEY_REQ_SIGNATURE) {
-            value->setSignature(object);
+            value->signature = object.get_binary();
         } else if (key == Message::KEY_REQ_SEQ) {
-            value->setSequenceNumber(object.get<uint16_t>());
+            value->sequenceNumber = object.get<uint16_t>();
         } else if (key == Message::KEY_REQ_CAS) {
             object.get_to(expectedSequenceNumber);
         } else if (key == Message::KEY_REQ_TOKEN) {
             object.get_to(token);
         } else if (key == Message::KEY_RES_VALUE) {
-            value->setData(object);
+            value->data = object.get_binary();
         } else {
             throw std::invalid_argument("Unknown field: " + key);
         }

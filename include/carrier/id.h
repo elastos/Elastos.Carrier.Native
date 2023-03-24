@@ -25,6 +25,7 @@
 #include <array>
 #include <vector>
 #include <stdexcept>
+#include <string>
 
 #include "def.h"
 #include "types.h"

@@ -36,6 +36,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <ifaddrs.h>
+#include <filesystem>
 
 #include "utils/random_generator.h"
 #include "carrier/node_info.h"

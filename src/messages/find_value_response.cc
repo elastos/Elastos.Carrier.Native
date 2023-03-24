@@ -24,6 +24,7 @@
 
 #include "utils/hex.h"
 #include "message.h"
+#include "serializers.h"
 #include "find_value_response.h"
 
 namespace elastos {
@@ -45,17 +46,18 @@ void FindValueResponse::_serialize(nlohmann::json& object) const {
 
 void FindValueResponse::_parse(const std::string& fieldName, nlohmann::json& object) {
     if (fieldName == Message::KEY_RES_PUBLICKEY) {
-        value->setPublicKey(object);
+        value->publicKey = object.get<Id>();
     } else if (fieldName == Message::KEY_RES_RECIPIENT) {
-        value->setRecipient(object);
+        value->recipient = object.get<Id>();
     } else if (fieldName == Message::KEY_RES_NONCE) {
-       value->setNonce(object);
+        auto _nonce = object.get_binary();
+        value->nonce = CryptoBox::Nonce(_nonce.data(), _nonce.size());
     } else if (fieldName == Message::KEY_RES_SIGNATURE) {
-        value->setSignature(object);
+        value->signature = object.get_binary();
     } else if (fieldName == Message::KEY_RES_SEQ) {
-        value->setSequenceNumber(object.get<uint16_t>());
+        value->sequenceNumber = object.get<uint16_t>();
     } else if (fieldName == Message::KEY_RES_VALUE) {
-        value->setData(object);
+        value->data = object.get_binary();
     } else {
         throw std::invalid_argument("Unknown field: " + fieldName);
     }
