@@ -326,7 +326,8 @@ std::future<Sp<Value>> Node::findValue(const Id& id, LookupOption option) const 
     auto valuePtr = std::make_shared<Sp<Value>>();
 
     auto localVal = getStorage()->getValue(id);
-    if (localVal != nullptr && (option == LookupOption::ARBITRARY || !localVal->isMutable())) {
+    if (option == LookupOption::LOCAL ||
+        (localVal != nullptr && (option == LookupOption::ARBITRARY || !localVal->isMutable()))){
         promise->set_value(localVal);
         return promise->get_future();
     }
@@ -413,7 +414,7 @@ std::future<std::list<Sp<PeerInfo>>> Node::findPeer(const Id& id, int expected, 
         if (rc.second)
             results->push_back(item);
     }
-    if (expected > 0 && results->size() >= expected && option == LookupOption::ARBITRARY) {
+    if (option == LookupOption::LOCAL || (expected > 0 && results->size() >= expected && option == LookupOption::ARBITRARY)) {
         promise->set_value(std::move(*results));
         return promise->get_future();
     }
