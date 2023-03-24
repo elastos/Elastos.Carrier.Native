@@ -28,6 +28,7 @@ namespace elastos {
 namespace carrier {
 
 enum class CARRIER_PUBLIC LookupOption {
+    LOCAL, /* reserved */
     ARBITRARY,
     OPTIMISTIC,
     CONSERVATIVE
