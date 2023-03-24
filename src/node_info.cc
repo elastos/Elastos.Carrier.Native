@@ -20,6 +20,7 @@
 * SOFTWARE.
 */
 
+#include <sstream>
 #include "carrier/node_info.h"
 
 namespace elastos {

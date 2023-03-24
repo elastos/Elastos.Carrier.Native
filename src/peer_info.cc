@@ -19,6 +19,7 @@
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 * SOFTWARE.
 */
+#include <sstream>
 
 #include "carrier/peer_info.h"
 #include "carrier/socket_address.h"

@@ -166,13 +166,6 @@ bool Value::operator==(const Value& other) const {
         data == other.data && sequenceNumber == other.sequenceNumber);
 }
 
-void Value::setPublicKey(const nlohmann::json& object) {
-    from_json(object, this->publicKey);
-}
-void Value::setRecipient(const nlohmann::json& object) {
-    from_json(object, this->recipient);
-}
-
 Value::operator std::string() const {
     std::stringstream ss;
     ss.str().reserve(256);

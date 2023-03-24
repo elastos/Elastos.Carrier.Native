@@ -24,7 +24,6 @@
 
 #include <memory>
 #include <vector>
-#include <nlohmann/json.hpp>
 
 namespace elastos {
 namespace carrier {

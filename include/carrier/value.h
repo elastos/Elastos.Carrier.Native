@@ -124,30 +124,16 @@ private: // internal methods used in friend class.
         std::memcpy(data.data(), val.ptr(), val.size());
     }
 
+    void setSequenceNumber(int seqNumber) {
+        this->sequenceNumber = seqNumber;
+    }
+
     const Signature::PrivateKey& getPrivateKey() const {
         return privateKey;
     }
 
-    // internal setts used in FindValueResponse and StoreValueRequest types.
-    void setPublicKey(const nlohmann::json& object);
-    void setRecipient(const nlohmann::json& object);
-    void setSignature(const nlohmann::json& object) {
-        this->signature = object.get_binary();
-    }
-    void setNonce(const nlohmann::json& object) {
-        auto _nonce = object.get_binary();
-        this->nonce = CryptoBox::Nonce(_nonce.data(), _nonce.size());
-    }
-    void setData(const nlohmann::json& object) {
-        this->data = object.get_binary();
-    }
-
     void purgePrivateKey() {
         privateKey.clear();
-    }
-
-    void setSequenceNumber(int seqNumber) {
-        this->sequenceNumber = seqNumber;
     }
 
     static Sp<Value> create(const std::vector<uint8_t>& data);
@@ -155,7 +141,6 @@ private: // internal methods used in friend class.
     static Sp<Value> createEncrypted(const Id& to, const std::vector<uint8_t>& data);
     static Sp<Value> updateValue(const Sp<Value> oldValue, const std::vector<uint8_t>& newData);
 
-private:
     void createSignature();
     bool verifySignature() const;
 

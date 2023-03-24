@@ -27,6 +27,8 @@
 #include <memory>
 #include <cstring>
 #include <stdexcept>
+#include <algorithm>
+
 #include "def.h"
 
 namespace elastos {
