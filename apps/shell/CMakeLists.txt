@@ -7,7 +7,7 @@ endif()
 
 include_directories(
     .
-    ../include
+    ../../include
     ${CARRIER_INT_DIST_DIR}/include)
 
 list(APPEND SHELL_SOURCES
