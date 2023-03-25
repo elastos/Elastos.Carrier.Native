@@ -30,6 +30,7 @@
 #include <algorithm>
 
 #include "def.h"
+#include "blob.h"
 
 namespace elastos {
 namespace carrier {
@@ -44,12 +45,13 @@ public:
 
         PrivateKey() noexcept {}
 
-        PrivateKey(const uint8_t* sk, size_t len);
+        PrivateKey(const Blob& sk);
 
         PrivateKey(const PrivateKey& o) noexcept :
-                PrivateKey(o.key.data(), o.key.size()) {}
+                PrivateKey(o.blob()) {}
+
         PrivateKey(PrivateKey&& o) noexcept :
-                PrivateKey(o.key.data(), o.key.size()) {
+                PrivateKey(o.blob()) {
             o.clear();
         }
 
@@ -96,21 +98,20 @@ public:
             return BYTES;
         }
 
+        const Blob blob() const noexcept {
+            return key;
+        }
+
         void clear() noexcept {
             key.fill(0);
         }
 
-        void sign(uint8_t* sig, size_t sigLen, const uint8_t* data, size_t dataLen) const;
+        void sign(Blob& sig, const Blob& data) const;
 
-        template<typename ST, typename DT>
-        void sign(ST& sig, const DT& data) const {
-            return sign(sig.data(), sig.size(), data.data(), data.size());
-        }
-
-        template<typename DT>
-        std::vector<uint8_t> sign(const DT& data) const {
+        std::vector<uint8_t> sign(const Blob& data) const {
             std::vector<uint8_t> sig(Signature::BYTES);
-            sign(sig.data(), sig.size(), data.data(), data.size());
+            Blob _sig{ sig };
+            sign(_sig, data);
             return sig;
         }
 
@@ -128,12 +129,13 @@ public:
 
         PublicKey() noexcept {}
 
-        PublicKey(const uint8_t* pk, size_t len);
+        PublicKey(const Blob& pk);
 
         PublicKey(const PublicKey& o) noexcept :
-                PublicKey(o.key.data(), o.key.size()) {}
+                PublicKey(o.blob()) {}
+
         PublicKey(PublicKey&& o) noexcept :
-                PublicKey(o.key.data(), o.key.size()) {
+                PublicKey(o.blob()) {
             o.clear();
         }
 
@@ -180,16 +182,15 @@ public:
             return BYTES;
         }
 
+        const Blob blob() const noexcept {
+            return key;
+        }
+
         void clear() noexcept {
             key.fill(0);
         }
 
-        bool verify(const uint8_t* sig, size_t sigLen, const uint8_t* data, size_t dataLen) const;
-
-        template<typename ST, typename DT>
-        bool verify(const ST& sig, const DT& data) const {
-            return verify(sig.data(), sig.size(), data.data(), data.size());
-        }
+        bool verify(const Blob& sig, const Blob& data) const;
 
         operator std::string() const noexcept;
 
@@ -206,19 +207,14 @@ public:
         KeyPair() noexcept;
         KeyPair(PrivateKey& sk) noexcept;
         KeyPair(PrivateKey&& sk) noexcept;
-        KeyPair(const uint8_t* sk, size_t len);
+        KeyPair(const Blob& sk);
 
         KeyPair(KeyPair& o) noexcept :
                 sk(o.sk), pk(o.pk) {}
         KeyPair(KeyPair&& o) noexcept :
                 sk(std::move(o.sk)), pk(std::move(o.pk)) {}
 
-        static KeyPair fromSeed(const uint8_t* seed, size_t len);
-
-        template<typename T>
-        static KeyPair fromSeed(const T& seed) {
-            return fromSeed(seed.data(), seed.size());
-        }
+        static KeyPair fromSeed(const Blob& seed);
 
         explicit operator bool() const noexcept {
             return static_cast<bool>(sk);
@@ -301,32 +297,18 @@ public:
 
     void reset();
 
-    void update(const uint8_t* part, size_t len);
+    void update(const Blob& part);
 
-    template <typename T>
-    void update(const T& part) {
-        return update(part.data(), part.size());
-    }
-
-    void sign(uint8_t* sig, size_t len, const PrivateKey& sk) const;
-
-    template <typename T>
-    bool sign(T& sig, const PrivateKey& sk) const {
-        return sign(sig.data(), sig.size(), sk);
-    }
+    void sign(Blob& sig, const PrivateKey& sk) const;
 
     std::vector<uint8_t> sign(const PrivateKey& sk) const {
         std::vector<uint8_t> sig(BYTES);
-        sign(sig.data(), sig.size(), sk);
+        Blob _sig{sig};
+        sign(_sig, sk);
         return sig;
     }
 
-    bool verify(const uint8_t* sig, size_t len, const PublicKey& pk) const;
-
-    template <typename T>
-    bool verify(const T& sig, const PublicKey& pk) const {
-        return verify(sig.data(), sig.size(), pk);
-    }
+    bool verify(const Blob& sig, const PublicKey& pk) const;
 
 private:
     struct SignState { uint8_t __opaque__[256]; };
@@ -343,12 +325,12 @@ public:
 
         PrivateKey() noexcept {}
 
-        PrivateKey(const uint8_t* sk, size_t len);
+        PrivateKey(const Blob& sk);
 
         PrivateKey(PrivateKey& o) noexcept :
-                PrivateKey(o.key.data(), o.key.size()) {}
+                PrivateKey(o.blob()) {}
         PrivateKey(PrivateKey&& o) noexcept :
-                PrivateKey(o.key.data(), o.key.size()) {
+                PrivateKey(o.blob()) {
             o.clear();
         }
 
@@ -397,6 +379,10 @@ public:
             return BYTES;
         }
 
+        const Blob blob() const noexcept {
+            return key;
+        }
+
         void clear() noexcept {
             key.fill(0);
         }
@@ -415,12 +401,12 @@ public:
 
         PublicKey() noexcept {}
 
-        PublicKey(const uint8_t* pk, size_t len);
+        PublicKey(const Blob& pk);
 
         PublicKey(PublicKey& o) noexcept :
-                PublicKey(o.key.data(), o.key.size()) {}
+                PublicKey(o.blob()) {}
         PublicKey(PublicKey&& o) noexcept :
-                PublicKey(o.key.data(), o.key.size()) {
+                PublicKey(o.blob()) {
             o.clear();
         }
 
@@ -469,6 +455,10 @@ public:
             return BYTES;
         }
 
+        const Blob blob() const noexcept {
+            return key;
+        }
+
         void clear() noexcept {
             key.fill(0);
         }
@@ -487,12 +477,12 @@ public:
 
         Nonce() noexcept {};
 
-        Nonce(const uint8_t* pk, size_t len);
+        Nonce(const Blob& pk);
 
         Nonce(const Nonce& o) noexcept :
-                Nonce(o.nonce.data(), o.nonce.size()) {}
+                Nonce(o.blob()) {}
         Nonce(Nonce&& o) noexcept :
-                Nonce(o.nonce.data(), o.nonce.size()) {
+                Nonce(o.blob()) {
             o.clear();
         }
 
@@ -539,6 +529,10 @@ public:
             return BYTES;
         }
 
+        const Blob blob() const noexcept {
+            return nonce;
+        }
+
         void clear() noexcept {
             nonce.fill(0);
         }
@@ -559,19 +553,14 @@ public:
         KeyPair() noexcept;
         KeyPair(PrivateKey& sk) noexcept;
         KeyPair(PrivateKey&& sk) noexcept;
-        KeyPair(const uint8_t* sk, size_t len);
+        KeyPair(const Blob& sk);
 
         KeyPair(KeyPair& o) noexcept :
                 sk(o.sk), pk(o.pk) {}
         KeyPair(KeyPair&& o) noexcept :
                 sk(std::move(o.sk)), pk(std::move(o.pk)) {}
 
-        static KeyPair fromSeed(const uint8_t* seed, size_t len);
-
-        template<typename T>
-        static KeyPair fromSeed(const T& seed) {
-            return fromSeed(seed.data(), seed.size());
-        }
+        static KeyPair fromSeed(const Blob& seed);
 
         static KeyPair fromSignatureKeyPair(const Signature::KeyPair& signKeyPair);
 
@@ -675,93 +664,53 @@ public:
         return SYMMETRIC_KEY_BYTES;
     }
 
+    const Blob blob() const noexcept {
+        return key;
+    }
+    
     void clear() noexcept {
         key.fill(0);
     }
 
-    void encrypt(uint8_t* cipher, size_t cipherLen,
-        const uint8_t* plain, size_t plainLen, const Nonce& nonce) const;
+    void encrypt(Blob& cipher, const Blob& plain, const Nonce& nonce) const;
 
-    template<typename CT, typename PT>
-    void encrypt(CT& cipher, const PT& plain, const Nonce& nonce) const {
-        encrypt(cipher.data(), cipher.size(), plain.data(), plain.size(), nonce);
-    }
-
-    std::vector<uint8_t> encrypt(const uint8_t* plain, size_t length, const Nonce& nonce) const {
-        std::vector<uint8_t> cipher(length + MAC_BYTES);
-        encrypt(cipher.data(), cipher.size(), plain, length, nonce);
+    std::vector<uint8_t> encrypt(const Blob& plain, const Nonce& nonce) const {
+        std::vector<uint8_t> cipher(plain.size() + MAC_BYTES);
+        Blob _cipher{cipher};
+        encrypt(_cipher, plain, nonce);
         return cipher;
     }
 
-    template<typename T>
-    std::vector<uint8_t> encrypt(const T& plain, const Nonce& nonce) const {
-        return encrypt(plain.data(), plain.size(), nonce);
-    }
+    static void encrypt(Blob& cipher, const Blob& plain, const Nonce& nonce,
+            const PublicKey& pk, const PrivateKey& sk);
 
-    static void encrypt(uint8_t* cipher, size_t cipherLen, const uint8_t* plain, size_t plainLen,
-            const Nonce& nonce, const PublicKey& pk, const PrivateKey& sk);
-
-    template<typename CT, typename PT>
-    static void encrypt(CT& cipher, const PT& plain,
-            const Nonce& nonce, const PublicKey& pk, const PrivateKey& sk) {
-        encrypt(cipher.data(), cipher.size(), plain.data(), plain.size(), nonce, pk, sk);
-    }
-
-    static std::vector<uint8_t> encrypt(const uint8_t* plain, size_t length,
-            const Nonce& nonce, const PublicKey& pk, const PrivateKey& sk) {
-        std::vector<uint8_t> cipher(length + MAC_BYTES);
-        encrypt(cipher.data(), cipher.size(), plain, length, nonce, pk, sk);
+    static std::vector<uint8_t> encrypt(const Blob& plain, const Nonce& nonce,
+            const PublicKey& pk, const PrivateKey& sk) {
+        std::vector<uint8_t> cipher(plain.size() + MAC_BYTES);
+        Blob _cipher{cipher};
+        encrypt(_cipher, plain, nonce, pk, sk);
         return cipher;
     }
 
-    template<typename T>
-    static std::vector<uint8_t> encrypt(const T& plain, const Nonce &nonce,
-            const PublicKey& pk, const PrivateKey& sk) {
-        return encrypt(plain.data(), plain.size(), nonce, pk, sk);
-    }
+    void decrypt(Blob& plain, const Blob& cipher, const Nonce& nonce) const;
 
-    void decrypt(uint8_t* plain, size_t plainLen,
-            const uint8_t *cipher, size_t cipherLen, const Nonce &nonce) const;
-
-    template<typename PT, typename CT>
-    void decrypt(PT& plain, const CT& cipher, const Nonce& nonce) const {
-        decrypt(plain.data(), plain.size(), cipher.data(), cipher.size(), nonce);
-    }
-
-    std::vector<uint8_t> decrypt(const uint8_t *cipher, size_t length, const Nonce &nonce) const {
-        std::vector<uint8_t> plain(length - MAC_BYTES);
-        decrypt(plain.data(), plain.size(), cipher, length, nonce);
+    std::vector<uint8_t> decrypt(const Blob& cipher, const Nonce &nonce) const {
+        std::vector<uint8_t> plain(cipher.size() - MAC_BYTES);
+        Blob _plain{plain};
+        decrypt(_plain, cipher, nonce);
         return plain;
     }
 
-    template<typename T>
-    std::vector<uint8_t> decrypt(const T& cipher, const Nonce &nonce) const {
-        return decrypt(cipher.data(), cipher.size(), nonce);
-    }
+    static void decrypt(Blob& plain, const Blob& cipher, const Nonce& nonce,
+            const PublicKey& pk, const PrivateKey& sk);
 
-    static void decrypt(uint8_t* plain, size_t plainLen, const uint8_t* cipher, size_t cipherLen,
-            const Nonce &nonce, const PublicKey& pk, const PrivateKey& sk);
-
-    template<typename PT, typename CT>
-    static void decrypt(PT& plain, const CT& cipher,
-            const Nonce& nonce, const PublicKey& pk, const PrivateKey& sk) {
-        decrypt(plain.data(), plain.size(), cipher.data(), cipher.size(), nonce, pk, sk);
-    }
-
-    static std::vector<uint8_t> decrypt(const uint8_t* cipher, size_t length,
-            const Nonce &nonce, const PublicKey& pk, const PrivateKey& sk) {
-        std::vector<uint8_t> plain(length - MAC_BYTES);
-        decrypt(plain.data(), plain.size(), cipher, length, nonce, pk, sk);
+    static std::vector<uint8_t> decrypt(const Blob& cipher, const Nonce &nonce, 
+            const PublicKey& pk, const PrivateKey& sk) {
+        std::vector<uint8_t> plain(cipher.size() - MAC_BYTES);
+        Blob _plain{plain};
+        decrypt(_plain, cipher, nonce, pk, sk);
         return plain;
     }
-
-    template<typename T>
-    static std::vector<uint8_t> decrypt(const T& cipher, const Nonce &nonce,
-            const PublicKey& pk, const PrivateKey& sk) {
-        return decrypt(cipher.data(), cipher.size(), nonce, pk, sk);
-    }
-
-protected:
 
 private:
     std::array<uint8_t, SYMMETRIC_KEY_BYTES> key {};
@@ -777,37 +726,23 @@ public:
 
     void reset();
 
-    void update(const uint8_t* part, size_t len);
+    void update(const Blob& part);
 
-    template<typename T>
-    void update(const T& part) {
-        update(part.data(), part.size());
-    }
-
-    void digest(uint8_t *hash, size_t len);
-
-    template<typename T>
-    void digest(T& hash) {
-        digest(hash.data(), hash.size());
-    }
+    void digest(Blob& hash);
 
     std::vector<uint8_t> digest() {
         std::vector<uint8_t> hash(BYTES);
-        digest(hash.data(), hash.size());
+        Blob _hash{hash};
+        digest(_hash);
         return hash;
     }
 
-    static void digest(uint8_t *hash, size_t hashLen, const uint8_t* data, size_t dataLen);
+    static void digest(Blob& hash, const Blob& data);
 
-    template<typename HT, typename DT>
-    static void _digest(HT& hash, const DT& data) {
-        digest(hash.data(), hash.size(), data.data(), data.size());
-    }
-
-    template<typename T>
-    static std::vector<uint8_t> _digest(const T& data) {
+    static std::vector<uint8_t> digest(const Blob& data) {
         std::vector<uint8_t> hash(BYTES);
-        digest(hash.data(), hash.size(), data.data(), data.size());
+        Blob _hash{hash};
+        digest(_hash, data);
         return hash;
     }
 

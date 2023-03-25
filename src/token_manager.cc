@@ -65,12 +65,12 @@ int TokenManager::generateToken(const Id& nodeId, const SocketAddress& addr, con
 
     // nodeId + ip + port + targetId + timestamp + sessionSecret
     auto sha256 = SHA256();
-    sha256.update(nodeId.data(), nodeId.size());
-    sha256.update(addr.inaddr(), addr.inaddrLength());
-    sha256.update(port, sizeof(uint16_t));
-    sha256.update(targetId.data(), targetId.size());
-    sha256.update(stamp, sizeof(uint64_t));
-    sha256.update(sessionSecret.data(), sessionSecret.size());
+    sha256.update(nodeId.blob());
+    sha256.update({addr.inaddr(), addr.inaddrLength()});
+    sha256.update({(const uint8_t*)&port, sizeof(uint16_t)});
+    sha256.update(targetId.blob());
+    sha256.update({(const uint8_t*)&stamp, sizeof(uint64_t)});
+    sha256.update(sessionSecret);
 
     auto digest = sha256.digest();
     int pos = (digest[0] & 0xff) & 0x1f; // mod 32

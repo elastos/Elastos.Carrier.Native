@@ -52,7 +52,7 @@ protected:
         std::vector<uint8_t> data;
         data.reserve(strlen(nname));
         std::memcpy((void*)data.data(), nname, strlen(nname));
-        auto d = SHA256::_digest(data);
+        auto d = SHA256::digest(data);
         auto id = Id(d);
 
         LookupOption option {mode};

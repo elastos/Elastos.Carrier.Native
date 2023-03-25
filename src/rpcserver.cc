@@ -189,7 +189,7 @@ int RPCServer::sendData(Sp<Message>& msg) {
     #endif
 
     auto buffer = msg->serialize();
-    auto encrypted = node.encrypt(msg->getRemoteId(), buffer.data(), buffer.size());
+    auto encrypted = node.encrypt(msg->getRemoteId(), {buffer});
     buffer.resize(ID_BYTES + encrypted.size());
     std::memcpy(buffer.data(), msg->getId().data(), ID_BYTES);
     std::memcpy(buffer.data() + ID_BYTES, encrypted.data(), encrypted.size());
@@ -238,7 +238,7 @@ RPCServer::bindSockets(const SocketAddress& bind4, const SocketAddress& bind6)
         if (bind6.port() == 0) {
             // Attempt to use the same port as IPv4 with IPv6
             if (auto p4 = bound4.port()) {
-                auto b6 = SocketAddress(bind6.inaddr(), bind6.inaddrLength(), p4);
+                auto b6 = SocketAddress({bind6.inaddr(), bind6.inaddrLength()}, p4);
                 try {
                     sock6 = bindSocket(b6, bound6);
                 } catch (const DhtException& e) {
@@ -513,10 +513,10 @@ void RPCServer::sendError(Sp<Message> msg, int code, const std::string& err) {
 }
 
 void RPCServer::handlePacket(const uint8_t *buf, size_t buflen, const SocketAddress& from) {
-    Id sender(buf, ID_BYTES);
+    Id sender({buf, ID_BYTES});
 
     // try {
-    auto buffer = node.decrypt(sender, buf + ID_BYTES, buflen - ID_BYTES);
+    auto buffer = node.decrypt(sender, {buf + ID_BYTES, buflen - ID_BYTES});
     auto msg = Message::parse(buffer.data(), buffer.size());
     // } catch (MessageException e) {
     // 	log.warn("Got a wrong packet from {}, ignored.", AddressUtils.toString(sa));

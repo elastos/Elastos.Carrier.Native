@@ -78,13 +78,13 @@ static std::string to_hex_string(const uint8_t* bin, size_t len)
 // Signature::PrivateKey
 ////////////////////////////////////////////////////////////////////////////////
 
-Signature::PrivateKey::PrivateKey(const uint8_t* sk, size_t len)
+Signature::PrivateKey::PrivateKey(const Blob& sk)
 {
-    assert(len == BYTES);
-    if (len != BYTES)
+    assert(sk.size() == BYTES);
+    if (sk.size() != BYTES)
         throw std::invalid_argument("Invaild raw private key size.");
 
-    std::memcpy(key.data(), sk, len);
+    std::memcpy(key.data(), sk.ptr(), sk.size());
 }
 
 Signature::PrivateKey::operator std::string() const noexcept
@@ -92,25 +92,25 @@ Signature::PrivateKey::operator std::string() const noexcept
     return to_hex_string(key.data(), key.size());
 }
 
-void Signature::PrivateKey::sign(uint8_t* sig, size_t sigLen, const uint8_t* data, size_t dataLen) const
+void Signature::PrivateKey::sign(Blob& sig, const Blob& data) const
 {
-    assert(sigLen == Signature::BYTES);
-    if (sigLen != Signature::BYTES)
+    assert(sig.size() == Signature::BYTES);
+    if (sig.size() != Signature::BYTES)
         throw std::invalid_argument("Invalid signature length.");
 
-    crypto_sign_detached(sig, nullptr, data, dataLen, bytes()); // Always success
+    crypto_sign_detached(sig.ptr(), nullptr, data.ptr(), data.size(), bytes()); // Always success
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Signature::PublicKey
 ////////////////////////////////////////////////////////////////////////////////
-Signature::PublicKey::PublicKey(const uint8_t* pk, size_t len)
+Signature::PublicKey::PublicKey(const Blob& pk)
 {
-    assert(len == BYTES);
-    if (len != BYTES)
+    assert(pk.size() == BYTES);
+    if (pk.size() != BYTES)
         throw std::invalid_argument("Invaild raw public key size.");
 
-    std::memcpy(key.data(), pk, len);
+    std::memcpy(key.data(), pk.ptr(), pk.size());
 }
 
 Signature::PublicKey::operator std::string() const noexcept
@@ -118,13 +118,13 @@ Signature::PublicKey::operator std::string() const noexcept
     return to_hex_string(key.data(), key.size());
 }
 
-bool Signature::PublicKey::verify(const uint8_t* sig, size_t sigLen, const uint8_t* data, size_t dataLen) const
+bool Signature::PublicKey::verify(const Blob& sig, const Blob& data) const
 {
-    assert(sigLen == Signature::BYTES);
-    if (sigLen != Signature::BYTES)
+    assert(sig.size() == Signature::BYTES);
+    if (sig.size() != Signature::BYTES)
         throw std::invalid_argument("Invalid signature length.");
 
-    return crypto_sign_verify_detached(sig, data, dataLen, bytes()) == 0;
+    return crypto_sign_verify_detached(sig.ptr(), data.ptr(), data.size(), bytes()) == 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -146,26 +146,26 @@ Signature::KeyPair::KeyPair(PrivateKey&& sk) noexcept : sk(std::move(sk))
     crypto_sign_ed25519_sk_to_pk(pk.key.data(), sk.bytes()); // Always success
 }
 
-Signature::KeyPair::KeyPair(const uint8_t* sk, size_t len)
+Signature::KeyPair::KeyPair(const Blob& sk)
 {
-    assert(len == Signature::PrivateKey::BYTES);
-    if (len != Signature::PrivateKey::BYTES)
+    assert(sk.size() == Signature::PrivateKey::BYTES);
+    if (sk.size() != Signature::PrivateKey::BYTES)
         throw std::invalid_argument("Invaild raw private key size.");
 
-    std::memcpy(this->sk.key.data(), sk, len);
-    crypto_sign_ed25519_sk_to_pk(pk.key.data(), sk); // Always success
+    std::memcpy(this->sk.key.data(), sk.ptr(), sk.size());
+    crypto_sign_ed25519_sk_to_pk(pk.key.data(), sk.ptr()); // Always success
 }
 
 // Return KeyPair object maybe will have some copy overhead,
 // but easier to use also this is not a  frequently used method
-Signature::KeyPair Signature::KeyPair::fromSeed(const uint8_t* seed, size_t len)
+Signature::KeyPair Signature::KeyPair::fromSeed(const Blob& seed)
 {
-    assert(len == Signature::KeyPair::SEED_BYTES);
-    if (len != Signature::KeyPair::SEED_BYTES)
+    assert(seed.size() == Signature::KeyPair::SEED_BYTES);
+    if (seed.size() != Signature::KeyPair::SEED_BYTES)
         throw std::invalid_argument("Invaild seed size.");
 
     Signature::KeyPair keypair;
-    crypto_sign_seed_keypair(keypair.pk.key.data(), keypair.sk.key.data(), seed); // Always success
+    crypto_sign_seed_keypair(keypair.pk.key.data(), keypair.sk.key.data(), seed.ptr()); // Always success
     return keypair;
 }
 
@@ -182,43 +182,43 @@ void Signature::reset()
     crypto_sign_init(s); // Always success
 }
 
-void Signature::update(const uint8_t* part, size_t len)
+void Signature::update(const Blob& part)
 {
     crypto_sign_state *s = (crypto_sign_state*)&state;
-    crypto_sign_update(s, part, len); // Always success
+    crypto_sign_update(s, part.ptr(), part.size()); // Always success
 }
 
-void Signature::sign(uint8_t* sig, size_t len, const Signature::PrivateKey& sk) const
+void Signature::sign(Blob& sig, const Signature::PrivateKey& sk) const
 {
-    assert(len == Signature::BYTES);
-    if (len != Signature::BYTES)
+    assert(sig.size() == Signature::BYTES);
+    if (sig.size() != Signature::BYTES)
         throw std::invalid_argument("Invalid signature length.");
 
     crypto_sign_state *s = (crypto_sign_state*)&state;
-    crypto_sign_final_create(s, sig, nullptr, sk.bytes()); // Always success
+    crypto_sign_final_create(s, sig.ptr(), nullptr, sk.bytes()); // Always success
 }
 
-bool Signature::verify(const uint8_t* sig, size_t len, const Signature::PublicKey& pk) const
+bool Signature::verify(const Blob& sig, const Signature::PublicKey& pk) const
 {
-    assert(len == Signature::BYTES);
-    if (len != Signature::BYTES)
+    assert(sig.size() == Signature::BYTES);
+    if (sig.size() != Signature::BYTES)
         throw std::invalid_argument("Invalid signature length.");
 
     crypto_sign_state *s = (crypto_sign_state*)&state;
-    return crypto_sign_final_verify(s, sig, pk.bytes()) == 0;
+    return crypto_sign_final_verify(s, sig.ptr(), pk.bytes()) == 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // CryptoBox::PrivateKey
 ////////////////////////////////////////////////////////////////////////////////
 
-CryptoBox::PrivateKey::PrivateKey(const uint8_t* sk, size_t len)
+CryptoBox::PrivateKey::PrivateKey(const Blob& sk)
 {
-    assert(len == BYTES);
-    if (len != BYTES)
+    assert(sk.size() == BYTES);
+    if (sk.size() != BYTES)
         throw std::invalid_argument("Invaild raw private key size.");
 
-    std::memcpy(key.data(), sk, len);
+    std::memcpy(key.data(), sk.ptr(), sk.size());
 }
 
 CryptoBox::PrivateKey::operator std::string() const noexcept
@@ -237,13 +237,13 @@ CryptoBox::PrivateKey CryptoBox::PrivateKey::fromSignatureKey(const Signature::P
 // CryptoBox::PublicKey
 ////////////////////////////////////////////////////////////////////////////////
 
-CryptoBox::PublicKey::PublicKey(const uint8_t* pk, size_t len)
+CryptoBox::PublicKey::PublicKey(const Blob& pk)
 {
-    assert(len == BYTES);
-    if (len != BYTES)
+    assert(pk.size() == BYTES);
+    if (pk.size() != BYTES)
         throw std::invalid_argument("Invaild raw public key size.");
 
-    std::memcpy(key.data(), pk, len);
+    std::memcpy(key.data(), pk.ptr(), pk.size());
 }
 
 CryptoBox::PublicKey::operator std::string() const noexcept
@@ -265,13 +265,13 @@ CryptoBox::PublicKey CryptoBox::PublicKey::fromSignatureKey(const Signature::Pub
 // CryptoBox::Nonce
 ////////////////////////////////////////////////////////////////////////////////
 
-CryptoBox::Nonce::Nonce(const uint8_t* pk, size_t len)
+CryptoBox::Nonce::Nonce(const Blob& pk)
 {
-    assert(len == BYTES);
-    if (len != BYTES)
+    assert(pk.size() == BYTES);
+    if (pk.size() != BYTES)
         throw std::invalid_argument("Invaild raw nonce size.");
 
-    std::memcpy(nonce.data(), pk, len);
+    std::memcpy(nonce.data(), pk.ptr(), pk.size());
 }
 
 CryptoBox::Nonce& CryptoBox::Nonce::increment() noexcept
@@ -310,26 +310,26 @@ CryptoBox::KeyPair::KeyPair(PrivateKey&& sk) noexcept : sk(sk)
     crypto_scalarmult_base(pk.key.data(), sk.bytes()); // Always success
 }
 
-CryptoBox::KeyPair::KeyPair(const uint8_t* sk, size_t len)
+CryptoBox::KeyPair::KeyPair(const Blob& sk)
 {
-    assert(len == CryptoBox::PrivateKey::BYTES);
-    if (len != CryptoBox::PrivateKey::BYTES)
+    assert(sk.size() == CryptoBox::PrivateKey::BYTES);
+    if (sk.size() != CryptoBox::PrivateKey::BYTES)
         throw std::invalid_argument("Invaild raw private key size.");
 
-    std::memcpy(this->sk.key.data(), sk, len);
-    crypto_scalarmult_base(pk.key.data(), sk); // Always success
+    std::memcpy(this->sk.key.data(), sk.ptr(), sk.size());
+    crypto_scalarmult_base(pk.key.data(), sk.ptr()); // Always success
 }
 
 // Return KeyPair object maybe will have some copy overhead,
 // but easier to use also this is not a  frequently used method
-CryptoBox::KeyPair CryptoBox::KeyPair::fromSeed(const uint8_t* seed, size_t len)
+CryptoBox::KeyPair CryptoBox::KeyPair::fromSeed(const Blob& seed)
 {
-    assert(len == CryptoBox::KeyPair::SEED_BYTES);
-    if (len != CryptoBox::KeyPair::SEED_BYTES)
+    assert(seed.size() == CryptoBox::KeyPair::SEED_BYTES);
+    if (seed.size() != CryptoBox::KeyPair::SEED_BYTES)
         throw std::invalid_argument("Invaild seed size.");
 
     CryptoBox::KeyPair keypair;
-    crypto_box_seed_keypair(keypair.pk.key.data(), keypair.sk.key.data(), seed); // Always success
+    crypto_box_seed_keypair(keypair.pk.key.data(), keypair.sk.key.data(), seed.ptr()); // Always success
     return keypair;
 }
 
@@ -337,7 +337,7 @@ CryptoBox::KeyPair CryptoBox::KeyPair::fromSignatureKeyPair(const Signature::Key
 {
     uint8_t x25519[crypto_box_SECRETKEYBYTES];
     crypto_sign_ed25519_sk_to_curve25519(x25519, signKeyPair.privateKey().bytes()); // Always success
-    return {x25519, sizeof(x25519)};
+    return {Blob{x25519, sizeof(x25519)}};
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -350,47 +350,45 @@ CryptoBox::CryptoBox(const PublicKey &pk, const PrivateKey &sk)
         throw CryptoError("Compute symmetric key failed.");
 }
 
-void CryptoBox::encrypt(uint8_t* cipher, size_t cipherLen,
-        const uint8_t* plain, size_t plainLen, const Nonce& nonce) const
+void CryptoBox::encrypt(Blob& cipher, const Blob& plain, const Nonce& nonce) const
 {
-    assert(cipherLen >= plainLen + crypto_box_MACBYTES);
-    if (cipherLen < plainLen + crypto_box_MACBYTES)
+    assert(cipher.size() >= plain.size() + crypto_box_MACBYTES);
+    if (cipher.size() < plain.size() + crypto_box_MACBYTES)
         throw std::invalid_argument("The cipher buffer is too small.");
 
-    if (crypto_box_easy_afternm(cipher, plain, plainLen, nonce.bytes(), key.data()) != 0)
+    if (crypto_box_easy_afternm(cipher.ptr(), plain.ptr(), plain.size(), nonce.bytes(), key.data()) != 0)
         throw CryptoError("Encrypt data failed.");
 }
 
-void CryptoBox::encrypt(uint8_t* cipher, size_t cipherLen, const uint8_t* plain, size_t plainLen,
-            const Nonce& nonce, const PublicKey& pk, const PrivateKey& sk)
+void CryptoBox::encrypt(Blob& cipher, const Blob& plain, const Nonce& nonce,
+        const PublicKey& pk, const PrivateKey& sk)
 {
-    assert(cipherLen >= plainLen + crypto_box_MACBYTES);
-    if (cipherLen < plainLen + crypto_box_MACBYTES)
+    assert(cipher.size() >= plain.size() + crypto_box_MACBYTES);
+    if (cipher.size() < plain.size() + crypto_box_MACBYTES)
         throw std::invalid_argument("The cipher buffer is too small.");
 
-    if (crypto_box_easy(cipher, plain, plainLen, nonce.bytes(), pk.bytes(), sk.bytes()) != 0)
+    if (crypto_box_easy(cipher.ptr(), plain.ptr(), plain.size(), nonce.bytes(), pk.bytes(), sk.bytes()) != 0)
         throw CryptoError(std::string("Encrypt data failed."));
 }
 
-void CryptoBox::decrypt(uint8_t* plain, size_t plainLen,
-    const uint8_t *cipher, size_t cipherLen, const Nonce &nonce) const
+void CryptoBox::decrypt(Blob& plain, const Blob& cipher, const Nonce &nonce) const
 {
-    assert(plainLen >= cipherLen - crypto_box_MACBYTES);
-    if (plainLen < cipherLen - crypto_box_MACBYTES)
+    assert(plain.size() >= cipher.size() - crypto_box_MACBYTES);
+    if (plain.size() < cipher.size() - crypto_box_MACBYTES)
         throw std::invalid_argument("The plain buffer is too small.");
 
-    if (crypto_box_open_easy_afternm(plain, cipher, cipherLen, nonce.bytes(), key.data()) != 0)
+    if (crypto_box_open_easy_afternm(plain.ptr(), cipher.ptr(), cipher.size(), nonce.bytes(), key.data()) != 0)
         throw CryptoError(std::string("Decrypt data failed."));
 }
 
-void CryptoBox::decrypt(uint8_t* plain, size_t plainLen, const uint8_t* cipher, size_t cipherLen,
-        const Nonce& nonce, const PublicKey& pk, const PrivateKey& sk)
+void CryptoBox::decrypt(Blob& plain, const Blob& cipher, const Nonce& nonce, 
+        const PublicKey& pk, const PrivateKey& sk)
 {
-    assert(plainLen >= cipherLen - crypto_box_MACBYTES);
-    if (plainLen < cipherLen - crypto_box_MACBYTES)
+    assert(plain.size() >= cipher.size() - crypto_box_MACBYTES);
+    if (plain.size() < cipher.size() - crypto_box_MACBYTES)
         throw std::invalid_argument("The plain buffer is too small.");
 
-    if (crypto_box_open_easy(plain, cipher, cipherLen, nonce.bytes(), pk.bytes(), sk.bytes()) != 0)
+    if (crypto_box_open_easy(plain.ptr(), cipher.ptr(), cipher.size(), nonce.bytes(), pk.bytes(), sk.bytes()) != 0)
         throw CryptoError(std::string("Decrypt data failed."));
 }
 
@@ -407,29 +405,29 @@ void SHA256::reset()
     crypto_hash_sha256_init(s); // Always success
 }
 
-void SHA256::update(const uint8_t* part, size_t len)
+void SHA256::update(const Blob& part)
 {
     crypto_hash_sha256_state* s = (crypto_hash_sha256_state*)&state;
-    crypto_hash_sha256_update(s, part, len); // Always success
+    crypto_hash_sha256_update(s, part.ptr(), part.size()); // Always success
 }
 
-void SHA256::digest(uint8_t *hash, size_t len)
+void SHA256::digest(Blob& hash)
 {
-    assert(len == SHA256::BYTES);
-    if (len != SHA256::BYTES)
+    assert(hash.size() == SHA256::BYTES);
+    if (hash.size() != SHA256::BYTES)
         throw std::invalid_argument("Invaild hash size.");
 
     crypto_hash_sha256_state* s = (crypto_hash_sha256_state*)&state;
-    crypto_hash_sha256_final(s, hash); // Always success
+    crypto_hash_sha256_final(s, hash.ptr()); // Always success
 }
 
-void SHA256::digest(uint8_t *hash, size_t hashLen, const uint8_t* data, size_t dataLen)
+void SHA256::digest(Blob& hash, const Blob& data)
 {
-    assert(hashLen == SHA256::BYTES);
-    if (hashLen != SHA256::BYTES)
+    assert(hash.size() == SHA256::BYTES);
+    if (hash.size() != SHA256::BYTES)
         throw std::invalid_argument("Invaild hash size.");
 
-    crypto_hash_sha256(hash, data, dataLen); // Always success
+    crypto_hash_sha256(hash.ptr(), data.ptr(), data.size()); // Always success
 }
 
 ////////////////////////////////////////////////////////////////////////////////

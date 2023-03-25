@@ -221,13 +221,13 @@ Sp<Value> SqliteStorage::putValue(const Sp<Value>& value, int expectedSeq) {
 
     sqlite3_bind_blob(pStmt, 1, id.data(), id.size(), SQLITE_STATIC);
 
-    auto signer = value->getPublicKey().asBlob();
+    auto signer = value->getPublicKey().blob();
     sqlite3_bind_blob(pStmt, 2, signer.ptr(), signer.size(), SQLITE_STATIC);
 
     auto sk = value->getPrivateKey();
     sqlite3_bind_blob(pStmt, 3, sk.bytes(), sk.size(), SQLITE_STATIC);
 
-    auto recipient = value->getRecipient().asBlob();
+    auto recipient = value->getRecipient().blob();
     sqlite3_bind_blob(pStmt, 4, recipient.ptr(), recipient.size(), SQLITE_STATIC);
 
     auto nonce = value->getNonce();
@@ -265,14 +265,14 @@ std::list<Id> SqliteStorage::listValueId() {
         int cNum = sqlite3_column_count(pStmt);
         for (int i = 0; i < cNum; i++) {
             const int cType = sqlite3_column_type(pStmt, i);
-            int len= 0;
-            const void *ptr = NULL;
+            size_t len = 0;
+            const uint8_t* ptr = NULL;
 
             if (cType == SQLITE_BLOB) {
                 len = sqlite3_column_bytes(pStmt, i);
-                ptr = sqlite3_column_blob(pStmt, i);
+                ptr = (const uint8_t*)sqlite3_column_blob(pStmt, i);
 
-                auto id = Id((uint8_t*)ptr, len);
+                auto id = Id({ptr, len});
                 ids.emplace_back(id);
             }
         }
@@ -339,7 +339,7 @@ std::list<Sp<PeerInfo>> SqliteStorage::getPeer(const Id& peerId, int family, int
                 }
             }
 
-            peer->setSocketAddress(ip.data(), ip.size(), port);
+            peer->setSocketAddress(ip, port);
             peers.push_back(peer);
         }
         sqlite3_finalize(pStmt);
@@ -388,7 +388,7 @@ Sp<PeerInfo> SqliteStorage::getPeer(const Id& peerId, int family, const Id& node
             }
         }
         sqlite3_finalize(pStmt);
-        peer->setSocketAddress(ip.data(), ip.size(), port);
+        peer->setSocketAddress(ip, port);
         return peer;
     }
 
@@ -444,14 +444,14 @@ std::list<Id> SqliteStorage::listPeerId() {
         int cNum = sqlite3_column_count(pStmt);
         for (int i = 0; i < cNum; i++) {
             const int cType = sqlite3_column_type(pStmt, i);
-            int len= 0;
+            size_t len = 0;
             const void *ptr = NULL;
 
             if (cType == SQLITE_BLOB) {
                 len = sqlite3_column_bytes(pStmt, i);
                 ptr = sqlite3_column_blob(pStmt, i);
 
-                auto id = Id((uint8_t*)ptr, len);
+                auto id = Id(Blob{ptr, len});
                 ids.emplace_back(id);
             }
         }

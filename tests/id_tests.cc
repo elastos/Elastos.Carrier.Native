@@ -70,14 +70,14 @@ void IdTests::testIdFromBytes() {
 
     std::array<uint8_t, ID_BYTES> binId;
     std::generate_n(binId.begin(), ID_BYTES, [&]{ return dist(rd); });
-    auto id = Id(binId.data(), binId.size());
+    auto id = Id(binId);
 
     auto hexStr = id.toHexString().substr(2);
     CPPUNIT_ASSERT(std::memcmp(binId.data(), Hex::decode(hexStr.c_str(), hexStr.size()).data(), ID_BYTES) == 0);
 
     std::array<uint8_t, 20> binId2;
     std::generate_n(binId2.begin(), 20, [&]{ return dist(rd); });
-    CPPUNIT_ASSERT_THROW_MESSAGE("Binary id should be 32 bytes long.", new Id(binId2.data(), binId2.size()), std::invalid_argument);
+    CPPUNIT_ASSERT_THROW_MESSAGE("Binary id should be 32 bytes long.", new Id(binId2), std::invalid_argument);
 }
 
 void IdTests::testIdFromId() {

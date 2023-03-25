@@ -134,11 +134,11 @@ public:
 
     Sp<Value> updateValue(const Id& valueId, const std::vector<uint8_t>& data);
 
-    std::vector<uint8_t> encrypt(const Id& recipient, const uint8_t *buf, size_t buflen) const;
-    std::vector<uint8_t> decrypt(const Id& sender, const uint8_t *buf, size_t buflen) const;
+    std::vector<uint8_t> encrypt(const Id& recipient, const Blob& plain) const;
+    std::vector<uint8_t> decrypt(const Id& sender, const Blob& cipher) const;
 
-    void encrypt(const Id& recipient, uint8_t* cipher, size_t cipherlen, const uint8_t *buf, size_t buflen) const;
-    void decrypt(const Id& sender, uint8_t* plain, size_t plainlen, const uint8_t *buf, size_t buflen) const;
+    void encrypt(const Id& recipient, Blob& cipher, const Blob& plain) const;
+    void decrypt(const Id& sender, Blob& plain, const Blob& cipher) const;
 
     std::string toString() const;
 private:

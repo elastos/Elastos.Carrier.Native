@@ -78,6 +78,7 @@ void Node::loadKey(const std::string& keyPath) {
     if (!in.is_open())
         throw std::runtime_error("Can not read the key file.");
 
+    // TODO: should read as binary
     std::stringstream ss;
     ss << in.rdbuf();
     auto keystr = ss.str();
@@ -86,7 +87,7 @@ void Node::loadKey(const std::string& keyPath) {
     if (keystr.empty())
         throw std::runtime_error("Key file is empty.");
 
-    keyPair = Signature::KeyPair((uint8_t*)keystr.c_str(), keystr.size());
+    keyPair = Signature::KeyPair({(uint8_t*)keystr.c_str(), keystr.size()});
 }
 
 void Node::initKey(const std::string& keyPath) {
@@ -503,24 +504,24 @@ void Node::setupCryptoBoxesCache() {
     cryptoContexts = std::make_shared<CryptoCache>(encryptionKeyPair);
 }
 
-std::vector<uint8_t> Node::encrypt(const Id& recipient, const uint8_t *buf, size_t buflen) const {
+std::vector<uint8_t> Node::encrypt(const Id& recipient, const Blob& plain) const {
     auto ctx = cryptoContexts->get(recipient);
-    return ctx.encrypt(buf, buflen);
+    return ctx.encrypt(plain);
 }
 
-std::vector<uint8_t> Node::decrypt(const Id& sender, const uint8_t *buf, size_t buflen) const {
+std::vector<uint8_t> Node::decrypt(const Id& sender, const Blob& cipher) const {
     auto ctx = cryptoContexts->get(sender);
-    return ctx.decrypt(buf, buflen);
+    return ctx.decrypt(cipher);
 }
 
-void Node::encrypt(const Id& recipient, uint8_t* cipher, size_t cipherlen, const uint8_t *buf, size_t buflen) const {
+void Node::encrypt(const Id& recipient, Blob& cipher, const Blob& plain) const {
     auto ctx = cryptoContexts->get(recipient);
-    ctx.encrypt(cipher, cipherlen, buf, buflen);
+    ctx.encrypt(cipher, plain);
 }
 
-void Node::decrypt(const Id& sender, uint8_t* plain, size_t plainlen, const uint8_t *buf, size_t buflen) const {
+void Node::decrypt(const Id& sender, Blob& plain, const Blob& cipher) const {
     auto ctx = cryptoContexts->get(sender);
-    ctx.decrypt(plain, plainlen, buf, buflen);
+    ctx.decrypt(plain, cipher);
 }
 
 int Node::getPort() {

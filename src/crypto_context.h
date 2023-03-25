@@ -57,20 +57,20 @@ public:
         return *this;
     }
 
-    std::vector<uint8_t> encrypt(const uint8_t* plain, size_t length) {
-        return box.encrypt(plain, length, nonce);
+    std::vector<uint8_t> encrypt(const Blob& plain) const {
+        return box.encrypt(plain, nonce);
     }
 
-    std::vector<uint8_t> decrypt(const uint8_t* cipher, size_t length) {
-        return box.decrypt(cipher, length, nonce);
+    std::vector<uint8_t> decrypt(const Blob& cipher) const {
+        return box.decrypt(cipher, nonce);
     }
 
-    void encrypt(uint8_t* cipher, size_t cipherLen, const uint8_t* plain, size_t plainLen) {
-        box.encrypt(cipher, cipherLen, plain, plainLen, nonce);
+    void encrypt(Blob& cipher, const Blob& plain) const {
+        box.encrypt(cipher, plain, nonce);
     }
 
-    void decrypt(uint8_t* plain, size_t plainLen, const uint8_t* cipher, size_t cipherLen) {
-        box.decrypt(plain, plainLen, cipher, cipherLen, nonce);
+    void decrypt(Blob& plain, const Blob& cipher) const {
+        box.decrypt(plain, cipher, nonce);
     }
 
 private:
