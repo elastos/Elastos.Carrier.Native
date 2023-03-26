@@ -46,18 +46,15 @@ public:
     Id() noexcept = default;
     Id(const Id& id) = default;
 
-    Id(const uint8_t* ptr, size_t len) {
-        if (len != ID_BYTES || !ptr)
+    Id(const Blob& id) {
+        if (!id || id.size() != ID_BYTES)
             throw std::invalid_argument("Binary id should be " + std::to_string(ID_BYTES) + " bytes long.");
 
-        std::memcpy(bytes.data(), ptr, len);
+        std::memcpy(bytes.data(), id.ptr(), id.size());
     }
 
     Id(const Signature::PublicKey& key)
-        : Id(key.bytes(), key.size()) {}
-
-    explicit Id(const std::vector<uint8_t>& vector)
-        : Id(vector.data(), vector.size()) {}
+        : Id(key.blob()) {}
 
     explicit Id(const std::string& id) {
         id.find("0x") == 0 ? fromHexString(id) : fromBase58String(id);
@@ -79,12 +76,12 @@ public:
         return bytes.data() + ID_BYTES;
     }
 
-    Blob asBlob() const noexcept {
-        return static_cast<bool>(*this) ? Blob(data(), size()) : Blob();
+    const Blob blob() const noexcept {
+        return static_cast<bool>(*this) ? Blob(bytes) : Blob();
     }
 
     Sp<Signature::PublicKey> toKey() const {
-        return std::make_shared<Signature::PublicKey>(bytes.data(), ID_BYTES);
+        return std::make_shared<Signature::PublicKey>(blob());
     }
 
     static Id ofHex(const std::string& hexId);

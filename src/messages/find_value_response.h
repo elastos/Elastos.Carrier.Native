@@ -44,7 +44,7 @@ public:
     }
 
     void setPublicKey(const Id& publicKey) {
-        value->setPublicKey(publicKey.asBlob());
+        value->setPublicKey(publicKey.blob());
     }
 
     const Id& getRecipient() const {
@@ -52,7 +52,7 @@ public:
     }
 
     void setRecipient(const Id& recipient) {
-        value->setRecipient(recipient.asBlob());
+        value->setRecipient(recipient.blob());
     }
 
     const CryptoBox::Nonce& getNonce() const {

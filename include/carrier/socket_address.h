@@ -78,14 +78,7 @@ public:
     SocketAddress(const char* ip, in_port_t port = 0)
         :  SocketAddress(std::string(ip), std::to_string(port)) {}
 
-    SocketAddress(const uint8_t* ip, size_t len, in_port_t port);
-
-    template<typename T>
-    SocketAddress(const T& ip, in_port_t port)
-        : SocketAddress(ip.data(), ip.size(), port) {}
-
-    SocketAddress(const Blob& address, int port)
-        : SocketAddress(address.ptr(), address.size(), port) {}
+    SocketAddress(const Blob& ip, in_port_t port);
 
     static std::vector<SocketAddress> resolve(const std::string& host, const std::string& service = {});
     static std::vector<SocketAddress> resolve(const std::string& host, in_port_t port) {

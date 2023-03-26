@@ -32,10 +32,7 @@ namespace carrier {
 struct CARRIER_PUBLIC NodeInfo {
     NodeInfo() = default;
 
-    NodeInfo(const uint8_t* id, size_t idLen, const uint8_t* addr,  size_t addrLen, int port)
-        : nodeId(id, idLen), sockaddr(addr, addrLen, port) {}
-
-    explicit NodeInfo(const std::vector<uint8_t>& id, const std::vector<uint8_t>& ip, int port)
+    explicit NodeInfo(const Blob& id, const Blob& ip, int port)
         : nodeId(id), sockaddr(ip, port) {}
 
     explicit NodeInfo(const std::string& id, const std::string& ip, int port)
@@ -44,7 +41,7 @@ struct CARRIER_PUBLIC NodeInfo {
     explicit NodeInfo(const Id& id, const std::string& ip, int port)
         : nodeId(id), sockaddr(ip, port) {}
 
-    explicit NodeInfo(const Id& id, const std::vector<uint8_t>& ip, int port)
+    explicit NodeInfo(const Id& id, const Blob& ip, int port)
         : nodeId(id), sockaddr(ip, port) {}
 
     explicit NodeInfo(const Id& id, const sockaddr* addr) noexcept

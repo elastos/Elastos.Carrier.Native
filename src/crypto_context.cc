@@ -29,12 +29,12 @@ namespace carrier {
 CryptoContext::CryptoContext(const CryptoBox::PublicKey& pk, const CryptoBox::KeyPair& keypair) {
     box = CryptoBox(pk, keypair.privateKey());
 
-    auto receiver = Id(pk.bytes(), pk.size());
-    auto sender = Id(keypair.publicKey().bytes(), keypair.publicKey().size());
+    auto receiver = Id(pk.blob());
+    auto sender = Id(keypair.publicKey().blob());
 
     auto dist = Id::distance(sender, receiver);
 
-    nonce = CryptoBox::Nonce((uint8_t*)dist.data(), CryptoBox::Nonce::BYTES);
+    nonce = CryptoBox::Nonce({(uint8_t*)dist.data(), CryptoBox::Nonce::BYTES});
 }
 
 }

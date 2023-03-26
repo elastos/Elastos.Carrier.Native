@@ -104,20 +104,20 @@ private: // internal methods used in friend class.
 
     // internal setts used in SqliteStorage type.
     void setPrivateKey(const Blob& val) noexcept {
-        this->privateKey = Signature::PrivateKey(val.ptr(), val.size());
+        this->privateKey = Signature::PrivateKey(val);
     }
     void setPublicKey(const Blob& val) {
-        this->publicKey = Id(val.ptr(), val.size());
+        this->publicKey = Id(val);
     }
     void setRecipient(const Blob& val) {
-        this->recipient = Id(val.ptr(), val.size());
+        this->recipient = Id(val);
     }
     void setSignature(const Blob& val) {
         signature.resize(val.size());
         std::memcpy(signature.data(), val.ptr(), val.size());
     }
     void setNonce(const Blob& val) {
-        this->nonce = CryptoBox::Nonce((uint8_t*)val.ptr(), (size_t)val.size());
+        this->nonce = CryptoBox::Nonce(val);
     }
     void setData(const Blob& val) {
         data.resize(val.size());

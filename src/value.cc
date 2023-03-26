@@ -34,12 +34,12 @@ Id Value::calculateId(const Value& value) {
     if (!static_cast<bool>(value.getPublicKey())) {
         sha.update(value.data);
     } else {
-        sha.update(value.publicKey.data(), value.publicKey.size());
-        sha.update(value.nonce.bytes(), value.nonce.size());
+        sha.update(value.publicKey.blob());
+        sha.update(value.nonce.blob());
     }
 
     auto digest = sha.digest();
-    return Id(digest.data(), digest.size());
+    return Id(digest);
 }
 
 void Value::createSignature() {
@@ -120,7 +120,7 @@ Sp<Value> Value::createEncrypted(const Id& target, const std::vector<uint8_t>& d
 
     auto value = std::make_shared<Value>();
 
-    value->recipient = Id(target.data(), ID_BYTES);
+    value->recipient = Id(target);
 
     auto keypair = Signature::KeyPair();
     value->privateKey = keypair.privateKey();

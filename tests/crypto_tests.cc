@@ -157,10 +157,10 @@ void CryptoTester::testCrytoContext()
         0xe0, 0x82, 0xf9, 0x37, 0x76, 0x38, 0x48, 0x64, 0x5e, 0x07, 0x05
     };
 
-    auto encrypted = encryptContext.encrypt(data1.data(), data1.size());
+    auto encrypted = encryptContext.encrypt(data1);
     CPPUNIT_ASSERT(encrypted.size());
 
-    auto decrypted = decryptContext.decrypt(encrypted.data(), encrypted.size());
+    auto decrypted = decryptContext.decrypt(encrypted);
     CPPUNIT_ASSERT(decrypted.size());
     CPPUNIT_ASSERT(data1 == decrypted);
 }

@@ -32,12 +32,13 @@ class Blob {
 public:
     Blob() {};
     Blob(const Blob& blob) noexcept: _ptr(blob._ptr), _size(blob._size) {}
+    Blob(Blob&& blob) noexcept: _ptr(blob._ptr), _size(blob._size) {}
 
     template <size_t N>
-    explicit Blob(const std::array<uint8_t, N>& arry) noexcept
+    Blob(const std::array<uint8_t, N>& arry) noexcept
         : _ptr(arry.data()), _size(arry.size()) {}
 
-    explicit Blob(const std::vector<uint8_t>& vector) noexcept
+    Blob(const std::vector<uint8_t>& vector) noexcept
         : _ptr(vector.data()), _size(vector.size()) {}
 
     Blob(const uint8_t* ptr, size_t size) noexcept
@@ -46,11 +47,24 @@ public:
     Blob(const void* ptr, size_t size) noexcept
         : _ptr(reinterpret_cast<const uint8_t *>(ptr)), _size(size) {}
 
-    Blob& operator=(const Blob& target) noexcept
-    {
+    Blob& operator=(const Blob& target) noexcept {
         this->_ptr = target._ptr;
         this->_size = target._size;
         return *this;
+    }
+
+    Blob& operator=(Blob&& target) noexcept {
+        this->_ptr = target._ptr;
+        this->_size = target._size;
+        return *this;
+    }
+
+    operator bool() const noexcept {
+        return _ptr != nullptr && _size != 0;
+    }
+
+    uint8_t* ptr() noexcept {
+        return const_cast<uint8_t*>(this->_ptr);
     }
 
     const uint8_t* ptr() const noexcept {
@@ -59,6 +73,14 @@ public:
 
     size_t size() const noexcept {
         return this->_size;
+    }
+
+    uint8_t* begin() noexcept {
+        return const_cast<uint8_t*>(this->_ptr);
+    }
+
+    uint8_t* end() noexcept {
+        return const_cast<uint8_t*>(this->_ptr + this->_size);
     }
 
     const uint8_t* cbegin() const noexcept {

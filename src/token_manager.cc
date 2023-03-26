@@ -58,19 +58,17 @@ void TokenManager::updateTokenTimestamps() {
 }
 
 int TokenManager::generateToken(const Id& nodeId, const SocketAddress& addr, const Id& targetId, long timestamp, std::array<uint8_t, 32>& sessionSecret) {
-    const uint16_t _port = htons(addr.port());
-    const uint64_t _stamp = htonll(timestamp);
-    const auto port = reinterpret_cast<const uint8_t*>(&_port);
-    const auto stamp = reinterpret_cast<const uint8_t*>(&_stamp);
+    const uint16_t port = htons(addr.port());
+    const uint64_t stamp = htonll(timestamp);
 
     // nodeId + ip + port + targetId + timestamp + sessionSecret
     auto sha256 = SHA256();
-    sha256.update(nodeId.data(), nodeId.size());
-    sha256.update(addr.inaddr(), addr.inaddrLength());
-    sha256.update(port, sizeof(uint16_t));
-    sha256.update(targetId.data(), targetId.size());
-    sha256.update(stamp, sizeof(uint64_t));
-    sha256.update(sessionSecret.data(), sessionSecret.size());
+    sha256.update(nodeId.blob());
+    sha256.update({addr.inaddr(), addr.inaddrLength()});
+    sha256.update({(const uint8_t*)&port, sizeof(uint16_t)});
+    sha256.update(targetId.blob());
+    sha256.update({(const uint8_t*)&stamp, sizeof(uint64_t)});
+    sha256.update(sessionSecret);
 
     auto digest = sha256.digest();
     int pos = (digest[0] & 0xff) & 0x1f; // mod 32

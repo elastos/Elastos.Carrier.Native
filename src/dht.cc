@@ -539,9 +539,8 @@ void DHT::onAnnouncePeer(const Sp<Message>& msg) {
         return;
     }
 
-    auto addr = request->getOrigin();
-    auto peer = std::make_shared<PeerInfo>(request->getId().data(), request->getId().size(),
-        addr.inaddr(), addr.inaddrLength(), request->getPort());
+    Blob ip = {request->getOrigin().inaddr(), request->getOrigin().inaddrLength()};
+    auto peer = std::make_shared<PeerInfo>(request->getId(), ip, request->getPort());
     node.getStorage()->putPeer(request->getTarget(), peer);
 
     auto response = std::make_shared<AnnouncePeerResponse>(request->getTxid());

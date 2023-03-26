@@ -41,6 +41,7 @@
 #include <stdexcept>
 
 #include "carrier/socket_address.h"
+#include "carrier/blob.h"
 
 namespace elastos {
 namespace carrier {
@@ -54,11 +55,11 @@ static constexpr std::array<uint8_t, 12> MAPPED_IPV4_PREFIX {{0, 0, 0, 0, 0, 0, 
 #define IN_IS_ADDR_UNSPECIFIED(a) (((long int) (a)->s_addr) == 0x00000000)
 #endif /* IN_IS_ADDR_UNSPECIFIED */
 
-SocketAddress::SocketAddress(const uint8_t* ip, size_t len, in_port_t port)
+SocketAddress::SocketAddress(const Blob& ip, in_port_t port)
 {
     port = htons(port);
 
-    switch (len) {
+    switch (ip.size()) {
     case sizeof(in_addr): {
         sockaddr_in* addr4 = (sockaddr_in*)&ss;
 #ifdef __APPLE__
@@ -66,7 +67,7 @@ SocketAddress::SocketAddress(const uint8_t* ip, size_t len, in_port_t port)
 #endif
         addr4->sin_family = AF_INET;
         addr4->sin_port = port;
-        std::memcpy(&(addr4->sin_addr.s_addr), ip, len);
+        std::memcpy(&(addr4->sin_addr.s_addr), ip.ptr(), ip.size());
         break;
     }
     case sizeof(in6_addr): {
@@ -76,7 +77,7 @@ SocketAddress::SocketAddress(const uint8_t* ip, size_t len, in_port_t port)
 #endif
         addr6->sin6_family = AF_INET6;
         addr6->sin6_port = port;
-        std::memcpy(&(addr6->sin6_addr.s6_addr), ip, len);
+        std::memcpy(&(addr6->sin6_addr.s6_addr), ip.ptr(), ip.size());
         break;
     }
     default:

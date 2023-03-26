@@ -31,6 +31,7 @@
 #include <thread>
 
 #include "carrier.h"
+#include "carrier/blob.h"
 
 namespace elastos {
 namespace carrier {
@@ -99,81 +100,37 @@ public:
     }
 
     // encrypt/decrypt with the session context
-    void encrypt(uint8_t* cipher, size_t cipherLen, const uint8_t* plain, size_t plainLen) const {
-        box.encrypt(cipher, cipherLen, plain, plainLen, nonce);
-    }
-
-    template<typename CT, typename PT>
-    void encrypt(CT& cipher, const PT& plain) const {
+    void encrypt(Blob& cipher, const Blob& plain) const {
         box.encrypt(cipher, plain, nonce);
     }
 
-    std::vector<uint8_t> encrypt(const uint8_t* plain, size_t length) const {
-        return box.encrypt(plain, length, nonce);
-    }
-
-    template<typename T>
-    std::vector<uint8_t> encrypt(const T& plain) const {
+    std::vector<uint8_t> encrypt(const Blob& plain) const {
         return box.encrypt(plain, nonce);
     }
 
-    void decrypt(uint8_t* plain, size_t plainLen, const uint8_t* cipher, size_t cipherLen) const {
-        box.decrypt(plain, plainLen, cipher, cipherLen, nonce);
-    }
-
-    template<typename PT, typename CT>
-    void decrypt(PT& plain, const CT& cipher) const {
+    void decrypt(Blob& plain, const Blob& cipher) const {
         box.decrypt(plain, cipher, nonce);
     }
 
-    std::vector<uint8_t> decrypt(const uint8_t* cipher, size_t length) const {
-        return box.decrypt(cipher, length, nonce);
-    }
-
-    template<typename T>
-    std::vector<uint8_t> decrypt(const T& cipher) const {
+    std::vector<uint8_t> decrypt(const Blob& cipher) const {
         return box.decrypt(cipher, nonce);
     }
 
     // encrypt/decrypt with the node context
-    void encryptWithNode(uint8_t* cipher, size_t cipherLen, const uint8_t* plain, size_t plainLen) const {
-        node.encrypt(serverId, cipher, cipherLen, plain, plainLen);
+    void encryptWithNode(Blob& cipher, const Blob& plain) const {
+        node.encrypt(serverId, cipher, plain);
     }
 
-    template<typename CT, typename PT>
-    void encryptWithNode(CT& cipher, const PT& plain) const {
-        encryptWithNode(cipher.data(), cipher.size(), plain.data(), plain.size());
+    std::vector<uint8_t> encryptWithNode(const Blob& plain) const {
+        return node.encrypt(serverId, plain);
     }
 
-    std::vector<uint8_t> encryptWithNode(const uint8_t* plain, size_t length) const {
-        std::vector<uint8_t> cipher(length + CryptoBox::MAC_BYTES);
-        encryptWithNode(cipher.data(), cipher.size(), plain, length);
-        return cipher;
+    void decryptWithNode(Blob& plain, const Blob& cipher) const {
+        node.decrypt(serverId, plain, cipher);
     }
 
-    template<typename T>
-    std::vector<uint8_t> encryptWithNode(const T& plain) const {
-        return encryptWithNode(plain.data(), plain.size());
-    }
-
-    void decryptWithNode(uint8_t* plain, size_t plainLen, const uint8_t* cipher, size_t cipherLen) const {
-        node.decrypt(serverId, plain, plainLen, cipher, cipherLen);
-    }
-
-    template<typename PT, typename CT>
-    void decryptWithNode(PT& plain, const CT& cipher) const {
-        decryptWithNode(plain.data(), plain.size(), cipher.data(), cipher.size());
-    }
-
-    std::vector<uint8_t> decryptWithNode(const uint8_t* cipher, size_t length) const {
-        std::vector<uint8_t> plain(length - CryptoBox::MAC_BYTES);
-        decryptWithNode(plain.data(), plain.size(), cipher, length);
-        return plain;
-    }
-
-    template<typename T>
-    std::vector<uint8_t> decryptWithNode(const T& cipher) const {
-        return decryptWithNode(cipher.data(), cipher.size());
+    std::vector<uint8_t> decryptWithNode(const Blob& cipher) const {
+        return node.decrypt(serverId, cipher);
     }
 
 protected:

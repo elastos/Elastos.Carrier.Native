@@ -32,16 +32,13 @@ namespace carrier {
 struct CARRIER_PUBLIC PeerInfo {
     PeerInfo() = default;
 
-    PeerInfo(const uint8_t* id, size_t idLen, const uint8_t* addr,  size_t addrLen, int port)
-        : nodeId(id, idLen), sockaddr(addr, addrLen, port) {}
-
-    explicit PeerInfo(const std::vector<uint8_t>& id, const std::vector<uint8_t>& ip, int port)
+    explicit PeerInfo(const Blob& id, const Blob& ip, int port)
         : nodeId(id), sockaddr(ip, port) {}
 
     explicit PeerInfo(const Id& id, const std::string& ip, int port)
         : nodeId(id), sockaddr(ip, port) {}
 
-    explicit PeerInfo(const Id& id, const std::vector<uint8_t>& ip, int port)
+    explicit PeerInfo(const Id& id, const Blob& ip, int port)
         : nodeId(id), sockaddr(ip, port) {}
 
     PeerInfo(const Id& id, const SocketAddress& _addr) noexcept
@@ -75,12 +72,12 @@ struct CARRIER_PUBLIC PeerInfo {
 
 private:
     friend class SqliteStorage;
-    void setNodeId(const Blob& blob) {
-        this->nodeId = Id(blob.ptr(), blob.size());
+    void setNodeId(const Blob& id) {
+        this->nodeId = Id(id);
     }
 
-    void setSocketAddress(const uint8_t* ip, size_t len, in_port_t port) {
-        this->sockaddr = SocketAddress(ip, len, port);
+    void setSocketAddress(const Blob& ip, in_port_t port) {
+        this->sockaddr = SocketAddress(ip, port);
     }
 
 private:

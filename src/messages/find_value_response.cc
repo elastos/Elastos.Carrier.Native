@@ -51,7 +51,7 @@ void FindValueResponse::_parse(const std::string& fieldName, nlohmann::json& obj
         value->recipient = object.get<Id>();
     } else if (fieldName == Message::KEY_RES_NONCE) {
         auto _nonce = object.get_binary();
-        value->nonce = CryptoBox::Nonce(_nonce.data(), _nonce.size());
+        value->nonce = CryptoBox::Nonce(_nonce);
     } else if (fieldName == Message::KEY_RES_SIGNATURE) {
         value->signature = object.get_binary();
     } else if (fieldName == Message::KEY_RES_SEQ) {
