@@ -23,7 +23,7 @@ add_submodule(spdlog-setup
 add_submodule(libuv
     DEPENDS platform-specific)
 
-if (ENABLE_SHELL)
+if (ENABLE_APPS)
     add_submodule(CLI11
         DEPENDS platform-specific)
 
