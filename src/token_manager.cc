@@ -58,10 +58,8 @@ void TokenManager::updateTokenTimestamps() {
 }
 
 int TokenManager::generateToken(const Id& nodeId, const SocketAddress& addr, const Id& targetId, long timestamp, std::array<uint8_t, 32>& sessionSecret) {
-    const uint16_t _port = htons(addr.port());
-    const uint64_t _stamp = htonll(timestamp);
-    const auto port = reinterpret_cast<const uint8_t*>(&_port);
-    const auto stamp = reinterpret_cast<const uint8_t*>(&_stamp);
+    const uint16_t port = htons(addr.port());
+    const uint64_t stamp = htonll(timestamp);
 
     // nodeId + ip + port + targetId + timestamp + sessionSecret
     auto sha256 = SHA256();
