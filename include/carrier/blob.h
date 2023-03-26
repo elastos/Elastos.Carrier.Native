@@ -32,7 +32,7 @@ class Blob {
 public:
     Blob() {};
     Blob(const Blob& blob) noexcept: _ptr(blob._ptr), _size(blob._size) {}
-    Blob(const Blob&& blob) noexcept: _ptr(blob._ptr), _size(blob._size) {}
+    Blob(Blob&& blob) noexcept: _ptr(blob._ptr), _size(blob._size) {}
 
     template <size_t N>
     Blob(const std::array<uint8_t, N>& arry) noexcept
@@ -53,7 +53,7 @@ public:
         return *this;
     }
 
-    Blob& operator=(const Blob&& target) noexcept {
+    Blob& operator=(Blob&& target) noexcept {
         this->_ptr = target._ptr;
         this->_size = target._size;
         return *this;
