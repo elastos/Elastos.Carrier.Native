@@ -22,9 +22,14 @@
 
 #pragma once
 
+#include <carrier/addon.h>
+#include <carrier/blob.h>
+#include <carrier/def.h>
 #include <carrier/log.h>
 #include <carrier/types.h>
 #include <carrier/crypto_core.h>
+#include <carrier/socket_address.h>
+#include <carrier/prefix.h>
 #include <carrier/id.h>
 #include <carrier/configuration.h>
 #include <carrier/default_configuration.h>
@@ -32,7 +37,6 @@
 #include <carrier/node_info.h>
 #include <carrier/peer_info.h>
 #include <carrier/value.h>
-#include <carrier/prefix.h>
 #include <carrier/version.h>
 #include <carrier/node_status.h>
 #include <carrier/node_status_listener.h>
