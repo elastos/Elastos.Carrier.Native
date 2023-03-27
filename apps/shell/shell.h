@@ -5,6 +5,7 @@
 #include <carrier/default_configuration.h>
 
 #include "command.h"
+#include "application_lock.h"
 
 using namespace elastos::carrier;
 
@@ -40,11 +41,11 @@ protected:
             getchar();
         #else
             DebugBreak();
-        #endif 
+        #endif
         }
 
-        auto builder = DefaultConfiguration::Builder {};
 
+        auto builder = DefaultConfiguration::Builder {};
         if (!configFile.empty()) {
             try {
                 builder.load(configFile);
@@ -66,8 +67,15 @@ protected:
             builder.setStoragePath(dataDir);
 
         auto config = builder.build();
-
         node = std::make_shared<Node>(config);
+
+        std::string lockfile = dataDir + "/lock";
+
+        if(lock.acquire(lockfile) < 0) {
+            std::cout << "Another instance already running." << std::endl;
+            exit(-1);
+        }
+
         node->start();
     };
 
@@ -75,10 +83,11 @@ private:
     std::string addr4 {};
     std::string addr6 {};
     int port = 0;
-    
+
     std::string dataDir = "~/.cache/carrier";
     std::string bootstrap {};
     std::string configFile {};
 
     bool waitForDebugAttach = false;
+    ApplicationLock lock;
 };
