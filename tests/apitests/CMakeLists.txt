@@ -48,3 +48,8 @@ configure_file(log_test.conf log_test.conf COPYONLY)
 
 enable_testing()
 add_test(TEST apitests)
+
+install(TARGETS apitests
+    RUNTIME DESTINATION "bin"
+    ARCHIVE DESTINATION "lib"
+    LIBRARY DESTINATION "lib")

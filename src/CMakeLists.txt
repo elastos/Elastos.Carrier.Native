@@ -63,15 +63,25 @@ list(APPEND CARRIER_SOURCES
 )
 
 list(APPEND CARRIER_HEADERS
-    ${INCLUDE_DIR}/carrier/node.h
-    ${INCLUDE_DIR}/carrier/configuration.h
+    ${INCLUDE_DIR}/carrier/addon.h
+    ${INCLUDE_DIR}/carrier/blob.h
+    ${INCLUDE_DIR}/carrier/def.h
+    ${INCLUDE_DIR}/carrier/log.h
+    ${INCLUDE_DIR}/carrier/types.h
+    ${INCLUDE_DIR}/carrier/crypto_core.h
+    ${INCLUDE_DIR}/carrier/socket_address.h
+    ${INCLUDE_DIR}/carrier/prefix.h
     ${INCLUDE_DIR}/carrier/id.h
+    ${INCLUDE_DIR}/carrier/configuration.h
+    ${INCLUDE_DIR}/carrier/default_configuration.h
+    ${INCLUDE_DIR}/carrier/lookup_option.h
     ${INCLUDE_DIR}/carrier/node_info.h
     ${INCLUDE_DIR}/carrier/peer_info.h
     ${INCLUDE_DIR}/carrier/value.h
+    ${INCLUDE_DIR}/carrier/version.h
     ${INCLUDE_DIR}/carrier/node_status.h
     ${INCLUDE_DIR}/carrier/node_status_listener.h
-    ${INCLUDE_DIR}/carrier/lookup_option.h
+    ${INCLUDE_DIR}/carrier/node.h
 )
 
 include_directories(
