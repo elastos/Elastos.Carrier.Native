@@ -233,6 +233,11 @@ StoreFindValueTests::tearDown() {
         node2->stop();
     if (node3)
         node3->stop();
+
+    std::string pwd = getenv("PWD");
+    Utils::removeStorage(pwd + "/carrier1");
+    Utils::removeStorage(pwd + "/carrier2");
+    Utils::removeStorage(pwd + "/carrier3");
 }
 
 }  // namespace test
