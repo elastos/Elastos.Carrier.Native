@@ -45,19 +45,16 @@ namespace test {
 CPPUNIT_TEST_SUITE_REGISTRATION(NodeTester);
 
 void NodeTester::setUp() {
-    std::string path = getenv("PWD");
-    std::string path1 = path + "/temp1";
-    std::string path2 = path + "/temp2";
-
-    Utils::removeStorage(path1);
-    Utils::removeStorage(path2);
+    std::string pwd = getenv("PWD");
+    Utils::removeStorage(pwd + "/temp1");
+    Utils::removeStorage(pwd + "/temp2");
 
     auto b1 = DefaultConfiguration::Builder {};
     auto ipAddresses = Utils::getLocalIpAddresses();
 
     b1.setIPv4Address(ipAddresses);
     b1.setListeningPort(42222);
-    b1.setStoragePath(path1);
+    b1.setStoragePath(pwd + "/temp1");
 
     node1 = std::make_shared<Node>(b1.build());
     node1->start();
@@ -66,7 +63,7 @@ void NodeTester::setUp() {
     auto b2 = DefaultConfiguration::Builder {};
     b2.setIPv4Address(ipAddresses);
     b2.setListeningPort(42223);
-    b2.setStoragePath(path2);
+    b2.setStoragePath(pwd + "/temp2");
 
     node2 = std::make_shared<Node>(b2.build());
     node2->start();
@@ -203,8 +200,7 @@ void NodeTester::testJavaNode() {
     //The node2(announcePeer node) can't save the peer now (the same as Java), so new the node3 for test
     auto b3 = DefaultConfiguration::Builder {};
     std::string path = getenv("PWD");
-    std::string _path = path + "/temp3";
-    Utils::removeStorage(_path);
+    Utils::removeStorage(path + "/temp3");
 
     b3.setStoragePath(_path);
     b3.setIPv4Address(Utils::getLocalIpAddresses());
@@ -232,5 +228,10 @@ void NodeTester::tearDown() {
 
     if (node1 != nullptr)
         node1->stop();
+
+    std::string pwd = getenv("PWD");
+    Utils::removeStorage(pwd + "/temp1");
+    Utils::removeStorage(pwd + "/temp2");
+    Utils::removeStorage(pwd + "/temp3");
 }
 }  // namespace test

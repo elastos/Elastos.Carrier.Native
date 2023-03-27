@@ -203,6 +203,11 @@ ValueTests::tearDown() {
         node1->stop();
     if (node2)
         node2->stop();
+
+    std::string pwd = getenv("PWD");
+
+    Utils::removeStorage(pwd + "/carrier.db");
+    Utils::removeStorage(pwd + "/carriernode.db");
 }
 
 }  // namespace test
