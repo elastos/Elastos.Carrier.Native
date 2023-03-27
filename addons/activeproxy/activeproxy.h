@@ -42,11 +42,15 @@ using CryptoBox = elastos::carrier::CryptoBox;
 
 class ProxyConnection;
 
-class ActiveProxy {
+class ActiveProxy : public Addon {
 public:
-    ActiveProxy(const Node& node, const Id& serverId,
-        const std::string& serverHost, uint16_t serverPort,
-        const std::string& targetHost, uint16_t targetPort);
+    std::future<void> initialize(Sp<Node> node, const std::map<std::string, std::any>& config) override;
+
+    std::future<void> deinitialize() override;
+
+    bool isInitialized() override {
+        return isRunning();
+    }
 
     const std::string& serverEndpoint() const noexcept {
         return serverName;
@@ -76,7 +80,7 @@ public:
     }
 
     const Id& getNodeId() const noexcept {
-        return node.getId();
+        return node->getId();
     }
 
     const CryptoBox::PublicKey& getSessionKey() const noexcept {
@@ -118,19 +122,19 @@ public:
 
     // encrypt/decrypt with the node context
     void encryptWithNode(Blob& cipher, const Blob& plain) const {
-        node.encrypt(serverId, cipher, plain);
+        node->encrypt(serverId, cipher, plain);
     }
 
     std::vector<uint8_t> encryptWithNode(const Blob& plain) const {
-        return node.encrypt(serverId, plain);
+        return node->encrypt(serverId, plain);
     }
 
     void decryptWithNode(Blob& plain, const Blob& cipher) const {
-        node.decrypt(serverId, plain, cipher);
+        node->decrypt(serverId, plain, cipher);
     }
 
     std::vector<uint8_t> decryptWithNode(const Blob& cipher) const {
-        return node.decrypt(serverId, cipher);
+        return node->decrypt(serverId, cipher);
     }
 
 protected:
@@ -142,7 +146,7 @@ protected:
     bool needsNewConnection() const noexcept;
 
 private:
-    const Node& node;
+    Sp<Node> node;
 
     CryptoBox::KeyPair sessionKey;
     CryptoBox::Nonce nonce;
@@ -176,6 +180,7 @@ private:
     uint64_t idleTimestamp;
 
     bool running { false };
+    bool first { false };
 
     uint32_t maxConnections { 8 };
     uint32_t inFlights { 0 };
@@ -183,6 +188,9 @@ private:
     std::vector<ProxyConnection*> connections;
 
     std::thread runner;
+
+    std::promise<void> startPromise {};
+    std::promise<void> stopPromise {};
 };
 
 } // namespace activeproxy

@@ -8,7 +8,6 @@ endif()
 include_directories(
     .
     ../include
-    ../addons/activeproxy
     )
 
 list(APPEND LAUNCHER_SOURCES
@@ -22,4 +21,4 @@ else()
 endif()
 
 add_executable(launcher ${LAUNCHER_SOURCES})
-target_link_libraries(launcher LINK_PUBLIC ${CARRIER_LIB} activeproxy pthread dl)
+target_link_libraries(launcher LINK_PUBLIC ${CARRIER_LIB} addons pthread dl)
