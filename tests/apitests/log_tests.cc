@@ -215,7 +215,7 @@ void LoggerTester::testConf() {
     std::string file = "log_test.conf";
     auto exist = isFileExists(path, file);
     if (!exist) {
-        file = "tests/log_test.conf";
+        file = "tests/apitests/log_test.conf";
         exist = isFileExists(path, file);
     }
     CPPUNIT_ASSERT_MESSAGE("Can't find the conf file!", exist);
