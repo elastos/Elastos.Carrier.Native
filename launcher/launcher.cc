@@ -161,7 +161,13 @@ static Sp<Configuration> initConfigure(dht_params& params) {
 
 static Sp<Node> initCarrierNode(Sp<Configuration> config) {
 	auto node = std::make_shared<Node>(config);
-	node->start();
+    try {
+	    node->start();
+    } catch(std::exception& e) {
+        std::cout << e.what() << std::endl;
+        return nullptr;
+    }
+
     return node;
 }
 
@@ -291,6 +297,9 @@ int main(int argc, char *argv[])
 
     auto config = initConfigure(params);
 	__node__ = initCarrierNode(config);
+    if (!__node__)
+        return 0;
+
 	if (!loadServices(__node__, config)) {
         stop();
         return 0;
@@ -299,6 +308,6 @@ int main(int argc, char *argv[])
     while (!stopped) {
         sleep(1);
     }
-    
+
     return 0;
 }

@@ -74,7 +74,12 @@ protected:
             exit(-1);
         }
 
-        node->start();
+        try {
+            node->start();
+        } catch(std::exception& e) {
+            std::cout << e.what() << std::endl;
+            exit(-1);
+        }
     };
 
 private:
