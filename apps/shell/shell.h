@@ -43,7 +43,6 @@ protected:
         #endif
         }
 
-
         auto builder = DefaultConfiguration::Builder {};
         if (!configFile.empty()) {
             try {
@@ -68,7 +67,7 @@ protected:
         auto config = builder.build();
         node = std::make_shared<Node>(config);
 
-        std::string lockfile = dataDir + "/lock";
+        std::string lockfile = config->getStoragePath() + "/lock";
 
         if(lock.acquire(lockfile) < 0) {
             std::cout << "Another instance already running." << std::endl;

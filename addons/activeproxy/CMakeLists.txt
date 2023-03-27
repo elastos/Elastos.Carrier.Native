@@ -12,7 +12,6 @@ include_directories(
 list(APPEND ACTIVEPROXY_SOURCES
     activeproxy.cc
     connection.cc
-    main.cc
 )
 
 if(ENABLE_SHARED)
