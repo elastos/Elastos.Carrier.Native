@@ -1,8 +1,7 @@
 #include <string>
 #include <memory>
 
-#include <carrier/node.h>
-#include <carrier/default_configuration.h>
+#include <carrier.h>
 
 #include "command.h"
 #include "application_lock.h"

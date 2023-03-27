@@ -27,11 +27,7 @@
 #include <mutex>
 #include <condition_variable>
 
-#include <carrier/id.h>
-#include <carrier/value.h>
-#include <carrier/node.h>
-#include <carrier/peer_info.h>
-#include <carrier/default_configuration.h>
+#include <carrier.h>
 
 #include "sqlite_storage.h"
 #include "data_storage.h"
