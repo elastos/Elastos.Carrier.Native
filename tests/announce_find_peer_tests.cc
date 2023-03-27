@@ -23,9 +23,7 @@
 #include <list>
 #include <iostream>
 #include <array>
-
-#include <carrier/value.h>
-#include <carrier/default_configuration.h>
+#include <carrier.h>
 
 #include "utils.h"
 #include "utils/misc.h"

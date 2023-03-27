@@ -23,8 +23,7 @@
 #include <iostream>
 #include <string>
 #include <nlohmann/json.hpp>
-#include <carrier/id.h>
-#include <carrier/node_info.h>
+#include <carrier.h>
 
 #include "utils.h"
 #include "../src/serializers.h"

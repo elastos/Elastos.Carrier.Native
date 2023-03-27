@@ -35,7 +35,7 @@
 #include <algorithm>
 
 // carrier
-#include "carrier.h"
+#include <carrier.h>
 #include "utils.h"
 #include "node_tests.h"
 

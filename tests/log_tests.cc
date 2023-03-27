@@ -38,7 +38,7 @@
 
 // carrier
 #define CARRIER_LOG_ACTIVE_LEVEL CARRIER_LOG_LEVEL_TRACE
-#include "carrier/log.h"
+#include <carrier.h>
 using namespace elastos::carrier;
 
 namespace test {

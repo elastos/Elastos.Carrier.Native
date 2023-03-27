@@ -26,8 +26,7 @@
 #include <memory>
 
 #include <CLI/CLI.hpp>
-
-#include <carrier/node.h>
+#include <carrier.h>
 
 using namespace elastos::carrier;
 using namespace CLI;

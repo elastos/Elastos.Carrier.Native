@@ -23,9 +23,8 @@
 #include <iostream>
 #include <string>
 #include <nlohmann/json.hpp>
-
+#include <carrier.h>
 #include "utils.h"
-#include "carrier/socket_address.h"
 #include "address_tests.h"
 
 using namespace elastos::carrier;
