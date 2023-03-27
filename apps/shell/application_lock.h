@@ -37,11 +37,8 @@ public:
     int acquire(const std::string& filename) {
         this->filename = filename;
         fd = open(filename.c_str(), O_RDWR | O_CREAT, 0666);
-        //test by chenyu
-        std::cout << "fd: " << fd << std::endl;
-        if (fd < 0) {
+        if (fd < 0)
             return -1;
-        }
 
         int rc = flock(fd, LOCK_EX | LOCK_NB);
         if (rc < 0) {

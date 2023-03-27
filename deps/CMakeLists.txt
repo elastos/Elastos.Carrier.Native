@@ -24,6 +24,9 @@ add_submodule(libuv
     DEPENDS platform-specific)
 
 if (ENABLE_APPS)
+    add_submodule(editline
+        DEPENDS platform-specific)
+
     add_submodule(CLI11
         DEPENDS platform-specific)
 

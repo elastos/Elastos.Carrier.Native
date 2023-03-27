@@ -21,7 +21,8 @@ else()
 endif()
 
 add_executable(carriershell ${SHELL_SOURCES})
-target_link_libraries(carriershell LINK_PUBLIC ${CARRIER_LIB} utf8proc)
+add_dependencies(carriershell ${CARRIER_LIB} CLI11 editline)
+target_link_libraries(carriershell LINK_PUBLIC ${CARRIER_LIB} utf8proc edit ncurses)
 
 install(TARGETS carriershell
     RUNTIME DESTINATION "bin"

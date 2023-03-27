@@ -22,10 +22,13 @@
 
 #include <string>
 #include <csignal>
+#include <cctype>
 
 #ifdef HAVE_SYS_RESOURCE_H
 #include <sys/resource.h>
 #endif
+
+#include <editline/readline.h>
 
 #include "shell.h"
 #include "id_command.h"
@@ -57,14 +60,30 @@ int sys_coredump_set(bool enable)
 }
 #endif
 
-void signal_handler(int signum)
+char *trim(char *str)
 {
-    exit(-1);
+    char *s, *t;
+
+    for (s = str; isspace(*s); s++);
+    if (*s == 0)
+        return (s);
+
+    t = s + strlen(s) - 1;
+    while (t > s && isspace(*t))
+        t--;
+    *++t = '\0';
+
+    return s;
 }
 
 int main(int argc, char **argv)
 {
     sys_coredump_set(true);
+
+    rl_initialize();
+    stifle_history(256);
+    rl_bind_key('\t', rl_complete);
+    rl_readline_name = "carriershell";
 
     Shell shell;
     IdCommand idCommand;
@@ -82,8 +101,6 @@ int main(int argc, char **argv)
     StorageCommand storageCommand;
     ExitCommand exitCommand;
 
-    std::string cmdline;
-
     shell.addSubCommand(idCommand);
     shell.addSubCommand(announcePeerCommand);
     shell.addSubCommand(bootstrapCommand);
@@ -98,14 +115,25 @@ int main(int argc, char **argv)
     storageCommand.addSubCommand(listPeerCommand);
     shell.addSubCommand(storageCommand);
     shell.addSubCommand(exitCommand);
-    shell.prepare();
 
+    shell.prepare();
     shell.run(argc, argv);
 
-    while (true) {
-        std::cout << "Carrier $ ";
-        std::getline(std::cin, cmdline);
+    // We can add auto completion later
+    // rl_attempted_completion_function = custom_completion;
 
-        shell.run(cmdline);
+    char* line;
+    char* cmdline;
+    while ((line = readline("Carrier $ ")) != nullptr) {
+        cmdline = trim(line);
+
+        if (*cmdline) {
+            shell.run(cmdline);
+            add_history(cmdline);
+        }
+
+        free(line);
     }
+
+    return 0;
 }
