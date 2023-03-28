@@ -513,29 +513,22 @@ void RPCServer::sendError(Sp<Message> msg, int code, const std::string& err) {
 }
 
 void RPCServer::handlePacket(const uint8_t *buf, size_t buflen, const SocketAddress& from) {
+    Sp<Message> msg = nullptr;
+    std::vector<uint8_t> buffer;
+
     Id sender({buf, ID_BYTES});
 
-    // try {
-    auto buffer = node.decrypt(sender, {buf + ID_BYTES, buflen - ID_BYTES});
-    auto msg = Message::parse(buffer.data(), buffer.size());
-    // } catch (MessageException e) {
-    // 	log.warn("Got a wrong packet from {}, ignored.", AddressUtils.toString(sa));
+    try {
+        buffer = node.decrypt(sender, {buf + ID_BYTES, buflen - ID_BYTES});
+    } catch(std::exception &e) {
+        log->warn("Decrypt packet error from {}, ignored.", from.toString());
+        return;
+    }
 
-    // 	stats.droppedPacket(packet.length);
-
-    // 	PartialMessage pm = e.getPartialMessage();
-    // 	ErrorMessage err = new ErrorMessage(pm.getMethod(), pm.getTxid(), e.getCode(), e.getMessage());
-    // 	err.setRemote(sa);
-    // 	sendMessage(err);
-    // 	return;
-    // }
-
-    if (msg == nullptr) {
-        //TODO:: maybe improve
-        auto err = std::make_shared<ErrorMessage>(msg->getMethod(), 0, ErrorCode::ProtocolError,
-                "Received a message with an invalid message, can't parse.");
-        err->setRemote(msg->getId(), msg->getOrigin());
-        sendMessage(err);
+    try {
+        msg = Message::parse(buffer.data(), buffer.size());
+    } catch(std::exception& e) {
+        log->warn("Got a wrong packet from {}, ignored.", from.toString());
         return;
     }
 
@@ -553,9 +546,6 @@ void RPCServer::handlePacket(const uint8_t *buf, size_t buflen, const SocketAddr
     log->info("Received {}/{} from {}: [{}] {}", msg->getMethodString(), msg->getTypeString(),
             from.toString(), buflen, static_cast<std::string>(*msg));
 #endif
-
-    // receivedMessages.incrementAndGet();
-    // stats.receivedMessage(msg);
 
     // transaction id should be a non-zero integer
     if (msg->getType() != Message::Type::ERROR && msg->getTxid() == 0) {
@@ -590,8 +580,6 @@ void RPCServer::handlePacket(const uint8_t *buf, size_t buflen, const SocketAddr
             return;
         }
 
-        /* Maybe error these codes.
-            *
         // 1. the message is not a request
         // 2. transaction ID matched
         // 3. request destination did not match response source!!
@@ -599,19 +587,18 @@ void RPCServer::handlePacket(const uint8_t *buf, size_t buflen, const SocketAddr
         // indicates either port-mangling NAT, a multhomed host listening on any-local address or some kind of attack
         // ignore response
         log->warn("Transaction id matched, socket address did not, ignoring message, request: {} -> response: {}, version: {}",
-                call.getRequest().getRemote(), msg.getOrigin(), msg.getReadableVersion());
+                call->getRequest()->getRemoteAddress().toString(), msg->getOrigin().toString(), msg->getReadableVersion());
 
-        if(msg->getType() == Message::Type::RESPONSE && dht->getType() == DHT.Type.IPV6) {
+        if(msg->getType() == Message::Type::RESPONSE && dht6) {
             // this is more likely due to incorrect binding implementation in ipv6. notify peers about that
             // don't bother with ipv4, there are too many complications
-            Message err = new ErrorMessage(msg.getMethod(), msg.getTxid(), ErrorCode.ProtocolError.value(),
-                    "A request was sent to " + call.getRequest().getRemote() +
-                    " and a response with matching transaction id was received from " + msg.getOrigin() +
+            auto err = std::make_shared<ErrorMessage>(msg->getMethod(), msg->getTxid(), ErrorCode::ProtocolError,
+                    "A request was sent to " + call->getRequest()->getRemoteAddress().toString() +
+                    " and a response with matching transaction id was received from " + msg->getOrigin().toString() +
                     " . Multihomed nodes should ensure that sockets are properly bound and responses are sent with the correct source socket address. See BEPs 32 and 45.");
-            err.setRemote(call.getRequest().getRemote());
+            err->setRemote(msg->getId(), call->getRequest()->getRemoteAddress());
             sendMessage(err);
         }
-        */
 
         // but expect an upcoming timeout if it's really just a misbehaving node
         call->responseSocketMismatch();
