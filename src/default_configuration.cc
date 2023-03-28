@@ -48,7 +48,7 @@ void Builder::load(const std::string& filePath) {
 
     struct stat _stat;
     if (stat(path.c_str(), &_stat) == -1)
-        throw std::invalid_argument("Configuration file: " + path + " not exist.");
+        throw std::invalid_argument("Configuration file: '" + path + "' not exist.");
 
     if (S_ISDIR(_stat.st_mode))
         throw std::invalid_argument("Invalid configuration file: " + path + ", should not be a directory.");

@@ -37,13 +37,11 @@
 #include <unistd.h>
 
 #include "../src/constants.h"
-#include "activeproxy.h"
+#include "carrier.h"
 
 using namespace elastos::carrier;
-using namespace elastos::carrier::activeproxy;
 
-Sp<Node> __node__ = nullptr;
-std::unique_ptr<ActiveProxy> __proxy__ = nullptr;
+Sp<Node> g_node = nullptr;
 bool stopped = false;
 
 static void print_usage()
@@ -171,55 +169,6 @@ static Sp<Node> initCarrierNode(Sp<Configuration> config) {
     return node;
 }
 
-static bool loadServices(Sp<Node> node, Sp<Configuration> config) {
-    std::map<std::string, std::any>& services = config->getServices();
-    if (services.empty())
-        return true;
-
-    for (auto& [name, value] : services) {
-        if (name == "ActiveProxy") {
-            if (value.type() != typeid(std::map<std::string, std::any>)) {
-                std::cout << "Service '" << name << "': invalid configure! " << std::endl;
-                return false;
-            }
-
-            auto configure = std::any_cast<std::map<std::string, std::any>>(value);
-            if (!configure.count("serverId")) {
-                std::cout << "Service '" << name << "': invalid serverId! " << std::endl;
-                return false;
-            }
-            if (!configure.count("serverHost")) {
-                std::cout << "Service '" << name << "': invalid serverHost! " << std::endl;
-                return false;
-            }
-            if (!configure.count("serverPort")) {
-                std::cout << "Service '" << name << "': invalid serverPort! " << std::endl;
-                return false;
-            }
-            if (!configure.count("upstreamHost")) {
-                std::cout << "Service '" << name << "': invalid upstreamHost! " << std::endl;
-                return false;
-            }
-            if (!configure.count("upstreamPort")) {
-                std::cout << "Service '" << name << "': invalid upstreamPort! " << std::endl;
-                return false;
-            }
-
-            std::string serverId = std::any_cast<std::string>(configure["serverId"]);
-            Id id(serverId);
-            std::string serverHost = std::any_cast<std::string>(configure["serverHost"]);
-            uint16_t serverPort = (uint16_t)std::any_cast<int64_t>(configure["serverPort"]);
-            std::string upstreamHost = std::any_cast<std::string>(configure["upstreamHost"]);
-            uint16_t upstreamPort = (uint16_t)std::any_cast<int64_t>(configure["upstreamPort"]);
-
-            __proxy__ = std::make_unique<ActiveProxy>(*node, id, serverHost, serverPort, upstreamHost, upstreamPort);
-            __proxy__->start();
-        }
-    }
-
-    return true;
-}
-
 static void daemonize() {
 #ifndef _MSC_VER
     pid_t pid = fork();
@@ -241,14 +190,11 @@ static void daemonize() {
 
 static void stop() {
     stopped = true;
-    if (__proxy__ != nullptr) {
-        __proxy__->stop();
-        __proxy__ = nullptr;
-    }
+    unloadAddons();
 
-    if (__node__ != nullptr) {
-        __node__->stop();
-        __node__ = nullptr;
+    if (g_node != nullptr) {
+        g_node->stop();
+        g_node = nullptr;
     }
 }
 
@@ -296,11 +242,11 @@ int main(int argc, char *argv[])
     setupSignals();
 
     auto config = initConfigure(params);
-	__node__ = initCarrierNode(config);
-    if (!__node__)
+	g_node = initCarrierNode(config);
+    if (!g_node)
         return 0;
 
-	if (!loadServices(__node__, config)) {
+	if (!loadAddons(g_node, config->getServices())) {
         stop();
         return 0;
     }

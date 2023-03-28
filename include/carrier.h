@@ -41,3 +41,4 @@
 #include <carrier/node_status.h>
 #include <carrier/node_status_listener.h>
 #include <carrier/node.h>
+#include <carrier/addon.h>

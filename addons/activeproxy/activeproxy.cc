@@ -42,17 +42,38 @@ static std::shared_ptr<Logger> log = Logger::get("AcriveProxy");
 static const uint32_t IDLE_CHECK_INTERVAL = 60000;  // 1 minute
 static const uint32_t MAX_IDLE_TIME = 300000;       // 3 minutes
 
-ActiveProxy::ActiveProxy(const Node& node, const Id& serverId,
-        const std::string& serverHost, uint16_t serverPort,
-        const std::string& upstreamHost, uint16_t upstreamPort)
-        : node(node), serverId(serverId),
-          serverHost(serverHost), serverPort(serverPort),
-          upstreamHost(upstreamHost), upstreamPort(upstreamPort)
-{
+std::future<void> ActiveProxy::initialize(Sp<Node> node, const std::map<std::string, std::any>& configure) {
+    //get value from configure
+    if (!configure.count("serverId"))
+        throw std::runtime_error("Service 'ActiveProxy': invalid serverId! " );
+
+    if (!configure.count("serverHost"))
+        throw std::runtime_error("Service 'ActiveProxy': invalid serverHost! " );
+
+    if (!configure.count("serverPort"))
+        throw std::runtime_error("Service 'ActiveProxy': invalid serverPort! " );
+
+    if (!configure.count("upstreamHost"))
+        throw std::runtime_error("Service 'ActiveProxy': invalid upstreamHost! " );
+
+    if (!configure.count("upstreamPort"))
+        throw std::runtime_error("Service 'ActiveProxy': invalid upstreamPort! " );
+
+
+    std::string strId = std::any_cast<std::string>(configure.at("serverId"));
+    serverId = Id(strId);
+    serverHost = std::any_cast<std::string>(configure.at("serverHost"));
+    serverPort = (uint16_t)std::any_cast<int64_t>(configure.at("serverPort"));
+    upstreamHost = std::any_cast<std::string>(configure.at("upstreamHost"));
+    upstreamPort = (uint16_t)std::any_cast<int64_t>(configure.at("upstreamPort"));
+
     assert(!serverHost.empty() && serverPort != 0);
     assert(!upstreamHost.empty() && upstreamPort != 0);
 
+    //init data
     log->setLevel(Level::Info);
+
+    this->node = node;
 
     auto addrs = SocketAddress::resolve(serverHost, serverPort);
     serverAddr = addrs[0];
@@ -65,6 +86,17 @@ ActiveProxy::ActiveProxy(const Node& node, const Id& serverId,
 
     serverName.append(serverHost).append(":").append(std::to_string(serverPort));
     upstreamName.append(upstreamHost).append(":").append(std::to_string(upstreamPort));
+
+    //start
+    startPromise = std::promise<void>();
+    start();
+    return startPromise.get_future();
+}
+
+std::future<void> ActiveProxy::deinitialize() {
+    stopPromise = std::promise<void>();
+    stop();
+    return stopPromise.get_future();
 }
 
 void ActiveProxy::onStop() noexcept
@@ -93,6 +125,8 @@ void ActiveProxy::onStop() noexcept
     }
 
     connections.clear();
+
+    stopPromise.set_value();
 }
 
 bool ActiveProxy::needsNewConnection() const noexcept
@@ -114,6 +148,11 @@ bool ActiveProxy::needsNewConnection() const noexcept
 
 void ActiveProxy::onIteration() noexcept
 {
+    if (first) {
+        startPromise.set_value();
+        first = false;
+    }
+
     if (needsNewConnection()) {
         connect();
     }
@@ -172,7 +211,7 @@ void ActiveProxy::start()
     // init the idle/iteration handle
     uv_idle_init(&loop, &idleHandle); // always success
     idleHandle.data = this;
-    uv_idle_start(&idleHandle, [](uv_idle_t* handle) {
+    rc = uv_idle_start(&idleHandle, [](uv_idle_t* handle) {
         ActiveProxy* ap = (ActiveProxy*)handle->data;
         ap->onIteration();
     });
@@ -207,6 +246,7 @@ void ActiveProxy::start()
     runner = std::thread([&]() {
         log->info("ActiveProxy started.");
         running = true;
+        first = true;
         int rc = uv_run(&loop, UV_RUN_DEFAULT);
         if (rc < 0) {
             log->error("ActiveProxy failed to start the event loop({}): {}", rc, uv_strerror(rc));
@@ -218,7 +258,11 @@ void ActiveProxy::start()
             uv_close((uv_handle_t*)&idleCheckTimer, nullptr);
             uv_close((uv_handle_t*)&reconnectTimer, nullptr);
             uv_loop_close(&loop);
-            throw networking_error(uv_strerror(rc));
+            try {
+                throw networking_error(uv_strerror(rc));
+            } catch(...) {
+                startPromise.set_exception(std::current_exception());
+            }
         }
 
         running = false;
@@ -234,6 +278,9 @@ void ActiveProxy::stop() noexcept
         uv_async_send(&stopHandle);
 
         runner.join();
+    }
+    else {
+        stopPromise.set_value();
     }
 }
 
