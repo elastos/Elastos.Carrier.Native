@@ -18,11 +18,12 @@ ExternalProject_Add(
     PREFIX ${PROJECT_DEPS_BUILD_PREFIX}
     URL "https://www.thrysoee.dk/editline/libedit-20221030-3.1.tar.gz"
     URL_HASH SHA256=f0925a5adf4b1bf116ee19766b7daa766917aec198747943b1c4edf67a4be2bb
+    HTTP_HEADER "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 13_3) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.4 Safari/605.1.15"
     DOWNLOAD_NAME "libedit-20221030-3.1.tar.gz"
     DOWNLOAD_DIR ${PROJECT_DEPS_TARBALL_DIR}
     DOWNLOAD_NO_PROGRESS 1
 
     BUILD_IN_SOURCE 1
 
-    CONFIGURE_COMMAND  autoreconf -if && ${CONFIGURE_CMD} ${CONFIGURE_ARGS}
+    CONFIGURE_COMMAND ${CONFIGURE_CMD} ${CONFIGURE_ARGS}
 )
