@@ -31,7 +31,6 @@ set(ENABLE_STATIC TRUE CACHE BOOL "Build static library")
 set(ENABLE_ADDONS TRUE CACHE BOOL "Build addons")
 set(ENABLE_TESTS ${ENABLE_TESTS_DEFAULT} CACHE BOOL "Build test cases")
 set(ENABLE_APPS ${ENABLE_APPS_DEFAULT} CACHE BOOL "Build applications")
-set(ENABLE_LAUNCHER ${ENABLE_LAUNCHER_DEFAULT} CACHE BOOL "Build test cases")
 set(ENABLE_DOCS FALSE CACHE BOOL "Build APIs documentation")
 set(ENABLE_CARRIER_DEVELOPMENT FALSE CACHE BOOL "Eanble carrier development mode")
 
@@ -48,10 +47,6 @@ endif()
 
 if (ENABLE_APPS)
     add_subdirectory(apps)
-endif()
-
-if (ENABLE_LAUNCHER)
-    add_subdirectory(launcher)
 endif()
 
 if(ENABLE_DOCS)

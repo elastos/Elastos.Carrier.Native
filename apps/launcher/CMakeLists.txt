@@ -7,7 +7,8 @@ endif()
 
 include_directories(
     .
-    ../include
+    ../common
+    ../../include
     )
 
 list(APPEND LAUNCHER_SOURCES

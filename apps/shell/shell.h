@@ -2,9 +2,8 @@
 #include <memory>
 
 #include <carrier.h>
-
+#include <application_lock.h>
 #include "command.h"
-#include "application_lock.h"
 
 using namespace elastos::carrier;
 
