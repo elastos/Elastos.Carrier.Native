@@ -20,6 +20,10 @@
 * SOFTWARE.
 */
 
+#include <vector>
+
+#include <nlohmann/json.hpp>
+
 #include "serializers.h"
 #include "kbucket_entry.h"
 
@@ -62,7 +66,9 @@ bool KBucketEntry::withinBackoffWindow(uint64_t now) const {
 
 Sp<KBucketEntry> KBucketEntry::fromJson(nlohmann::json& root) {
     auto id = root.at("id").get<Id>();
-    SocketAddress addr = root.at("addr").get<SocketAddress>();
+    Blob ip = root.at("addr").get_binary();
+    uint16_t port = root.at("port").get<uint16_t>();
+    SocketAddress addr{ip, port};
 
     auto entry = std::make_shared<KBucketEntry>(id, addr, root.at("version").get<int>());
     entry->created = root.at("created");
@@ -77,8 +83,12 @@ Sp<KBucketEntry> KBucketEntry::fromJson(nlohmann::json& root) {
 nlohmann::json KBucketEntry::toJson() const {
     nlohmann::json root = nlohmann::json::object();
 
+    std::vector<uint8_t> addr(getAddress().inaddrLength());
+    memcpy(addr.data(), getAddress().inaddr(), addr.size());
+
     root["id"] = getId();
-    root["addr"] = getAddress();
+    root["addr"] = nlohmann::json::binary_t(addr);
+    root["port"] = getAddress().port();
     root["created"] = created;
     root["lastSeen"] = lastSeen;
     root["lastSend"] = lastSend;
