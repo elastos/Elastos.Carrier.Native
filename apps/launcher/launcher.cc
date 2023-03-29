@@ -37,7 +37,8 @@
 #include <unistd.h>
 
 #include "../src/constants.h"
-#include "carrier.h"
+#include <carrier.h>
+#include <application_lock.h>
 
 using namespace elastos::carrier;
 

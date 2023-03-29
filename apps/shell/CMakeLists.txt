@@ -7,6 +7,7 @@ endif()
 
 include_directories(
     .
+    ../common
     ../../include
     ${CARRIER_INT_DIST_DIR}/include)
 
