@@ -291,11 +291,13 @@ void RoutingTable::load(const std::string& path) {
     try {
         nlohmann::json root = nlohmann::json::from_cbor(data);
 
-        //long timestamp = root.at("timestamp");
+        long timestamp = root.at("timestamp").get<long>();
         auto nodes = root.at("entries");
         for (auto &node : nodes)
            _put(KBucketEntry::fromJson(node));
 
+        log->info("Loaded {} entries from persistent file. it was {} min old.", 
+            nodes.size(), (currentTimeMillis() - timestamp) / (60 * 1000));
     } catch (const std::exception& e) {
         log->error("read file '{}' error: {}", path, e.what());
     }
