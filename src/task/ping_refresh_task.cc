@@ -41,7 +41,7 @@ void PingRefreshTask::addBucket(Sp<KBucket> bucket) {
     }
 }
 
-void PingRefreshTask::callTimeout(Sp<RPCCall> call) {
+void PingRefreshTask::callTimeout(RPCCall* call) {
     if (!removeOnTimeout)
         return;
 
