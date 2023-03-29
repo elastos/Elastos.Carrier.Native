@@ -42,3 +42,4 @@
 #include <carrier/node_status_listener.h>
 #include <carrier/node.h>
 #include <carrier/addon.h>
+#include <carrier/application_lock.h>

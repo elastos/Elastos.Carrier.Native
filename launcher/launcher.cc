@@ -44,6 +44,8 @@ using namespace elastos::carrier;
 Sp<Node> g_node = nullptr;
 bool stopped = false;
 
+static ApplicationLock lock;
+
 static void print_usage()
 {
     std::cout << "Usage: launcher [OPTIONS] " << std::endl;
@@ -242,6 +244,13 @@ int main(int argc, char *argv[])
     setupSignals();
 
     auto config = initConfigure(params);
+
+    std::string lockfile = config->getStoragePath() + "/lock";
+    if(lock.acquire(lockfile) < 0) {
+        std::cout << "Another instance already running." << std::endl;
+        exit(-1);
+    }
+
 	g_node = initCarrierNode(config);
     if (!g_node)
         return 0;

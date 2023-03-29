@@ -29,6 +29,9 @@
 #include <stdexcept>
 #include <iostream>
 
+namespace elastos {
+namespace carrier {
+
 class ApplicationLock {
 public:
     ApplicationLock() : fd(-1) {};
@@ -65,3 +68,6 @@ private:
     std::string filename;
     int fd;
 };
+
+} // namespace carrier
+} // namespace elastos
