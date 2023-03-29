@@ -53,7 +53,7 @@ public:
     void addBucket(Sp<KBucket> bucket);
 
 protected:
-    void callTimeout(Sp<RPCCall> call);
+    void callTimeout(RPCCall* call) override;
     void update() override;
     bool isDone() const override {
         return todo.empty() && Task::isDone();
