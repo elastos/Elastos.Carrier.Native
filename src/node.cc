@@ -332,6 +332,8 @@ std::future<Sp<Value>> Node::findValue(const Id& id, LookupOption option) const 
         return promise->get_future();
     }
 
+    *valuePtr = localVal;
+
     auto completion = std::make_shared<std::atomic<int>>(0);
     auto completeHandler = [=](Sp<Value> value) {
         (*completion)++;
