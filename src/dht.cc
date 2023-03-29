@@ -127,6 +127,49 @@ void DHT::bootstrap(const NodeInfo& ni) {
     }
 }
 
+void DHT::updateBootstrapNodes() {
+   if (!isRunning() || bootstrapNodes.empty()
+       || currentTimeMillis() - lastBootstrap < Constants::BOOTSTRAP_MIN_INTERVAL)
+       return;
+
+    bool expected {false};
+    if (!bootstrapping.compare_exchange_weak(expected, true))
+        return;
+
+    log->info("DHT {} updateBootstrapNodes...", getTypeName());
+
+    auto nodes = std::make_shared<std::list<Sp<NodeInfo>>>();
+    auto count = std::make_shared<int>(0);
+    int len = bootstrapNodes.size();
+
+    for (auto node: bootstrapNodes) {
+        std::promise<std::list<Sp<NodeInfo>>> promise {};
+        auto q = std::make_shared<FindNodeRequest>(Id::random());
+
+        q->setWant4(type == Type::IPV4);
+        q->setWant6(type == Type::IPV6);
+
+        auto call = std::make_shared<RPCCall>(this, node, q);
+        call->addStateChangeHandler([=](RPCCall* call, RPCCall::State previous, RPCCall::State current) {
+            log->info("RPCCall::OnStateChange for FindNodeRequest message invoked .....");
+            if (current == RPCCall::State::RESPONDED || current == RPCCall::State::ERROR
+                    || current == RPCCall::State::TIMEOUT) {
+                auto r = std::dynamic_pointer_cast<FindNodeResponse>(call->getResponse());
+                if (r != nullptr) {
+                    auto list = r->getNodes(getType());
+                    nodes->insert(nodes->end(), list.begin(), list.end());
+                }
+                (*count)++;
+                if (*count == len) {
+                    this->lastBootstrap = currentTimeMillis();
+                    this->fillHomeBucket(*nodes);
+                }
+            }
+        });
+        rpcServer->sendCall(call);
+    }
+}
+
 void DHT::fillHomeBucket(const std::list<Sp<NodeInfo>>& nodes) {
     if (routingTable.getNumBucketEntries() == 0 && nodes.empty()) {
         bootstrapping = false;
@@ -164,7 +207,7 @@ void DHT::update () {
     if (routingTable.getNumBucketEntries() < Constants::BOOTSTRAP_IF_LESS_THAN_X_PEERS ||
             now - lastBootstrap > Constants::SELF_LOOKUP_INTERVAL)
         // Regularly search for our id to update routing table
-        bootstrap();
+        updateBootstrapNodes();
 
     if (persistFile != "" && (now - lastSave) > Constants::ROUTING_TABLE_PERSIST_INTERVAL) {
         log->info("Persisting routing table ...");

@@ -152,6 +152,7 @@ public:
 private:
     void received(Sp<Message>);
     void update();
+    void updateBootstrapNodes();
     void sendError(Sp<Message> q, int code, const std::string& msg);
 
     void onRequest(Sp<Message>);
@@ -182,9 +183,9 @@ private:
     std::vector<Sp<NodeInfo>> bootstrapNodes = {};
     std::map<SocketAddress, Id> knownNodes = {};
     std::atomic<bool> bootstrapping;
-    uint64_t lastBootstrap;
+    uint64_t lastBootstrap {0};
 
-    uint64_t lastSave;
+    uint64_t lastSave {0};
     bool running = false;
 
     std::string persistFile;
