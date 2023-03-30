@@ -1,4 +1,4 @@
-project(sqlite)
+project(deps_sqlite)
 
 include(ProjectDefaults)
 include(ExternalProject)

@@ -42,11 +42,12 @@ if(ENABLE_ADDONS)
 endif()
 
 if(ENABLE_TESTS)
-    add_subdirectory(tests)
+    add_subdirectory(tests/apitests)
 endif()
 
 if (ENABLE_APPS)
-    add_subdirectory(apps)
+    add_subdirectory(apps/shell)
+    add_subdirectory(apps/launcher)
 endif()
 
 if(ENABLE_DOCS)

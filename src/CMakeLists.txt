@@ -1,3 +1,5 @@
+project(carrier-core CXX)
+
 include(ProjectDefaults)
 include(CheckIncludeFile)
 
@@ -86,8 +88,7 @@ list(APPEND CARRIER_HEADERS
 
 include_directories(
     .
-    ${INCLUDE_DIR}
-    ${CARRIER_INT_DIST_DIR}/include)
+    ${INCLUDE_DIR})
 
 if(WIN32)
     list(APPEND CARRIER_HEADERS compat/msvc/unistd.h)
@@ -105,9 +106,7 @@ list(APPEND CARRIER_DEPENDS
 list(APPEND LIBS
     sqlite3
     sodium
-    crypto
-    pthread
-    dl)
+    crypto)
 
 if(WIN32)
     set(LIBS
@@ -119,12 +118,16 @@ else()
         sodium)
 endif()
 
-add_custom_target(carrier)
+list(APPEND SYSTEM_LIBS
+    pthread
+    dl)
+
+add_custom_target(carrier0)
 
 if(ENABLE_STATIC)
     add_library(carrier-static STATIC ${CARRIER_SOURCES} ${CARRIER_HEADERS})
     add_dependencies(carrier-static ${CARRIER_DEPENDS})
-    add_dependencies(carrier carrier-static)
+    add_dependencies(carrier0 carrier-static)
 
     target_compile_definitions(carrier-static PRIVATE CARRIER_BUILD CARRIER_STATIC)
     set_target_properties(carrier-static PROPERTIES OUTPUT_NAME carrier${STATIC_LIB_DECORATOR})
@@ -133,9 +136,7 @@ if(ENABLE_STATIC)
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}../include>
         $<INSTALL_INTERFACE:include>
     )
-
-    target_link_libraries(carrier-static
-        INTERFACE ${LIBS} ${SYSTEM_LIBS})
+    target_link_libraries(carrier-static INTERFACE ${LIBS} ${SYSTEM_LIBS})
 
     install(TARGETS carrier-static
         RUNTIME DESTINATION "bin"
@@ -146,17 +147,13 @@ endif()
 if(ENABLE_SHARED)
     add_library(carrier-shared SHARED ${CARRIER_SOURCES} ${CARRIER_HEADERS})
     add_dependencies(carrier-shared ${CARRIER_DEPENDS})
-    add_dependencies(carrier carrier-shared)
+    add_dependencies(carrier0 carrier-shared)
 
     target_compile_definitions(carrier-shared PRIVATE CARRIER_BUILD CARRIER_DYNAMIC)
     set_target_properties(carrier-shared PROPERTIES
         OUTPUT_NAME carrier${SHARED_LIB_DECORATOR}
         VERSION ${PROJECT_VERSION}
         SOVERSION ${PROJECT_VERSION_MAJOR})
-
-    #if(WIN32)
-    #    set_target_properties(carrier-shared PROPERTIES LINK_FLAGS /FORCE:MULTIPLE)
-    #endif()
 
     target_include_directories(carrier-shared PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}../include>
@@ -178,20 +175,6 @@ if(ENABLE_SHARED)
         ARCHIVE DESTINATION "lib"
         LIBRARY DESTINATION "lib")
 
-    install(EXPORT
-            ElastosCarrierConfig
-        NAMESPACE
-            "ElastosCarrier::"
-        DESTINATION
-            share/ElastosCarrier/cmake
-    )
-
-    export(
-        TARGETS
-            carrier-shared
-        FILE
-            ElastosCarrierConfig.cmake
-    )
 endif()
 
 install(FILES ${CARRIER_HEADERS} DESTINATION "include/carrier")

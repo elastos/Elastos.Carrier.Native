@@ -11,7 +11,7 @@ include_directories(
     ../../src
     ${CARRIER_INT_DIST_DIR}/include)
 
-list(APPEND TEST_SOURCES
+list(APPEND APITESTS_SOURCES
     main.cc
     messages/ping_tests.cc
     messages/find_node_tests.cc
@@ -35,14 +35,21 @@ list(APPEND TEST_SOURCES
     address_tests.cc
 )
 
+list(APPEND APITESTS_DEPENDS
+    CppUnit
+    carrier0
+    addons0)
+
 if(ENABLE_SHARED)
-    set(CARRIER_LIB carrier-shared)
+    set(LIBS carrier-shared addons-shared cppunit)
+    set(SYSTEM_LIBS pthread dl)
 else()
-    set(CARRIER_LIB carrier-static)
+    set(LIBS carrier-static addons-static cppunit)
 endif()
 
-add_executable(apitests ${TEST_SOURCES})
-target_link_libraries(apitests LINK_PUBLIC ${CARRIER_LIB} cppunit pthread dl)
+add_executable(apitests ${APITESTS_SOURCES})
+target_link_libraries(apitests LINK_PUBLIC ${LIBS} ${SYSTEM_LIBS})
+add_dependencies(apitests ${APITESTS_DEPENDS})
 
 configure_file(log_test.conf log_test.conf COPYONLY)
 
