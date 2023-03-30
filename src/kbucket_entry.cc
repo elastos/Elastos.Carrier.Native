@@ -26,6 +26,7 @@
 
 #include "serializers.h"
 #include "kbucket_entry.h"
+#include "carrier/version.h"
 
 namespace elastos {
 namespace carrier {
@@ -114,7 +115,7 @@ std::string KBucketEntry::toString() const {
         str.append(";reachable");
 
     if (getVersion() != 0)
-        str.append(";ver:").append(std::to_string(getVersion()));
+        str.append(";ver:").append(Version::toString(getVersion()));
 
     return str;
 }
