@@ -195,15 +195,8 @@ KBucket::operator std::string() const {
     const auto& entriesRef = getEntries();
     if (!entriesRef.empty()) {
         ss << "  entries[" << std::to_string(entriesRef.size()) << "]:\n";
-        bool first {true};
-        for(const auto& entry: entriesRef) {
-            if (!first) {
-                ss << ",\n";
-            } else {
-                first = false;
-            }
+        for(const auto& entry: entriesRef)
             ss << "    " << entry->toString() << "\n";
-        }
     }
     return ss.str();
 }

@@ -521,7 +521,7 @@ void RPCServer::handlePacket(const uint8_t *buf, size_t buflen, const SocketAddr
     try {
         buffer = node.decrypt(sender, {buf + ID_BYTES, buflen - ID_BYTES});
     } catch(std::exception &e) {
-        log->warn("Decrypt packet error from {}, ignored.", from.toString());
+        log->warn("Decrypt packet error from {}, ignored: len {}, {}", from.toString(), buflen, e.what());
         return;
     }
 
