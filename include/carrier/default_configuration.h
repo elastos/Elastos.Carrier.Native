@@ -103,6 +103,10 @@ public:
             this->storagePath = path;
         }
 
+        const std::string& getStoragePath() {
+            return this->storagePath;
+        }
+
         void addBootstrap(const std::string& idstr, const std::string& addr, int port) {
             auto id = Id(idstr);
             auto address = SocketAddress(addr, port);

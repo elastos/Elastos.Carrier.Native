@@ -60,7 +60,7 @@ protected:
         if (port != 0)
             builder.setListeningPort(port);
 
-        if (!dataDir.empty())
+        if (builder.getStoragePath().empty())
             builder.setStoragePath(dataDir);
 
         auto config = builder.build();
