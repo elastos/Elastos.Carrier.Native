@@ -12,14 +12,25 @@ include_directories(
     )
 
 list(APPEND LAUNCHER_SOURCES
-    launcher.cc
-)
+    launcher.cc)
+
+list(APPEND LAUNCHER_DEPENDS
+    libuv
+    carrier0
+    addons0)
 
 if(ENABLE_SHARED)
-    set(CARRIER_LIB carrier-shared)
+    set(LIBS carrier-shared addons-shared)
+    set(SYSTEM_LIBS pthread dl)
 else()
-    set(CARRIER_LIB carrier-static)
+    set(LIBS carrier-static addons-static)
 endif()
 
 add_executable(launcher ${LAUNCHER_SOURCES})
-target_link_libraries(launcher LINK_PUBLIC ${CARRIER_LIB} addons pthread dl)
+target_link_libraries(launcher LINK_PUBLIC ${LIBS} ${SYSTEM_LIBS})
+add_dependencies(launcher ${LAUNCHER_DEPENDS})
+
+install(TARGETS launcher
+    RUNTIME DESTINATION "bin"
+    ARCHIVE DESTINATION "lib"
+    LIBRARY DESTINATION "lib")

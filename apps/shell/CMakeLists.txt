@@ -1,3 +1,4 @@
+project(carrier-shell CXX)
 include(ProjectDefaults)
 
 check_include_file(sys/resource.h HAVE_SYS_RESOURCE_H)
@@ -15,17 +16,24 @@ list(APPEND SHELL_SOURCES
     main.cc
 )
 
+list(APPEND SHELL_DEPENDS
+    CLI11
+    editline
+    carrier0
+    addons0)
+
 if(ENABLE_SHARED)
-    set(CARRIER_LIB carrier-shared)
+    set(LIBS carrier-shared addons-shared utf8proc edit ncurses)
+    set(SYSTEM_LIBS pthread dl)
 else()
-    set(CARRIER_LIB carrier-static)
+    set(LIBS carrier-static addons-static utf8proc edit ncurses)
 endif()
 
-add_executable(carriershell ${SHELL_SOURCES})
-add_dependencies(carriershell ${CARRIER_LIB} CLI11 editline)
-target_link_libraries(carriershell LINK_PUBLIC ${CARRIER_LIB} utf8proc edit ncurses)
+add_executable(carrier-shell ${SHELL_SOURCES})
+target_link_libraries(carrier-shell LINK_PUBLIC ${LIBS} ${SYSTEM_LIBS})
+add_dependencies(carrier-shell ${SHELL_DEPENDS})
 
-install(TARGETS carriershell
+install(TARGETS carrier-shell
     RUNTIME DESTINATION "bin"
     ARCHIVE DESTINATION "lib"
     LIBRARY DESTINATION "lib")
