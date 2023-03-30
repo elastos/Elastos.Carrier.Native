@@ -38,7 +38,7 @@ const char* version() {
     return PACKAGE_VERSION;
 }
 
-std::map<std::string, std::string> names {{"MK", "Meerkat"}};
+std::map<std::string, std::string> names {{"OR", "Orca"}};
 
 int Version::build(std::string& name, int version) {
     std::transform(name.cbegin(), name.cend(), name.begin(), // write to the same location
