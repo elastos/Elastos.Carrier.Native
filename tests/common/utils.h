@@ -38,8 +38,8 @@
 #include <ifaddrs.h>
 #include <filesystem>
 
-#include "utils/random_generator.h"
 #include "carrier/node_info.h"
+#include "utils/random_generator.h"
 
 using namespace elastos::carrier;
 namespace fs = std::filesystem;
@@ -162,6 +162,10 @@ static std::string getLocalIpAddresses() {
 static void removeStorage(const std::string path) {
     fs::path tmp{path};
     fs::remove_all(tmp);
+}
+
+static std::string getPwdStorage(const std::string dir) {
+    return getenv("PWD") + dir;
 }
 
 };

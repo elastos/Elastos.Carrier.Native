@@ -26,12 +26,15 @@
 #include <exception>
 #include <sstream>
 #include <set>
+#include <filesystem>
 
 #include "carrier/node.h"
 #include "carrier/node_status.h"
 #include "sqlite_storage.h"
 #include "crypto_cache.h"
 #include "dht.h"
+
+namespace fs = std::filesystem;
 
 #ifdef _WIN32
     static const std::string PATH_SEP = "\\";
@@ -59,7 +62,7 @@ bool Node::checkPersistence(const std::string& path) {
             log->warn("Failed to access storage path {}. DHT node will not be able to persist state", path);
             return false;
         }
-        if (mkdir(path.c_str(), S_IRWXU) != 0) {
+        if (!fs::create_directories(path)) {
             log->warn("Creating storage path {} failed. DHT node will not be able to persist state", path);
             return false;
         }
