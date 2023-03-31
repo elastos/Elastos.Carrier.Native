@@ -19,6 +19,7 @@ list(APPEND SHELL_SOURCES
 
 list(APPEND SHELL_DEPENDS
     CLI11
+    libutf8proc
     editline
     carrier0
     addons0)
@@ -37,7 +38,7 @@ add_dependencies(carrier-shell ${SHELL_DEPENDS})
 if(APPLE AND (${CMAKE_BUILD_TYPE} STREQUAL "Debug"))
     add_custom_command(TARGET carrier-shell POST_BUILD
         COMMAND /usr/libexec/PlistBuddy -c "Add :com.apple.security.get-task-allow bool true" coredump.entitlements
-        COMMAND codesign -s - -f --entitlements coredump.entitlements carrier-shell
+        COMMAND codesign -s - -f --entitlements coredump.entitlements $<TARGET_FILE:carrier-shell>
         COMMAND rm -f coredump.entitlements
         VERBATIM)
 endif()
