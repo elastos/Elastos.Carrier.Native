@@ -46,7 +46,7 @@ public:
     }
 
     bool isSplittable() const noexcept {
-        return depth < ID_BITS - 1;
+        return depth < (int)ID_BITS - 1;
     }
 
     Id first() const noexcept {
