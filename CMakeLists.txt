@@ -43,6 +43,7 @@ endif()
 
 if(ENABLE_TESTS)
     add_subdirectory(tests/apitests)
+    add_subdirectory(tests/ad-hoc)
 endif()
 
 if (ENABLE_APPS)

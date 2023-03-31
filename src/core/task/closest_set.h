@@ -52,10 +52,10 @@ public:
     void add(const Sp<CandidateNode>& cn) {
         closest[cn->getId()] = cn;
         if (closest.size() > capacity) {
-            const auto last = std::prev(closest.cend())->second;
-            closest.erase(closest.cend());
+            auto last = std::prev(closest.cend());
+            closest.erase(last);
 
-            if (last == cn) {
+            if (last->second == cn) {
                 insertAttemptsSinceTailModification++;
             } else {
                 insertAttemptsSinceTailModification = 0;

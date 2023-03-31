@@ -28,23 +28,20 @@
 
 namespace test {
 
-class NodeTester : public CppUnit::TestFixture {
-    CPPUNIT_TEST_SUITE(NodeTester);
-    CPPUNIT_TEST(testNode);
+class RoutingTableTester : public CppUnit::TestFixture {
+    CPPUNIT_TEST_SUITE(RoutingTableTester);
+    CPPUNIT_TEST(testRoutingTable);
     CPPUNIT_TEST_SUITE_END();
 
 public:
     void setUp();
     void tearDown();
 
-    void testNode();
+    void testRoutingTable();
 
 private:
-    std::shared_ptr<Node> node1 = nullptr;
-    std::shared_ptr<Node> node2 = nullptr;
-    std::shared_ptr<Node> node3 = nullptr;
-
     std::string dataDir {};
+    std::vector<Sp<Node>> nodes {};
 };
 
 }  // namespace test

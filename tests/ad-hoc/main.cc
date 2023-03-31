@@ -38,6 +38,8 @@ extern "C" {
 
 using namespace std;
 
+bool stopped = false;
+
 int sys_coredump_set(bool enable)
 {
     const struct rlimit rlim = {
@@ -50,7 +52,8 @@ int sys_coredump_set(bool enable)
 
 void signal_handler(int signum)
 {
-    exit(-1);
+    stopped = true;
+    // exit(-1);
 }
 
 void usage(void)
