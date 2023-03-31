@@ -33,7 +33,7 @@ add_dependencies(launcher ${LAUNCHER_DEPENDS})
 if(APPLE AND (${CMAKE_BUILD_TYPE} STREQUAL "Debug"))
     add_custom_command(TARGET launcher POST_BUILD
         COMMAND /usr/libexec/PlistBuddy -c "Add :com.apple.security.get-task-allow bool true" coredump.entitlements
-        COMMAND codesign -s - -f --entitlements coredump.entitlements launcher
+        COMMAND codesign -s - -f --entitlements coredump.entitlements $<TARGET_FILE:launcher>
         COMMAND rm -f coredump.entitlements
         VERBATIM)
 endif()
