@@ -26,14 +26,14 @@
 #include <cppunit/extensions/HelperMacros.h>
 #include <carrier/node.h>
 
-// #define TEST_JAVA 1
+#define TEST_OTHER 1
 
 namespace test {
 
 class NodeTester : public CppUnit::TestFixture {
     CPPUNIT_TEST_SUITE(NodeTester);
-#ifdef TEST_JAVA
-    CPPUNIT_TEST(testJavaNode);
+#ifdef TEST_OTHER
+    CPPUNIT_TEST(testOtherNode);
 #else
     CPPUNIT_TEST(testLocalNode);
 #endif
@@ -43,15 +43,17 @@ public:
     void setUp();
     void tearDown();
 
-    void testLocalNode();
-#ifdef TEST_JAVA
-    void testJavaNode();
+    void testSelfNode();
+#ifdef TEST_OTHER
+    void testOtherNode();
 #endif
 
 private:
     std::shared_ptr<Node> node1 = nullptr;
     std::shared_ptr<Node> node2 = nullptr;
     std::shared_ptr<Node> node3 = nullptr;
+
+    std::string dataDir {};
 };
 
 }  // namespace test

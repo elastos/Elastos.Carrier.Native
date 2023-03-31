@@ -9,6 +9,7 @@ include_directories(
     .
     ../../include
     ../../src/core
+    ../common
     ${CARRIER_INT_DIST_DIR}/include)
 
 list(APPEND APITESTS_SOURCES
@@ -31,8 +32,8 @@ list(APPEND APITESTS_SOURCES
     storage_tests.cc
     store_find_value_tests.cc
     announce_find_peer_tests.cc
-    node_tests.cc
     address_tests.cc
+    node_api_tests.cc
 )
 
 list(APPEND APITESTS_DEPENDS
