@@ -187,7 +187,7 @@ KBucket::operator std::string() const {
     std::stringstream ss;
     ss.str().reserve(1024);
 
-    ss << "Prefix: " << static_cast<std::string>(prefix);
+    ss << "Prefix: " << prefix.toString();
     if (isHomeBucket())
         ss << " [Home]";
     ss << "\n";

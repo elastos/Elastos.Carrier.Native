@@ -113,9 +113,12 @@ void RoutingTable::_split(const Sp<KBucket>& bucket) {
     assert(bucket.get());
 
     auto& prefix = bucket->getPrefix();
-    auto isHome = isHomeBucket(prefix);
-    Sp<KBucket> l = std::make_shared<KBucket>(prefix.splitBranch(false), isHome);
-    Sp<KBucket> h = std::make_shared<KBucket>(prefix.splitBranch(true), isHome);
+    const Prefix& pl = prefix.splitBranch(false);
+    auto isHome = isHomeBucket(pl);
+    Sp<KBucket> l = std::make_shared<KBucket>(pl, isHome);
+    const Prefix& ph = prefix.splitBranch(true);
+    isHome = isHomeBucket(ph);
+    Sp<KBucket> h = std::make_shared<KBucket>(ph, isHome);
 
     for (auto& entry: bucket->getEntries()) {
         if (l->getPrefix().isPrefixOf(entry->getId()))
@@ -296,7 +299,7 @@ void RoutingTable::load(const std::string& path) {
         for (auto &node : nodes)
            _put(KBucketEntry::fromJson(node));
 
-        log->info("Loaded {} entries from persistent file. it was {} min old.", 
+        log->info("Loaded {} entries from persistent file. it was {} min old.",
             nodes.size(), (currentTimeMillis() - timestamp) / (60 * 1000));
     } catch (const std::exception& e) {
         log->error("read file '{}' error: {}", path, e.what());
