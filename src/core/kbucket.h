@@ -87,7 +87,7 @@ public:
         if (entriesRef.empty())
             return nullptr;
 
-        auto it = std::next(entriesRef.begin(), RandomGenerator<int>(0, entriesRef.size())());
+        auto it = std::next(entriesRef.begin(), RandomGenerator<int>(0, entriesRef.size() - 1)());
         return *it;
     }
 
