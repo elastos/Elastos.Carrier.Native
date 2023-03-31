@@ -92,7 +92,7 @@ public:
 
     Sp<KBucketEntry> getRandomEntry() const {
         const auto& bucketsRef = getBuckets();
-        auto it = std::next(bucketsRef.begin(), RandomGenerator<int>(1, bucketsRef.size())());
+        auto it = std::next(bucketsRef.begin(), RandomGenerator<int>(0, bucketsRef.size() - 1)());
         return (it != bucketsRef.end()) ? (*it)->random(): nullptr;
     }
 
