@@ -34,6 +34,14 @@ add_executable(carrier-shell ${SHELL_SOURCES})
 target_link_libraries(carrier-shell LINK_PUBLIC ${LIBS} ${SYSTEM_LIBS})
 add_dependencies(carrier-shell ${SHELL_DEPENDS})
 
+if(APPLE AND (${CMAKE_BUILD_TYPE} STREQUAL "Debug"))
+    add_custom_command(TARGET carrier-shell POST_BUILD
+        COMMAND /usr/libexec/PlistBuddy -c "Add :com.apple.security.get-task-allow bool true" coredump.entitlements
+        COMMAND codesign -s - -f --entitlements coredump.entitlements carrier-shell
+        COMMAND rm -f coredump.entitlements
+        VERBATIM)
+endif()
+
 install(TARGETS carrier-shell
     RUNTIME DESTINATION "bin"
     ARCHIVE DESTINATION "lib"
