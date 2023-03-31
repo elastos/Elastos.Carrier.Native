@@ -6,7 +6,7 @@ if(HAVE_SYS_RESOURCE_H)
     add_definitions(-DHAVE_SYS_RESOURCE_H=1)
 endif()
 
-set(INCLUDE_DIR ../include)
+set(INCLUDE_DIR ../../include)
 
 list(APPEND ADDONS_SOURCES
     activeproxy/activeproxy.cc

@@ -24,7 +24,7 @@
 #include <iostream>
 #include <string>
 
-#include "../src/data_storage.h"
+#include "core/data_storage.h"
 #include "command.h"
 
 class ValueCommand : public Command {

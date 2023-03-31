@@ -10,6 +10,7 @@ include_directories(
     .
     ../common
     ../../include
+    ../../src
     ${CARRIER_INT_DIST_DIR}/include)
 
 list(APPEND SHELL_SOURCES

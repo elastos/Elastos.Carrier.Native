@@ -8,7 +8,7 @@ endif()
 include_directories(
     .
     ../../include
-    ../../src
+    ../../src/core
     ${CARRIER_INT_DIST_DIR}/include)
 
 list(APPEND APITESTS_SOURCES

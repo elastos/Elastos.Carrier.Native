@@ -21,7 +21,7 @@
  */
 
 #include <carrier.h>
-#include "../src/crypto_context.h"
+#include "crypto_context.h"
 #include "crypto_tests.h"
 
 namespace test {

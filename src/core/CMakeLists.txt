@@ -14,7 +14,7 @@ if (ENABLE_CARRIER_DEVELOPMENT)
     add_definitions(-DCARRIER_DEVELOPMENT)
 endif()
 
-set(INCLUDE_DIR ../include)
+set(INCLUDE_DIR ../../include)
 
 list(APPEND CARRIER_SOURCES
     utils/log.cc

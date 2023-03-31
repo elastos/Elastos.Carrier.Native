@@ -26,7 +26,7 @@
 #include <carrier.h>
 
 #include "utils.h"
-#include "../src/serializers.h"
+#include "serializers.h"
 #include "nodeinfo_tests.h"
 
 using namespace elastos::carrier;
