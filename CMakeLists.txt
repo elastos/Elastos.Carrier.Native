@@ -35,10 +35,10 @@ set(ENABLE_DOCS FALSE CACHE BOOL "Build APIs documentation")
 set(ENABLE_CARRIER_DEVELOPMENT FALSE CACHE BOOL "Eanble carrier development mode")
 
 add_subdirectory(deps)
-add_subdirectory(src)
+add_subdirectory(src/core)
 
 if(ENABLE_ADDONS)
-    add_subdirectory(addons)
+    add_subdirectory(src/addons)
 endif()
 
 if(ENABLE_TESTS)
