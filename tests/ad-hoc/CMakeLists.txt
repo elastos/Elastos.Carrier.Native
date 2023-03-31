@@ -8,14 +8,14 @@ endif()
 include_directories(
     .
     ../../include
-    ../../src
+    ../../src/core
     ../common
     ${CARRIER_INT_DIST_DIR}/include)
 
 list(APPEND TEST_SOURCES
     main.cc
     node_tests.cc
-#    routingtable_tests.cc
+    routingtable_tests.cc
 )
 
 if(ENABLE_SHARED)

@@ -59,7 +59,7 @@ void NodeTester::setUp() {
     node1->start();
 }
 
-void NodeTester::testOtherNode() {
+void NodeTester::testNode() {
     //Maybe set to java node ip
     Id javaId("MzDfxDmCpgX6J9DtvttUsXDyTDwNJKKAmWaUW4XGRfs");
     auto nij = NodeInfo {javaId, Utils::getLocalIpAddresses(), 39001};

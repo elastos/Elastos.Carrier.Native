@@ -30,7 +30,7 @@ std::map<std::string, std::shared_ptr<Addon>> g_addons {};
 
 bool loadAddons(Sp<Node> node, std::map<std::string, std::any>& addons) {
     if (addons.empty())
-        return false;
+        return true;
 
     for (auto& [name, value] : addons) {
         if (value.type() != typeid(std::map<std::string, std::any>)) {
