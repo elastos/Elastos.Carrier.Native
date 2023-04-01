@@ -206,11 +206,11 @@ int RPCServer::sendData(Sp<Message>& msg) {
         msg->setName(txidNames[msg->getTxid()]);
         if (filterMessage(msg->name)) {
             auto af = msg->getRemoteAddress().family();
-            log->info("\n\n-- Sent: {} bytes --\nLocal: {}\nTo: {}\n{}\n-- ** --\n",
+            log->debug("\n\n-- Sent: {} bytes --\nLocal: {}\nTo: {}\n{}\n-- ** --\n",
                     ret, getAddress(af).toString(), msg->getRemoteAddress().toString(), static_cast<std::string>(*msg));
         }
 #else
-        log->info("Sent {}/{} to {}: [{}] {}", msg->getMethodString(), msg->getTypeString(),
+        log->debug("Sent {}/{} to {}: [{}] {}", msg->getMethodString(), msg->getTypeString(),
                 msg->getRemoteAddress().toString(), buffer.size(), static_cast<std::string>(*msg));
 #endif
         return 0;
@@ -539,11 +539,11 @@ void RPCServer::handlePacket(const uint8_t *buf, size_t buflen, const SocketAddr
 #ifdef MSG_PRINT_DETAIL
     msg->setName(txidNames[msg->getTxid()]);
     if (filterMessage(msg->name)) {
-        log->info("\n\n-- Received: {} bytes -- \nLocal: {}\nFrom: {}\n{}\n-- ** --\n",
+        log->debug("\n\n-- Received: {} bytes -- \nLocal: {}\nFrom: {}\n{}\n-- ** --\n",
                   buflen,  getAddress(from.family()).toString(), from.toString(), static_cast<std::string>(*msg));
     }
 #else
-    log->info("Received {}/{} from {}: [{}] {}", msg->getMethodString(), msg->getTypeString(),
+    log->debug("Received {}/{} from {}: [{}] {}", msg->getMethodString(), msg->getTypeString(),
             from.toString(), buflen, static_cast<std::string>(*msg));
 #endif
 

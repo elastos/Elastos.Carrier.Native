@@ -91,7 +91,7 @@ void DHT::bootstrap() {
 
         auto call = std::make_shared<RPCCall>(this, node, q);
         call->addStateChangeHandler([&](RPCCall* call, RPCCall::State previous, RPCCall::State current) {
-            log->info("RPCCall::OnStateChange for FindNodeRequest message invoked .....");
+            log->debug("RPCCall::OnStateChange for FindNodeRequest message invoked .....");
             if (current == RPCCall::State::RESPONDED || current == RPCCall::State::ERROR
                     || current == RPCCall::State::TIMEOUT) {
                 auto r = std::dynamic_pointer_cast<FindNodeResponse>(call->getResponse());
@@ -151,7 +151,7 @@ void DHT::updateBootstrapNodes() {
 
         auto call = std::make_shared<RPCCall>(this, node, q);
         call->addStateChangeHandler([=](RPCCall* call, RPCCall::State previous, RPCCall::State current) {
-            log->info("RPCCall::OnStateChange for FindNodeRequest message invoked .....");
+            log->debug("RPCCall::OnStateChange for FindNodeRequest message invoked .....");
             if (current == RPCCall::State::RESPONDED || current == RPCCall::State::ERROR
                     || current == RPCCall::State::TIMEOUT) {
                 auto r = std::dynamic_pointer_cast<FindNodeResponse>(call->getResponse());
