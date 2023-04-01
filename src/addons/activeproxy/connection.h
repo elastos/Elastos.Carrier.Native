@@ -119,7 +119,7 @@ protected:
     void onDataRequest(const uint8_t* packet, size_t size) noexcept;
 
     void openUpstream() noexcept;
-    void closeUpstream() noexcept;
+    void closeUpstream(bool force = false) noexcept;
     void startReadUpstream() noexcept;
 
     void onAuthorized(const CryptoBox::PublicKey& serverPk, const CryptoBox::Nonce& nonce, uint16_t port) noexcept {
