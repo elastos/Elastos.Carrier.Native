@@ -27,7 +27,9 @@
 
 #include <string>
 #include <stdexcept>
-#include <iostream>
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 namespace elastos {
 namespace carrier {
@@ -38,6 +40,12 @@ public:
     ~ApplicationLock() { release(); };
 
     int acquire(const std::string& filename) {
+        // Make sure the existence of the parent directory
+        fs::path lockPath = filename;
+        auto parent = lockPath.parent_path();
+        if (!fs::exists(parent))
+            fs::create_directories(parent);
+
         this->filename = filename;
         fd = open(filename.c_str(), O_RDWR | O_CREAT, 0666);
         if (fd < 0)
