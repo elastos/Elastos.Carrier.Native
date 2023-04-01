@@ -39,6 +39,7 @@
 #include <carrier.h>
 #include "../../src/core/constants.h"
 #include <application_lock.h>
+#include <coredump.h>
 
 using namespace elastos::carrier;
 
@@ -228,6 +229,8 @@ static void setupSignals()
 
 int main(int argc, char *argv[])
 {
+    sys_coredump_set(true);
+
     auto params = parseArgs(argc, argv);
     if (params.help) {
         print_usage();

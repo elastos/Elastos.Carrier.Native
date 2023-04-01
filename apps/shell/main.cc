@@ -24,11 +24,9 @@
 #include <csignal>
 #include <cctype>
 
-#ifdef HAVE_SYS_RESOURCE_H
-#include <sys/resource.h>
-#endif
-
 #include <editline/readline.h>
+
+#include <coredump.h>
 
 #include "shell.h"
 #include "id_command.h"
@@ -47,18 +45,6 @@
 #include "exit_command.h"
 
 static const std::string prompt = "Carrier $";
-
-#ifdef HAVE_SYS_RESOURCE_H
-int sys_coredump_set(bool enable)
-{
-    const struct rlimit rlim = {
-        enable ? RLIM_INFINITY : 0,
-        enable ? RLIM_INFINITY : 0
-    };
-
-    return setrlimit(RLIMIT_CORE, &rlim);
-}
-#endif
 
 char *trim(char *str)
 {
