@@ -169,11 +169,13 @@ void ProxyConnection::close() noexcept
 
     if (upstream.data) {
         uv_read_stop((uv_stream_t*)&upstream);
-        uv_close((uv_handle_t*)&upstream, [](uv_handle_t* handle) {
-            ProxyConnection* pc = (ProxyConnection*)handle->data;
-            handle->data = nullptr;
-            pc->unref(); // upstream.data
-        });
+        if (!uv_is_closing((uv_handle_t*)&upstream)) {
+            uv_close((uv_handle_t*)&upstream, [](uv_handle_t* handle) {
+                ProxyConnection* pc = (ProxyConnection*)handle->data;
+                handle->data = nullptr;
+                pc->unref(); // upstream.data
+            });
+        }
     }
 
     if (relay.data) {
@@ -325,6 +327,9 @@ static inline size_t randomPadding(void)
 
 void ProxyConnection::sendAuthenticateRequest() noexcept
 {
+    if (state == ConnectionState::Closed)
+        return;
+
     const Id& nodeId = proxy.getNodeId();
     const CryptoBox::PublicKey& pk = proxy.getSessionKey();
     const CryptoBox::Nonce& nonce = proxy.getSessionNonce();
@@ -379,6 +384,9 @@ void ProxyConnection::sendAuthenticateRequest() noexcept
 
 void ProxyConnection::sendAttachRequest() noexcept
 {
+    if (state == ConnectionState::Closed)
+        return;
+
     const CryptoBox::PublicKey& pk = proxy.getSessionKey();
     uint16_t port = htons(proxy.getRelayPort());
 
@@ -428,6 +436,9 @@ void ProxyConnection::sendAttachRequest() noexcept
 
 void ProxyConnection::sendPingRequest() noexcept
 {
+    if (state == ConnectionState::Closed)
+        return;
+
     size_t padding = randomPadding();
     size_t size = PACKET_HEADER_BYTES + padding;
 
@@ -471,6 +482,9 @@ static uint8_t randomBoolean(bool v)
 
 void ProxyConnection::sendConnectResponse(bool success) noexcept
 {
+    if (state == ConnectionState::Closed)
+        return;
+
     size_t padding = randomPadding();
     size_t size = PACKET_HEADER_BYTES + sizeof(uint8_t) + padding;
 
@@ -521,6 +535,9 @@ void ProxyConnection::sendConnectResponse(bool success) noexcept
 
 void ProxyConnection::sendDisconnectRequest() noexcept
 {
+    if (state == ConnectionState::Closed)
+        return;
+
     size_t padding = randomPadding();
     size_t size = PACKET_HEADER_BYTES + padding;
 
@@ -558,6 +575,9 @@ void ProxyConnection::sendDisconnectRequest() noexcept
 
 void ProxyConnection::sendDataRequest(const uint8_t* data, size_t _size) noexcept
 {
+    if (state == ConnectionState::Closed)
+        return;
+
     size_t size = PACKET_HEADER_BYTES + CryptoBox::MAC_BYTES + _size;
 
     WriteRequest* request = new WriteRequest{this, size};
@@ -707,7 +727,7 @@ void ProxyConnection::processRelayPacket(const uint8_t* packet, size_t size) noe
             onAttachResponse(packet, size);
             return;
         } else {
-            log->error("Connection {} got a wrong packet, AUTH or ATTACH acknowledge expected.", id);
+            log->error("Connection {} got a wrong packet({}), AUTH or ATTACH acknowledge expected.", flag, id);
             close();
             return;
         }
@@ -721,7 +741,7 @@ void ProxyConnection::processRelayPacket(const uint8_t* packet, size_t size) noe
             onConnectRequest(packet, size);
             return;
         } else {
-            log->error("Connection {} got a wrong packet, PING acknowledge or CONNECT expected.", id);
+            log->error("Connection {} got a wrong packet({}), PING acknowledge or CONNECT expected.", flag, id);
             close();
             return;
         }
@@ -735,7 +755,7 @@ void ProxyConnection::processRelayPacket(const uint8_t* packet, size_t size) noe
             onDisconnectRequest(packet, size);
             return;
         } else {
-            log->error("Connection {} got a wrong packet, DATA or DISCONNECT expected.", id);
+            log->error("Connection {} got a wrong packet({}), DATA or DISCONNECT expected.", flag, id);
             close();
             return;
         }
@@ -833,7 +853,7 @@ void ProxyConnection::onConnectRequest(const uint8_t* packet, size_t size) noexc
 void ProxyConnection::onDisconnectRequest(const uint8_t* packet, size_t size) noexcept
 {
     log->debug("Connection {} got DISCONNECT from server {}", id, proxy.serverEndpoint());
-    closeUpstream();
+    closeUpstream(true);
 }
 
 void ProxyConnection::onDataRequest(const uint8_t* packet, size_t size) noexcept
@@ -921,7 +941,7 @@ void ProxyConnection::openUpstream() noexcept
     }
 }
 
-void ProxyConnection::closeUpstream() noexcept
+void ProxyConnection::closeUpstream(bool force) noexcept
 {
     if (state == ConnectionState::Closed)
         return;
@@ -934,25 +954,42 @@ void ProxyConnection::closeUpstream() noexcept
     if (!upstream.data)
         return;
 
-    ShutdownRequest* request = new ShutdownRequest{this};
-    auto rc = uv_shutdown((uv_shutdown_t*)request, (uv_stream_t*)&upstream, [](uv_shutdown_t* req, int status){
-        ShutdownRequest* request = (ShutdownRequest*)req;
-        ProxyConnection* pc = request->connection();
+    int rc = 0;
+    ShutdownRequest* request = nullptr;
 
-        uv_close((uv_handle_t*)&pc->upstream, [](uv_handle_t* handle) {
-            ProxyConnection* pc = (ProxyConnection*)handle->data;
-            handle->data = nullptr;
-            pc->unref(); // upstream.data
+    if (!force) {
+        request = new ShutdownRequest{this};
+        rc = uv_shutdown((uv_shutdown_t*)request, (uv_stream_t*)&upstream, [](uv_shutdown_t* req, int status){
+            ShutdownRequest* request = (ShutdownRequest*)req;
+            ProxyConnection* pc = request->connection();
+
+            if (uv_is_closing((uv_handle_t*)&pc->upstream)) {
+                delete request;
+                return;
+            }
+            
+            uv_close((uv_handle_t*)&pc->upstream, [](uv_handle_t* handle) {
+                ProxyConnection* pc = (ProxyConnection*)handle->data;
+                handle->data = nullptr;
+                pc->unref(); // upstream.data
+            });
+
+            log->info("Connection {} closed upstream {}", pc->id, pc->proxy.upstreamEndpoint());
+
+            pc->state = ConnectionState::Idling;
+            pc->onIdle();
+            delete request;
         });
+    }
+    if (rc < 0 || force) {
+        if (uv_is_closing((uv_handle_t*)&upstream)) {
+            if (request)
+                delete request;
+            return;
+        }
 
-        log->info("Connection {} closed upstream {}", pc->id, pc->proxy.upstreamEndpoint());
-
-        pc->state = ConnectionState::Idling;
-        pc->onIdle();
-        delete request;
-    });
-    if (rc < 0) {
-        log->warn("Connection {} shutdown upstream failed({}): {}, force to close.", id, rc, uv_strerror(rc));
+        if (rc < 0)
+            log->warn("Connection {} shutdown upstream failed({}): {}, force to close.", id, rc, uv_strerror(rc));
 
         uv_close((uv_handle_t*)&upstream, [](uv_handle_t* handle) {
             ProxyConnection* pc = (ProxyConnection*)handle->data;
