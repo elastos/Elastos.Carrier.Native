@@ -48,9 +48,12 @@ protected:
             return;
         }
 
+        std::transform(name.cbegin(), name.cend(), name.begin(), // write to the same location
+                [](unsigned char c) { return std::tolower(c); });
+
         const char* nname = (const char *)utf8proc_NFC((unsigned char *)(name.c_str()));
         std::vector<uint8_t> data;
-        data.reserve(strlen(nname));
+        data.resize(strlen(nname));
         std::memcpy((void*)data.data(), nname, strlen(nname));
         auto d = SHA256::digest(data);
         auto id = Id(d);
