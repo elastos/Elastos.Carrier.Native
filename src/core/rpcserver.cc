@@ -265,22 +265,9 @@ RPCServer::bindSockets(const SocketAddress& bind4, const SocketAddress& bind6)
 void
 RPCServer::openSockets()
 {
-    int stopfds[2];
-#ifndef _WIN32
-    auto status = pipe(stopfds);
-    if (status == -1) {
-        throw DhtException(std::string("Can't open pipe: ") + strerror(errno));
-    }
-#else
-    udpPipe(stopfds);
-#endif
-    int stop_readfd = stopfds[0];
-
-    stopfd = stopfds[1];
-
     running = true;
-    rcv_thread = std::thread([this, stop_readfd, ls4=sock4, ls6=sock6]() mutable {
-        int selectFd = std::max({ls4, ls6, stop_readfd}) + 1;
+    rcv_thread = std::thread([this, ls4=sock4, ls6=sock6]() mutable {
+        int selectFd = std::max({ls4, ls6}) + 1;
         struct timeval timeout;
 
 // TODO:: will be remove
@@ -293,7 +280,6 @@ RPCServer::openSockets()
             while (running) {
                 fd_set readfds;
                 FD_ZERO(&readfds);
-                FD_SET(stop_readfd, &readfds);
 
                 if (ls4 >= 0) {
                     FD_SET(ls4, &readfds);
@@ -321,14 +307,7 @@ RPCServer::openSockets()
                     sockaddr_storage from;
                     socklen_t from_len = sizeof(from);
 
-                    if (FD_ISSET(stop_readfd, &readfds)) {
-                        if (recv(stop_readfd, (char*)buf.data(), buf.size(), 0) < 0) {
-                            if (log)
-                                log->error("Got stop packet error: {}", strerror(errno));
-                            break;
-                        }
-                    }
-                    else if (ls4 >= 0 && FD_ISSET(ls4, &readfds))
+                    if (ls4 >= 0 && FD_ISSET(ls4, &readfds))
                         rc = recvfrom(ls4, (char*)buf.data(), (size_t)buf.size(), 0, (sockaddr*)&from, &from_len);
                     else if (ls6 >= 0 && FD_ISSET(ls6, &readfds))
                         rc = recvfrom(ls6, (char*)buf.data(), (size_t)buf.size(), 0, (sockaddr*)&from, &from_len);
@@ -369,7 +348,7 @@ RPCServer::openSockets()
                                     break;
                                 sock4 = ls4;
                                 sock6 = ls6;
-                                selectFd = std::max({ls4, ls6, stop_readfd}) + 1;
+                                selectFd = std::max({ls4, ls6}) + 1;
                             } else {
                                 break;
                             }
@@ -387,17 +366,12 @@ RPCServer::openSockets()
             close(ls4);
         if (ls6 >= 0)
             close(ls6);
-        if (stop_readfd != -1)
-            close(stop_readfd);
-        if (stopfd != -1)
-            close(stopfd);
         std::unique_lock<std::mutex> lk(lock, std::try_to_lock);
         if (lk.owns_lock()) {
             sock4 = -1;
             sock6 = -1;
             bound4 = {};
             bound6 = {};
-            stopfd = -1;
         }
     });
 }
@@ -425,11 +399,8 @@ void RPCServer::stop() {
         return;
 
     state = State::STOPPED;
-    if (running.exchange(false)) {
-        auto sfd = stopfd;
-        if (sfd != -1 && write(sfd, "\0", 1) == -1)
-            log->error("Can't write to stop fd");
-    }
+    if (!running.exchange(false))
+        return;
 
     if (rcv_thread.joinable())
         rcv_thread.join();

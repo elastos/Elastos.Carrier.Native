@@ -105,7 +105,6 @@ private:
 
     int sock4 {-1};
     int sock6 {-1};
-    int stopfd {-1};
 
     SocketAddress bound4;
     SocketAddress bound6;
