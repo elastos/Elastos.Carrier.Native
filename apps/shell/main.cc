@@ -69,7 +69,7 @@ int main(int argc, char **argv)
     rl_initialize();
     stifle_history(256);
     rl_bind_key('\t', rl_complete);
-    rl_readline_name = "carriershell";
+    rl_readline_name = "carrier-shell";
 
     Shell shell;
     IdCommand idCommand;
