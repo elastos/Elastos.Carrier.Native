@@ -100,8 +100,9 @@ void RoutingTable::_modify(const std::vector<Sp<KBucket>>& toRemove, const std::
         list_removeAll(newBuckets, toRemove);
     if (!toAdd.empty())
         list_addAll(newBuckets, toAdd);
+    
+    assert(newBuckets.size() != 0);
 
-    // TODO: Check ME here.
     auto sortKBucket = [](Sp<KBucket> a, Sp<KBucket> b) -> bool {
         return a->compareTo(b) < 0;
     };
@@ -114,11 +115,9 @@ void RoutingTable::_split(const Sp<KBucket>& bucket) {
 
     auto& prefix = bucket->getPrefix();
     const Prefix& pl = prefix.splitBranch(false);
-    auto isHome = isHomeBucket(pl);
-    Sp<KBucket> l = std::make_shared<KBucket>(pl, isHome);
+    Sp<KBucket> l = std::make_shared<KBucket>(pl, isHomeBucket(pl));
     const Prefix& ph = prefix.splitBranch(true);
-    isHome = isHomeBucket(ph);
-    Sp<KBucket> h = std::make_shared<KBucket>(ph, isHome);
+    Sp<KBucket> h = std::make_shared<KBucket>(ph, isHomeBucket(ph));
 
     for (auto& entry: bucket->getEntries()) {
         if (l->getPrefix().isPrefixOf(entry->getId()))
@@ -168,8 +167,8 @@ void RoutingTable::_mergeBuckets() {
             if (effectiveSize1 + effectiveSize2 <= Constants::MAX_ENTRIES_PER_BUCKET) {
                 // Insert into a new bucket directly, no splitting to avoid
                 // fibrillation between merge and split operations
-                auto isHome = isHomeBucket(b1->getPrefix());
-                auto newBucket = std::make_shared<KBucket>(b1->getPrefix().getParent(), isHome);
+                auto parent = b1->getPrefix().getParent();
+                auto newBucket = std::make_shared<KBucket>(parent, isHomeBucket(parent));
 
                 for (auto& entry: b1->getEntries()) {
                     newBucket->_put(entry);
@@ -208,8 +207,6 @@ void RoutingTable::_maintenance() {
     auto bootstrapIds = dht.getBootstrapIds();
 
     for (auto& bucket : getBuckets()) {
-        auto isHome = bucket->isHomeBucket();
-
         std::list<Sp<KBucketEntry>> entries = bucket->getEntries();
         auto wasFull = entries.size() >= Constants::MAX_ENTRIES_PER_BUCKET;
         for (auto& entry : entries) {
@@ -231,9 +228,6 @@ void RoutingTable::_maintenance() {
             auto name =  "Refreshing Bucket - " + bucket->getPrefix().toString();
             tryPingMaintenance(bucket, {PingRefreshTask::Options::probeCache}, name);
         }
-
-        // only replace 1 bad entry with a replacement bucket entry at a time (per bucket)
-        // No need: bucket->_promoteVerifiedCacheEntry();
     }
 }
 
@@ -270,7 +264,6 @@ void RoutingTable::fillBuckets() {
     }
 }
 
-// TODO: check me.
 void RoutingTable::load(const std::string& path) {
     assert(!path.empty());
 

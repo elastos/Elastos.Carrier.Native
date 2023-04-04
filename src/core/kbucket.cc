@@ -133,10 +133,14 @@ void KBucket::_update(Sp<KBucketEntry> toRemove, Sp<KBucketEntry> toInsert) {
         if (added) {
             newEntries.push_back(toInsert);
         }
-#if 0 // TODO: Check me more.
-        if (unorderedInsert)
-            Collections.sort(newEntries, KBucketEntry.AGE_ORDER);
-#endif
+
+        if (unorderedInsert) {
+            auto sortKBucketEntry = [](Sp<KBucketEntry> a, Sp<KBucketEntry> b) -> bool {
+                return a->getCreationTime() < b->getCreationTime();
+            };
+            newEntries.sort(sortKBucketEntry);
+        }
+
     }
 
     // make changes visible
