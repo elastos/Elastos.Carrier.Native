@@ -19,6 +19,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
 #pragma once
 
 #include <iostream>
@@ -33,10 +34,8 @@ public:
 
 protected:
     void setupOptions() override {
-        auto app = getApp();
-
-        app->add_option("ID", id, "The value id.");
-        app->require_option(1, 1);
+        add_option("ID", id, "The value id.");
+        require_option(1, 1);
     };
 
     void execute() override {

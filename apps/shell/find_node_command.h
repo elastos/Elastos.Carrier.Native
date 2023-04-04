@@ -19,6 +19,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
 #pragma once
 
 #include <iostream>
@@ -32,11 +33,9 @@ public:
 
 protected:
     void setupOptions() override {
-        auto app = getApp();
-
-        app->add_option("-m, --mode", mode, "lookup mode: 0(arbitrary), 1(optimistic), 2(conservative).");
-        app->add_option("ID", id, "The target node id to be find.");
-        app->require_option(1, 2);
+        add_option("-m, --mode", mode, "lookup mode: 0(arbitrary), 1(optimistic), 2(conservative).");
+        add_option("ID", id, "The target node id to be find.");
+        require_option(1, 2);
     };
 
     void execute() override {

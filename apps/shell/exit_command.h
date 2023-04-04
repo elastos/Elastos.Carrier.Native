@@ -19,10 +19,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
 #pragma once
 
-#include <iostream>
-#include <string>
+#include <cstdlib>
 
 class ExitCommand : public Command {
 public:
@@ -31,6 +31,6 @@ public:
 protected:
     void execute() override {
         node->stop();
-        exit(0);
+        std::exit(0);
     }
 };

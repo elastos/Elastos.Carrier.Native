@@ -19,12 +19,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
 #pragma once
 
-#include <iostream>
-#include <string>
-
 #include "command.h"
+#include "storage_value_command.h"
+#include "storage_peer_command.h"
+#include "storage_listpeer_command.h"
+#include "storage_listvalue_command.h"
 
 class StorageCommand : public Command {
 public:
@@ -32,7 +34,17 @@ public:
 
 protected:
     void setupOptions() override {
-        auto app = getApp();
-        app->require_subcommand();
+        require_subcommand();
+
+        addSubCommand(valueCommand);
+        addSubCommand(peerCommand);
+        addSubCommand(listValueCommand);
+        addSubCommand(listPeerCommand);
     };
+
+private:
+    ValueCommand valueCommand{};
+    PeerCommand peerCommand{};
+    ListValueCommand listValueCommand{};
+    ListPeerCommand listPeerCommand{};
 };

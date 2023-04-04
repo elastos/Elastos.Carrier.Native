@@ -14,7 +14,7 @@ include_directories(
     ${CARRIER_INT_DIST_DIR}/include)
 
 list(APPEND SHELL_SOURCES
-    main.cc
+    shell.cc
 )
 
 list(APPEND SHELL_DEPENDS

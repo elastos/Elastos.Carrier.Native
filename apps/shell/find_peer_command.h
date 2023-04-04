@@ -19,10 +19,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
 #pragma once
 
 #include <iostream>
 #include <string>
+#include <vector>
+#include <algorithm>
+#include <cstring>
 
 #include "command.h"
 
@@ -32,12 +36,10 @@ public:
 
 protected:
     void setupOptions() override {
-        auto app = getApp();
-
-        app->add_option("-m, --mode", mode, "lookup mode: 0(arbitrary), 1(optimistic), 2(conservative).");
-        app->add_option("-x, --expected-count", excepted, "expected number of peers.");
-        app->add_option("NAME", name, "The service name to be find.");
-        app->require_option(1, 3);
+        add_option("-m, --mode", mode, "lookup mode: 0(arbitrary), 1(optimistic), 2(conservative).");
+        add_option("-x, --expected-count", excepted, "expected number of peers.");
+        add_option("NAME", name, "The service name to be find.");
+        require_option(1, 3);
     };
 
     void execute() override {
