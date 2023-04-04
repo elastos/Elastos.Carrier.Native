@@ -23,6 +23,7 @@
 #ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#pragma GCC diagnostic ignored "-Wunqualified-std-cast-call"
 #endif
 
 #include "spdlog/sinks/stdout_color_sinks.h"
