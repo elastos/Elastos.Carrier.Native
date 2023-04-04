@@ -19,10 +19,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
 #pragma once
 
 #include <iostream>
+#include <vector>
 #include <string>
+#include <algorithm>
+#include <cstring>
+
 #include <utf8proc.h>
 
 #include "command.h"
@@ -33,11 +38,9 @@ public:
 
 protected:
     void setupOptions() override {
-        auto app = getApp();
-
-        app->add_option("NAME", name, "The service name to be announce.");
-        app->add_option("PORT", port, "The service port to be announce.");
-        app->require_option(2, 2);
+        add_option("NAME", name, "The service name to be announce.");
+        add_option("PORT", port, "The service port to be announce.");
+        require_option(2, 2);
     };
 
     void execute() override {

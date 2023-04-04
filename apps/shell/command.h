@@ -24,6 +24,7 @@
 
 #include <string>
 #include <memory>
+#include <cstdlib>
 
 #include <CLI/CLI.hpp>
 #include <carrier.h>
@@ -31,13 +32,15 @@
 using namespace elastos::carrier;
 using namespace CLI;
 
-extern std::shared_ptr<Node> node;
+template<class T>
+struct null_deleter
+{
+    void operator() (T*) const {}
+};
 
-class Command {
+class Command : protected App, public std::enable_shared_from_this<App> {
 public:
-    Command(std::string name, std::string description) {
-        cliApp = std::make_shared<App>(description, name);
-    };
+    Command(std::string name, std::string description) : App(description, name) {};
 
     Command(std::string description = "") : Command("", description) {};
 
@@ -45,43 +48,71 @@ public:
 
     void addSubCommand(Command& command) {
         command.prepare();
-        cliApp->add_subcommand(command.cliApp);
+        this->add_subcommand(command.shared_from_this());
     };
 
     void prepare() {
+        if (prepaired)
+            return;
+
         setupOptions();
 
-        cliApp->callback([this]() {
+        this->callback([this]() {
             this->execute();
         });
+
+        prepaired = true;
     }
 
-    void run(int argc, char* argv[]) {
+    void process(int argc, char* argv[]) {
+        prepare();
+
         try {
-            cliApp->parse(argc, argv);
+            parse(argc, argv);
         } catch(const CLI::Error &e) {
-            int rc = cliApp->exit(e);
-            if (!cliApp->get_parent())
-                exit(rc);
+            int rc = this->exit(e);
+            if (!this->get_parent())
+                std::exit(rc);
         }
     };
 
-    void run(std::string cmdline) {
+    void process(std::string cmdline) {
+        prepare();
+
         try {
-            cliApp->parse(cmdline, false);
+            this->parse(cmdline, false);
         } catch(const CLI::Error &e) {
-            cliApp->exit(e);
+            this->exit(e);
         }
     };
+
+    std::shared_ptr<App> shared_from_this() {
+        try {
+            return std::enable_shared_from_this<App>::shared_from_this();
+        } catch (std::bad_weak_ptr &) {
+            return std::shared_ptr<App>(dynamic_cast<App*>(this), null_deleter<App>());
+        }
+    }
+
+    std::shared_ptr<const App> shared_from_this() const {
+        try {
+            return std::enable_shared_from_this<App>::shared_from_this();
+        } catch (std::bad_weak_ptr &) {
+            return std::shared_ptr<const App>(dynamic_cast<const App*>(this), null_deleter<const App>());
+        }
+    }
 
 protected:
     virtual void setupOptions() {};
     virtual void execute() {};
 
-    std::shared_ptr<App>& getApp() {
-        return cliApp;
-    }
+    static std::shared_ptr<Node> node;
 
+/*
+    std::shared_ptr<App> getApp() {
+        return shared_from_this();
+    }
+*/
 private:
-    std::shared_ptr<App> cliApp;
+    bool prepaired {false};
 };

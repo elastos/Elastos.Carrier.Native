@@ -19,10 +19,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
 #pragma once
 
 #include <iostream>
 #include <string>
+#include <vector>
+#include <memory>
 
 #include "command.h"
 
@@ -32,13 +35,11 @@ public:
 
 protected:
     void setupOptions() override {
-        auto app = getApp();
-
-        app->add_flag("-m, --mutable", bMutable, "Mutable value, default is immutable value, no effect on update mode.");
-        app->add_option("-r, --recipient", recipient, "The recipient id, no effect on imuutable values or update mode.");
-        app->add_option("-u, --update-value", target, "Existing value id to be update.");
-        app->add_option("VALUES", text, "The value text.");
-        app->require_option(1, 4);
+        add_flag("-m, --mutable", bMutable, "Mutable value, default is immutable value, no effect on update mode.");
+        add_option("-r, --recipient", recipient, "The recipient id, no effect on imuutable values or update mode.");
+        add_option("-u, --update-value", target, "Existing value id to be update.");
+        add_option("VALUES", text, "The value text.");
+        require_option(1, 4);
     };
 
     void execute() override {

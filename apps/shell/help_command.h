@@ -19,10 +19,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
 #pragma once
 
 #include <iostream>
-#include <string>
 
 #include "command.h"
 
@@ -31,17 +31,21 @@ public:
     HelpCommand() : Command("help", "Show all subcommands") {};
 
 protected:
+    class SubCommandOnlyFormatter : public Formatter {
+    public:
+        SubCommandOnlyFormatter() = default;
+        ~SubCommandOnlyFormatter() = default;
+
+        std::string make_help(const App* app, std::string name, AppFormatMode mode) const override {
+            return Formatter::make_subcommands(app, mode);
+        };
+    };
+
     void execute() override {
-        std::cout << "Subcommands:" << std::endl
-                  << "   id                          Display the ID of current Carrier node." << std::endl
-                  << "   announcepeer                Announce a service peer." << std::endl
-                  << "   bootstrap                   Bootstrap from the node." << std::endl
-                  << "   findnode                    Find node and show the node info if exists" << std::endl
-                  << "   findpeer                    Find peer and show the candidate peers if exists" << std::endl
-                  << "   storevalue                  Store a value to the DHT." << std::endl
-                  << "   findvalue                   Find value and show the value if exists" << std::endl
-                  << "   routingtable                Display the routing tables." << std::endl
-                  << "   storage                     Show the local data storage." << std::endl
-                  << "   exit                        Close and quit the shell." << std::endl;
+        auto shell = get_parent();
+        auto fmt = SubCommandOnlyFormatter();
+
+        shell->clear(); // clear the parsed command context
+        std::cout << fmt.make_help(shell, "", AppFormatMode::Normal) << std::endl;
     }
 };

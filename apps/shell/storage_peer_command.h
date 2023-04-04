@@ -19,6 +19,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
 #pragma once
 
 #include <iostream>
@@ -32,11 +33,9 @@ public:
 
 protected:
     void setupOptions() override {
-        auto app = getApp();
-
-        app->add_option("-f, --family", family, "IP family: 4 for IPv4, 6 for IPv6, default both");
-        app->add_option("ID", id, "The peer id.");
-        app->require_option(1, 2);
+        add_option("-f, --family", family, "IP family: 4 for IPv4, 6 for IPv6, default both");
+        add_option("ID", id, "The peer id.");
+        require_option(1, 2);
     };
 
     void execute() override {

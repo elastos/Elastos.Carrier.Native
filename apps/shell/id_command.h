@@ -19,10 +19,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
 #pragma once
 
 #include <iostream>
-#include <string>
 
 #include "command.h"
 
@@ -37,6 +37,5 @@ protected:
         std::cout << "----------------------------------------------" << std::endl
                   << "Carrier id [" << id << "]" << std::endl
                   << "----------------------------------------------" << std::endl;
-
     }
 };

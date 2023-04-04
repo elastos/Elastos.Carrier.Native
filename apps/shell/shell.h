@@ -1,85 +1,55 @@
+/*
+ * Copyright (c) 2022 - 2023 trinity-tech.io
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+#pragma once
+
 #include <string>
 #include <memory>
 
 #include <carrier.h>
 #include <application_lock.h>
+
 #include "command.h"
+#include "id_command.h"
+#include "announce_peer_command.h"
+#include "bootstrap_command.h"
+#include "find_node_command.h"
+#include "find_peer_command.h"
+#include "store_value_command.h"
+#include "find_value_command.h"
+#include "routingtable_command.h"
+#include "storage_command.h"
+#include "help_command.h"
+#include "exit_command.h"
 
 using namespace elastos::carrier;
-
-std::shared_ptr<Node> node {};
 
 class Shell : public Command {
 public:
     Shell() : Command("Elastos carrier interactive shell.") {};
+    void handleCommands();
 
 protected:
-    void setupOptions() override {
-        auto app = getApp();
-
-        app->add_option("-4,--address4", addr4, "IPv4 address to listen.");
-        app->add_option("-6,--address6", addr6, "IPv6 address to listen.");
-        app->add_option("-p,--port", port, "The port to listen.");
-        app->add_option("-d,--dataDir", dataDir, "The directory to store the node data, default: ~/.cache/carrier.");
-        app->add_option("-b,--bootstrap", bootstrap, "The bootstrap node.");
-        app->add_option("-c,--config", configFile, "The configuration file.");
-        app->add_flag("--debug", waitForDebugAttach, "Waiting for the debuger attach.");
-    };
-
-    void execute() override {
-        if (node)
-            return;
-
-        if (waitForDebugAttach) {
-            printf("Wait for debugger attaching, process id is: %d.\n", getpid());
-        #ifndef _MSC_VER
-            printf("After debugger attached, press any key to continue......");
-            getchar();
-            printf("Attached, press any key to continue......");
-            getchar();
-        #else
-            DebugBreak();
-        #endif
-        }
-
-        auto builder = DefaultConfiguration::Builder {};
-        if (!configFile.empty()) {
-            try {
-                builder.load(configFile);
-            } catch (const std::exception& e) {
-                std::cout << "Can not load the config file: " << configFile << ", error: " << e.what();
-            }
-        }
-
-        if (!addr4.empty())
-            builder.setIPv4Address(addr4);
-
-        if (!addr6.empty())
-            builder.setIPv6Address(addr6);
-
-        if (port != 0)
-            builder.setListeningPort(port);
-
-        if (builder.getStoragePath().empty())
-            builder.setStoragePath(dataDir);
-
-        auto config = builder.build();
-        node = std::make_shared<Node>(config);
-
-        std::string lockfile = config->getStoragePath() + "/lock";
-
-        if(lock.acquire(lockfile) < 0) {
-            std::cout << "Another instance already running." << std::endl;
-            exit(-1);
-        }
-
-        try {
-            node->start();
-        } catch(std::exception& e) {
-            std::cout << e.what() << std::endl;
-            exit(-1);
-        }
-    };
+    void setupOptions() override;
 
 private:
     std::string addr4 {};
@@ -92,4 +62,16 @@ private:
 
     bool waitForDebugAttach = false;
     ApplicationLock lock;
+
+    IdCommand idCommand;
+    AnnouncePeerCommand announcePeerCommand {};
+    BootstrapCommand bootstrapCommand {};
+    FindNodeCommand findNodeCommand {};
+    FindPeerCommand findPeerCommand {};
+    StoreValueCommand storeValueCommand {};
+    FindValueCommand findValueCommand {};
+    RoutingTableCommand routingtableCommand {};
+    StorageCommand storageCommand {};
+    HelpCommand helpCommand {};
+    ExitCommand exitCommand {};
 };

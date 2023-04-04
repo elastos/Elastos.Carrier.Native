@@ -19,6 +19,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
 #pragma once
 
 #include <iostream>
@@ -32,12 +33,10 @@ public:
 
 protected:
     void setupOptions() override {
-        auto app = getApp();
-
-        app->add_option("ID", id, "The node id.");
-        app->add_option("ADDRESS", address, "The node address.");
-        app->add_option("PORT", port, "The node port.");
-        app->require_option(3, 3);
+        add_option("ID", id, "The node id.");
+        add_option("ADDRESS", address, "The node address.");
+        add_option("PORT", port, "The node port.");
+        require_option(3, 3);
     };
 
     void execute() override {
