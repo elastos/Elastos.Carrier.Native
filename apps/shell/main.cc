@@ -42,6 +42,7 @@
 #include "storage_peer_command.h"
 #include "storage_listpeer_command.h"
 #include "storage_listvalue_command.h"
+#include "help_command.h"
 #include "exit_command.h"
 
 static const std::string prompt = "Carrier $";
@@ -85,6 +86,7 @@ int main(int argc, char **argv)
     ListValueCommand listValueCommand;
     ListPeerCommand listPeerCommand;
     StorageCommand storageCommand;
+    HelpCommand helpCommand;
     ExitCommand exitCommand;
 
     shell.addSubCommand(idCommand);
@@ -100,6 +102,7 @@ int main(int argc, char **argv)
     storageCommand.addSubCommand(listValueCommand);
     storageCommand.addSubCommand(listPeerCommand);
     shell.addSubCommand(storageCommand);
+    shell.addSubCommand(helpCommand);
     shell.addSubCommand(exitCommand);
 
     shell.prepare();
