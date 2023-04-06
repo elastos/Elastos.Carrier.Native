@@ -17,7 +17,8 @@ list(APPEND LAUNCHER_SOURCES
 list(APPEND LAUNCHER_DEPENDS
     libuv
     carrier0
-    addons0)
+    addons0
+    CLI11)
 
 if(ENABLE_SHARED)
     set(LIBS carrier-shared addons-shared)

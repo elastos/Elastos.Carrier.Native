@@ -21,147 +21,95 @@
  */
 
 #include <iostream>
+#include <cstdlib>
 #include <csignal>
 
-#ifndef _MSC_VER
-#include <getopt.h>
-#else
-#define SIGHUP 0
-#include "wingetopt.h"
-#include <io.h>
+#ifndef _WIN32
+#include <unistd.h>
 #endif
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <signal.h>
-#include <unistd.h>
+#include <CLI/CLI.hpp>
 
 #include <carrier.h>
-#include "../../src/core/constants.h"
 #include <application_lock.h>
 #include <coredump.h>
 
 using namespace elastos::carrier;
 
-Sp<Node> g_node = nullptr;
-bool stopped = false;
-
+static Sp<Node> g_node = nullptr;
+static bool stopped = false;
 static ApplicationLock lock;
 
-static void print_usage()
-{
-    std::cout << "Usage: launcher [OPTIONS] " << std::endl;
-    std::cout << "   -c, --config <configFile>    The configuration file." << std::endl;
-    std::cout << "   -4, --address4 <addr4>       IPv4 address to listen." << std::endl;
-    std::cout << "   -6, --address6 <addr6>       IPv6 address to listen." << std::endl;
-    std::cout << "   -p, --port <port>            The port to listen." << std::endl;
-    std::cout << "   -d, --data-dir <dir>         The dir for storage data." << std::endl;
-    std::cout << "   -D, --daemonize              Set daemonize." << std::endl;
-    std::cout << "   -h, --help                   Show this help message and exit." << std::endl;
-}
-
-static void print_version() {
-    std::cout << "Elastos Carrier version " << Constants::VERSION << std::endl;
-}
-
-static const constexpr struct option long_options[] = {
-    {"help",        no_argument,        nullptr,    'h'},
-    {"config",      required_argument,  nullptr,    'c'},
-    {"address4",    required_argument,  nullptr,    '4'},
-    {"address6",    required_argument,  nullptr,    '6'},
-    {"port",        required_argument,  nullptr,    'p'},
-    {"data-dir",    required_argument,  nullptr,    'd'},
-    {"daemonize",   no_argument      ,  nullptr,    'D'},
-    {"version",     no_argument      ,  nullptr,    'v'},
-    {nullptr,       0,                  nullptr,    0}
-};
-
-struct dht_params {
+struct Options {
     bool help {false}; // print help and exit
     bool version {false};
     bool daemonize {false};
-    std::string ipv4 {};
-    std::string ipv6 {};
+    std::string addr4 {};
+    std::string addr6 {};
     uint16_t port {0};
-    std::string config_file {};
-    std::string data_dir {};
+    std::string configFile {};
+    std::string dataDir {};
 };
 
-static dht_params parseArgs(int argc, char **argv) {
-    dht_params params;
-    int opt;
-
-    if (argc < 2) {
-        params.help = true;
-        return params;
-    }
-
-    while ((opt = getopt_long(argc, argv, "ic:4:6:p:d:Dv", long_options, nullptr)) != -1) {
-        switch (opt) {
-            case 'v':
-                params.version = true;
-                break;
-            case 'c':
-                params.config_file = optarg;
-                break;
-            case '4':
-                params.ipv4 = optarg;
-                break;
-            case '6':
-                params.ipv6 = optarg;
-                break;
-            case 'p': {
-                    int port_arg = atoi(optarg);
-                    if (port_arg >= 0 && port_arg < 0x10000)
-                        params.port = port_arg;
-                    else
-                        std::cout << "Invalid port: " << port_arg << std::endl;
-                }
-                break;
-            case 'd':
-                params.data_dir = optarg;
-                break;
-            case 'D':
-                params.daemonize = true;
-                break;
-            case 'h':
-            default:
-                params.help = true;
-                return params;
-        }
-    }
-
-    return params;
+static void printVersion()
+{
+    std::cout << "Elastos Carrier version " << version() << std::endl;
 }
 
-static Sp<Configuration> initConfigure(dht_params& params) {
+static Options parseArgs(int argc, char **argv)
+{
+    Options options;
+    bool version {false};
+
+    CLI::App app("Elastos Carrier Launcher", "launcher");
+    app.add_option("-c, --config", options.configFile, "The configuration file.");
+    app.add_option("-4, --address4", options.addr4, "IPv4 address to listen.");
+    app.add_option("-6, --address6", options.addr6, "IPv6 address to listen.");
+    app.add_option("-p, --port", options.port, "The port to listen.");
+    app.add_option("-d, --data-dir", options.dataDir, "The directory to store the node data.");
+    app.add_flag("-D, --daemonize", options.daemonize, "Run in daemonize mode.");
+    app.add_flag("-v, --version", version, "Show the Carrier version.");
+
+    try {
+        app.parse(argc, argv);
+    } catch (const CLI::Error &e) {
+        int rc = app.exit(e);
+        std::exit(rc);
+    }
+
+    if (version) {
+        printVersion();
+        std::exit(0);
+    }
+
+    return options;
+}
+
+static Sp<Configuration> initConfigure(Options& options)
+{
     auto builder = DefaultConfiguration::Builder{};
 
-    if (!params.config_file.empty()) {
-        builder.load(params.config_file);
-    }
+    if (!options.configFile.empty())
+        builder.load(options.configFile);
 
-    if (!params.ipv4.empty()) {
-        builder.setIPv4Address(params.ipv4);
-    }
+    if (!options.addr4.empty())
+        builder.setIPv4Address(options.addr4);
 
-    if (!params.ipv6.empty()) {
-        builder.setIPv6Address(params.ipv6);
-    }
+    if (!options.addr6.empty())
+        builder.setIPv6Address(options.addr6);
 
-    if (params.port > 0) {
-        builder.setListeningPort(params.port);
-    }
+    if (options.port > 0)
+        builder.setListeningPort(options.port);
 
-    if (!params.data_dir.empty()) {
-        builder.setStoragePath(params.data_dir);
-    }
+    if (!options.dataDir.empty())
+        builder.setStoragePath(options.dataDir);
 
     auto config = builder.build();
     return config;
 }
 
-static Sp<Node> initCarrierNode(Sp<Configuration> config) {
+static Sp<Node> initCarrierNode(Sp<Configuration> config)
+{
 	auto node = std::make_shared<Node>(config);
     try {
 	    node->start();
@@ -174,7 +122,7 @@ static Sp<Node> initCarrierNode(Sp<Configuration> config) {
 }
 
 static void daemonize() {
-#ifndef _MSC_VER
+#ifndef _WIN32
     pid_t pid = fork();
     if (pid < 0) exit(EXIT_FAILURE);
     if (pid > 0) exit(EXIT_SUCCESS);
@@ -192,7 +140,8 @@ static void daemonize() {
 #endif
 }
 
-static void stop() {
+static void stop()
+{
     stopped = true;
     unloadAddons();
 
@@ -202,57 +151,41 @@ static void stop() {
     }
 }
 
-static void signal_handler(int sig)
+static void signalHandler(int sig)
 {
-    switch(sig) {
-    case SIGHUP:
-        break;
-    case SIGINT:
-       stop();
-    case SIGTERM:
-        break;
-    }
+    stop();
 }
 
 static void setupSignals()
 {
+
+    signal(SIGCHLD, SIG_IGN);   /* ignore child */
+    signal(SIGTSTP, SIG_IGN);   /* ignore tty signals */
+    signal(SIGTTOU, SIG_IGN);
+    signal(SIGTTIN, SIG_IGN);
 #ifndef _MSC_VER
-    signal(SIGCHLD,SIG_IGN); /* ignore child */
-    signal(SIGTSTP,SIG_IGN); /* ignore tty signals */
-    signal(SIGTTOU,SIG_IGN);
-    signal(SIGTTIN,SIG_IGN);
-    signal(SIGHUP,signal_handler); /* catch hangup signal */
-    signal(SIGINT,signal_handler); /* catch interrupt signal */
-    signal(SIGTERM,signal_handler); /* catch kill signal */
+    signal(SIGHUP, SIG_IGN);    /* catch hangup signal */
 #endif
+    signal(SIGINT, signalHandler); /* catch interrupt signal */
+    signal(SIGTERM, signalHandler); /* catch kill signal */
 }
 
 int main(int argc, char *argv[])
 {
     sys_coredump_set(true);
 
-    auto params = parseArgs(argc, argv);
-    if (params.help) {
-        print_usage();
-        return 0;
-    }
-    if (params.version) {
-        print_version();
-        return 0;
-    }
-
-    if (params.daemonize) {
+    auto options = parseArgs(argc, argv);
+    if (options.daemonize)
         daemonize();
-    }
 
     setupSignals();
 
-    auto config = initConfigure(params);
+    auto config = initConfigure(options);
 
     std::string lockfile = config->getStoragePath() + "/lock";
     if(lock.acquire(lockfile) < 0) {
         std::cout << "Another instance already running." << std::endl;
-        exit(-1);
+        std::exit(-1);
     }
 
 	g_node = initCarrierNode(config);
@@ -264,9 +197,8 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    while (!stopped) {
+    while (!stopped)
         sleep(1);
-    }
 
     return 0;
 }
