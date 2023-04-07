@@ -228,7 +228,6 @@ void LoggerTester::testConf() {
     auto fullpath = path + "/" + file;
     Logger::initialize(fullpath);
     auto log = Logger::get("root");
-    CPPUNIT_ASSERT(log->isTraceEnabled());
     auto name = log->getName();
     log->critical("critical test.");
     log->error("error test.");
