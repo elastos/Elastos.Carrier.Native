@@ -23,6 +23,8 @@
 #pragma once
 
 #include <string>
+#include <any>
+
 #include "spdlog/spdlog.h"
 #include "types.h"
 
@@ -117,6 +119,10 @@ public:
     static void initialize(const std::string& config);
 
     static Sp<Logger> get(const std::string& name);
+
+    static void setDefaultSettings(std::any settings);
+
+    static void setLogFile(std::string file);
 
     //---- Print -----
     template<typename... Args>
