@@ -27,6 +27,7 @@
 #include "utils/addr.h"
 #include "utils/json_to_any.h"
 #include "carrier/default_configuration.h"
+#include "carrier/log.h"
 
 namespace elastos {
 namespace carrier {
@@ -77,6 +78,11 @@ void Builder::load(const std::string& filePath) {
 
     if (root.contains("dataDir"))
         setStoragePath(root["dataDir"].get<std::string>());
+
+    if (root.contains("logger")) {
+        auto logSettings = root["logger"].get<nlohmann::json>();
+        Logger::setDefaultSettings(jsonToAny(logSettings));
+    }
 
     if (root.contains("bootstraps")) {
         const auto bootstraps = root["bootstraps"];

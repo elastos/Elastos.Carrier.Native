@@ -35,12 +35,21 @@
 #pragma GCC diagnostic pop
 #endif
 
+#include <iostream>
 #include "carrier/log.h"
 
 using namespace spdlog;
 
 namespace elastos {
 namespace carrier {
+
+struct UserSettings {
+    level::level_enum defalutLevel = level::info;
+    Sp<sinks::basic_file_sink_mt> fileSink = nullptr;
+    std::string pattern {};
+};
+
+static UserSettings userSettings {};
 
 void Logger::initialize(const std::string& config) {
     spdlog_setup::from_file(config);
@@ -49,9 +58,59 @@ void Logger::initialize(const std::string& config) {
 std::shared_ptr<Logger> Logger::get(const std::string& name) {
     auto spd_logger = spdlog::get(name);
     if (!spd_logger) {
-        spd_logger = spdlog::stdout_color_mt(name);
+        if (userSettings.fileSink == nullptr) {
+            spd_logger = spdlog::stdout_color_mt(name);
+        }
+        else {
+            spd_logger = std::make_shared<spdlog::logger>(name, userSettings.fileSink);
+            spdlog::register_logger(spd_logger);
+        }
     }
+
+    spd_logger->set_level(userSettings.defalutLevel);
+    if (!userSettings.pattern.empty())
+        spd_logger->set_pattern(userSettings.pattern, pattern_time_type::local);
+
     return std::make_shared<Logger>(spd_logger);
+}
+
+void Logger::setDefaultSettings(std::any value) {
+    static std::unordered_map<std::string, level::level_enum> levelMap = {
+        { "trace", level::trace },
+        { "debug", level::debug },
+        { "info", level::info },
+        { "warn", level::warn },
+        { "err", level::err },
+        { "critical", level::critical },
+        { "off", level::off },
+    };
+
+    if (value.type() != typeid(std::map<std::string, std::any>)) {
+        std::cout << "Logger : invalid configure! " << std::endl;
+    }
+
+    auto settings = std::any_cast<std::map<std::string, std::any>>(value);
+
+    if (settings.count("level")) {
+        std::string level = std::any_cast<std::string>(settings.at("level"));
+        if (levelMap.count(level))
+            userSettings.defalutLevel = levelMap[level];
+    }
+
+    if (settings.count("logFile")) {
+        std::string logFile = std::any_cast<std::string>(settings.at("logFile"));
+
+        setLogFile(logFile);
+    }
+
+    if (settings.count("pattern")) {
+        userSettings.pattern = std::any_cast<std::string>(settings.at("pattern"));
+    }
+}
+
+void Logger::setLogFile(std::string filename) {
+    if (!filename.empty())
+        userSettings.fileSink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(filename);
 }
 
 void Logger::setLevel(Level level) {
