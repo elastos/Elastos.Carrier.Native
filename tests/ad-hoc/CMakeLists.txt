@@ -30,7 +30,9 @@ target_link_libraries(ad-hoc LINK_PUBLIC ${CARRIER_LIB} cppunit pthread dl)
 enable_testing()
 add_test(TEST ad-hoc)
 
-install(TARGETS ad-hoc
-    RUNTIME DESTINATION "bin"
-    ARCHIVE DESTINATION "lib"
-    LIBRARY DESTINATION "lib")
+if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+    install(TARGETS ad-hoc
+        RUNTIME DESTINATION "bin"
+        ARCHIVE DESTINATION "lib"
+        LIBRARY DESTINATION "lib")
+endif()

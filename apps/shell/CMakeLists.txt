@@ -49,4 +49,4 @@ install(TARGETS carrier-shell
     LIBRARY DESTINATION "lib")
 
 install(FILES shell.conf
-    DESTINATION "etc/carrier")
+    DESTINATION "etc/carrier-shell")

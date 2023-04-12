@@ -6,7 +6,7 @@ if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.24.0")
     cmake_policy(SET CMP0135 NEW)
 endif()
 
-project(ElastosCarrier VERSION 1.0.0 LANGUAGES CXX)
+project(carrier-native VERSION 2.0.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED on)
@@ -58,3 +58,4 @@ endif()
 add_custom_target(dist
     COMMAND ${CMAKE_MAKE_PROGRAM} package
     COMMENT "Build distrubtion package")
+
