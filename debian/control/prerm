@@ -1,0 +1,14 @@
+#!/bin/sh
+set -e
+
+# Begin prerm_init
+if [ -x "/etc/init.d/carrier-meerkat" ]; then
+	invoke-rc.d carrier-meerkat stop || exit $?
+fi
+# End prerm_init
+
+# Begin prerm_systemd
+if [ -d /run/systemd/system ]; then
+	deb-systemd-invoke stop 'carrier-meerkat.service' >/dev/null || true
+fi
+# End prerm_systemd

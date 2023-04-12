@@ -1,0 +1,32 @@
+#!/bin/sh
+
+set -e
+
+case "$1" in
+  upgrade)
+  ;;
+  install|abort-upgrade)
+  ;;
+  *)
+    echo "preinst called with unknown argument '$1'" >&2
+    exit 1
+  ;;
+esac
+
+# Begin preinst
+if ( [ "$1" = "install" ] || [ "$1" = "upgrade" ] ) && [ -d /usr/lib/carrier-meerkat ]; then
+	if [ -x "/etc/init.d/carrier-meerkat" ]; then
+		invoke-rc.d carrier-meerkat stop || exit $?
+	fi
+
+	if [ -d /run/systemd/system ]; then
+		deb-systemd-invoke stop 'carrier-meerkat.service' >/dev/null || true
+	fi
+
+	if [ -d /usr/lib/carrier-meerkat/lib ]; then
+		BACKUP_DIR=/usr/lib/carrier-meerkat/lib/backup-`date +"%Y%m%d%H%M%S"`
+	fi
+fi
+# End preinst
+
+exit 0

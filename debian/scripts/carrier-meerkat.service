@@ -1,0 +1,18 @@
+[Unit]
+Description=Carrier MeerKat Daemon
+After=network-online.target
+
+[Service]
+Type=forking
+RuntimeDirectory=carrier-launcher
+RuntimeDirectoryMode=755
+PIDFile=/var/run/carrier-meerkat/carrier-meerkat.pid
+WorkingDirectory=/var/lib/carrier-meerkat
+ExecStart=/usr/bin/carrier-launcher -c /etc/carrier-meerkat/default.conf
+User=carrier-meerkat
+Group=carrier-meerkat
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

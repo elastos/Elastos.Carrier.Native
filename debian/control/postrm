@@ -1,0 +1,47 @@
+#!/bin/sh
+
+set -e
+
+case "$1" in
+  purge)
+    if [ -d /usr/lib/carrier-meerkat ]; then
+      rm -rf /usr/lib/carrier-meerkat
+    fi
+    if [ -d /var/run/carrier-meerkat ]; then
+      rm -rf /var/run/carrier-meerkat
+    fi
+    if [ -d /var/log/carrier-meerkat ]; then
+      rm -rf /var/log/carrier-meerkat
+    fi
+    if [ -d /var/lib/carrier-meerkat ]; then
+      # Not purge the carrier key and id files
+      find /var/lib/carrier-meerkat -type f -not \( -name 'id' -or -name 'key' \) -print0 | xargs -0 -I {} rm -rf {}
+      rmdir /var/lib/carrier-meerkat 2>/dev/null || true
+    fi
+  ;;
+esac
+
+# Begin postrm_init
+if [ "$1" = "purge" ] ; then
+	update-rc.d carrier remove >/dev/null
+fi
+# End postrm_init
+
+# Begin postrm_systemd
+if [ -d /run/systemd/system ]; then
+	systemctl --system daemon-reload >/dev/null || true
+fi
+
+if [ "$1" = "remove" ]; then
+	if [ -x "/usr/bin/deb-systemd-helper" ]; then
+		deb-systemd-helper mask 'carrier-meerkat.service' >/dev/null || true
+	fi
+fi
+
+if [ "$1" = "purge" ]; then
+	if [ -x "/usr/bin/deb-systemd-helper" ]; then
+		deb-systemd-helper purge 'carrier-meerkat.service' >/dev/null || true
+		deb-systemd-helper unmask 'carrier-meerkat.service' >/dev/null || true
+	fi
+fi
+# End postrm_systemd
