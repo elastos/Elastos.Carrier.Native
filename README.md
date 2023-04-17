@@ -43,7 +43,7 @@ Consider the following commands to install the necessary packages on Linux syste
 
 ```shell
 $ sudo apt-get update
-$ sudo apt-get install -f build-essential autoconf automake autopoint libtool cmake
+$ sudo apt-get install -f build-essential autoconf automake autopoint libtool cmake libncurses-dev
 ```
 
 Download this repository using Git:
@@ -125,7 +125,7 @@ As part of the compilation process, a series of test cases is built. Running the
 Use the following command to run all of the testcases:
 
 ```shell
-$ ./tests/apitests
+$ ./tests/apitests/apitests
 ```
 
 ***Notice**: The testcases need to be run with the compilation option -**DENABLE_CARRIER_DEVELOPMENT**.*
@@ -133,7 +133,6 @@ $ ./tests/apitests
 ### 6.  API document for Developers
 
 The API documentation is currently lacking and it has been added to the TODO list, please stay tune for updates.
-
 
 
 ## Contribution
@@ -146,4 +145,4 @@ A sincere thank you goes out to all the projects that we rely on directly or ind
 
 ## License
 
-This project is licensed under the terms of the MIT license. We believe that open-source licensing  promotes transparency, collaboration, and innovation, and we encourage others to contribute to the project in accordance with the terms of the license.
+This project is licensed under the terms of the [MIT License](https://github.com/elastos/Elastos.Carrier.Native/blob/master/LICENSE). We believe that open-source licensing  promotes transparency, collaboration, and innovation, and we encourage others to contribute to the project in accordance with the terms of the license.
