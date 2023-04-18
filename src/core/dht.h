@@ -149,6 +149,10 @@ public:
     void onMessage(Sp<Message>);
     std::string toString() const;
 
+    bool isSelfAddress(const SocketAddress& addr) const {
+        return this->addr == addr;
+    }
+
 private:
     void received(Sp<Message>);
     void update();
