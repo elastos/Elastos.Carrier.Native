@@ -69,13 +69,13 @@ void NodeLookup::update() {
 }
 
 void NodeLookup::callResponsed(RPCCall* call, Sp<Message> response) {
+    LookupTask::callResponsed(call, response);
+
     if (!call->matchesId() ||
         response->getType() != Message::Type::RESPONSE ||
         response->getMethod() != Message::Method::FIND_NODE) {
         return;
     }
-
-    LookupTask::callResponsed(call, response);
 
     auto findNodeResponse = std::static_pointer_cast<FindNodeResponse>(response);
     auto nodes = findNodeResponse->getNodes(getDHT().getType());
