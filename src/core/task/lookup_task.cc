@@ -84,7 +84,6 @@ bool LookupTask::isBogonAddress(const SocketAddress &addr) const {
 #else
     return addr.isBogon();
 #endif
-    return false;
 }
 
 } // namespace carrier
