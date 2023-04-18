@@ -34,7 +34,8 @@ void LookupTask::addCandidates(const std::list<Sp<NodeInfo>>& nodes) {
     std::list<Sp<NodeInfo>> candidates {};
 
     for(const auto& node: nodes) {
-        if (isBogonAddress(node->getAddress()) ||
+        if (isSelfAddress(node->getAddress()) ||
+            isBogonAddress(node->getAddress()) ||
             getDHT().getNode().isLocalId(node->getId()) ||
             closestSet.contains(node->getId())) {
             continue;
@@ -85,6 +86,12 @@ bool LookupTask::isBogonAddress(const SocketAddress &addr) const {
     return addr.isBogon();
 #endif
 }
+
+bool LookupTask::isSelfAddress(const SocketAddress &addr) const {
+    return getDHT().getOrigin() == addr;
+}
+
+bool
 
 } // namespace carrier
 } // namespace elastos

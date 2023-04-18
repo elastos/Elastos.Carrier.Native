@@ -71,6 +71,7 @@ protected:
 
 private:
     bool isBogonAddress(const SocketAddress& addr) const;
+    bool isSelfAddress(const SocketAddress& addr) const;
 
     Id target;
     ClosestSet closestSet;
