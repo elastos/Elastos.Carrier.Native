@@ -71,63 +71,6 @@ Sp<NodeInfo> DHT::getNode(const Id& nodeId) const {
 }
 
 void DHT::bootstrap() {
-    if (!isRunning() || bootstrapNodes.empty()
-        || currentTimeMillis() - lastBootstrap < Constants::BOOTSTRAP_MIN_INTERVAL)
-        return;
-
-    bool expected {false};
-    if (!bootstrapping.compare_exchange_weak(expected, true))
-        return;
-
-    log->info("DHT {} bootstraping...", getTypeName());
-
-    auto nodes = std::list<Sp<NodeInfo>> {};
-    for (auto node: bootstrapNodes) {
-        std::promise<std::list<Sp<NodeInfo>>> promise {};
-        auto q = std::make_shared<FindNodeRequest>(Id::random());
-
-        q->setWant4(type == Type::IPV4);
-        q->setWant6(type == Type::IPV6);
-
-        auto call = std::make_shared<RPCCall>(this, node, q);
-        call->addStateChangeHandler([&](RPCCall* call, RPCCall::State previous, RPCCall::State current) {
-            log->debug("RPCCall::OnStateChange for FindNodeRequest message invoked .....");
-            if (current == RPCCall::State::RESPONDED || current == RPCCall::State::ERROR
-                    || current == RPCCall::State::TIMEOUT) {
-                auto r = std::dynamic_pointer_cast<FindNodeResponse>(call->getResponse());
-                if (r != nullptr)
-                    promise.set_value(r->getNodes(getType()));
-                else
-                    promise.set_value({});
-            }
-        });
-        rpcServer->sendCall(call);
-
-        auto list = promise.get_future().get();
-        nodes.insert(nodes.end(), list.begin(), list.end());
-    }
-
-    lastBootstrap = currentTimeMillis();
-    fillHomeBucket(nodes);
-}
-
-void DHT::bootstrap(const NodeInfo& ni) {
-    if (!canUseSocketAddress(ni.getAddress()))
-        return;
-
-    auto nodes = getBootstraps();
-    auto pos = std::find_if(nodes.begin(), nodes.end(), [&](Sp<NodeInfo> item) {
-        return (*item == ni);
-    });
-
-    if (pos == nodes.end()) {
-        bootstrapNodes.push_back(std::make_shared<NodeInfo>(ni));
-        lastBootstrap = 0;
-        bootstrap();
-    }
-}
-
-void DHT::updateBootstrapNodes() {
    if (!isRunning() || bootstrapNodes.empty()
        || currentTimeMillis() - lastBootstrap < Constants::BOOTSTRAP_MIN_INTERVAL)
        return;
@@ -136,7 +79,7 @@ void DHT::updateBootstrapNodes() {
     if (!bootstrapping.compare_exchange_weak(expected, true))
         return;
 
-    log->info("DHT {} updateBootstrapNodes...", getTypeName());
+    log->info("DHT {} bootstraping...", getTypeName());
 
     auto nodes = std::make_shared<std::list<Sp<NodeInfo>>>();
     auto count = std::make_shared<int>(0);
@@ -167,6 +110,22 @@ void DHT::updateBootstrapNodes() {
             }
         });
         rpcServer->sendCall(call);
+    }
+}
+
+void DHT::bootstrap(const NodeInfo& ni) {
+    if (!canUseSocketAddress(ni.getAddress()))
+        return;
+
+    auto nodes = getBootstraps();
+    auto pos = std::find_if(nodes.begin(), nodes.end(), [&](Sp<NodeInfo> item) {
+        return (*item == ni);
+    });
+
+    if (pos == nodes.end()) {
+        bootstrapNodes.push_back(std::make_shared<NodeInfo>(ni));
+        lastBootstrap = 0;
+        bootstrap();
     }
 }
 
@@ -207,7 +166,7 @@ void DHT::update () {
     if (routingTable.getNumBucketEntries() < Constants::BOOTSTRAP_IF_LESS_THAN_X_PEERS ||
             now - lastBootstrap > Constants::SELF_LOOKUP_INTERVAL)
         // Regularly search for our id to update routing table
-        updateBootstrapNodes();
+        bootstrap();
 
     if (persistFile != "" && (now - lastSave) > Constants::ROUTING_TABLE_PERSIST_INTERVAL) {
         log->info("Persisting routing table ...");
