@@ -61,7 +61,7 @@ public:
         return id;
     }
 
-    inline bool isLocalId(const Id& id) const {
+    inline bool isSelfId(const Id& id) const {
         return this->id == id;
     }
 
