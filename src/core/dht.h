@@ -156,7 +156,6 @@ public:
 private:
     void received(Sp<Message>);
     void update();
-    void updateBootstrapNodes();
     void sendError(Sp<Message> q, int code, const std::string& msg);
 
     void onRequest(Sp<Message>);

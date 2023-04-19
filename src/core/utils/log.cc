@@ -99,7 +99,6 @@ void Logger::setDefaultSettings(std::any value) {
 
     if (settings.count("logFile")) {
         std::string logFile = std::any_cast<std::string>(settings.at("logFile"));
-
         setLogFile(logFile);
     }
 

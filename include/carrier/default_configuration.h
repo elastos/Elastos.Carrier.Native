@@ -38,8 +38,10 @@ public:
         std::string path, std::vector<Sp<NodeInfo>> nodes, std::map<std::string, std::any> _services)
         : storagePath(path), bootstrapNodes(nodes), services(_services) {
             try {
-                addr4 = SocketAddress(ip4, port);
-                addr6 = SocketAddress(ip6, port);
+                if (!ip4.empty())
+                    addr4 = SocketAddress(ip4, port);
+                if (!ip6.empty())
+                    addr6 = SocketAddress(ip6, port);
             } catch(const std::exception& e) {
                 // TODO:
             }
