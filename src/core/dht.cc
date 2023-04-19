@@ -307,7 +307,7 @@ void DHT::onMessage(Sp<Message> msg) {
         return;
 
     // ignore the messages we get from ourself
-    if (node.isLocalId(msg->getId()) || isSelfAddress(msg->getOrigin()))
+    if (node.isSelfId(msg->getId()) || isSelfAddress(msg->getOrigin()))
         return;
 
     switch (msg->getType()) {

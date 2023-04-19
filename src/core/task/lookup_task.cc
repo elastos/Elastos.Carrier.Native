@@ -42,7 +42,7 @@ void LookupTask::addCandidates(const std::list<Sp<NodeInfo>>& nodes) {
 
     for(const auto& node: nodes) {
         if (isBogonAddress(node->getAddress()) ||
-            getDHT().getNode().isLocalId(node->getId()) ||
+            getDHT().getNode().isSelfId(node->getId()) ||
             getDHT().isSelfAddress(node->getAddress()) ||
             closestSet.contains(node->getId())) {
             continue;
@@ -85,6 +85,7 @@ void LookupTask::callResponsed(RPCCall* call, Sp<Message> response) {
     candidateNode->setToken((std::static_pointer_cast<LookupResponse>(response))->getToken());
     addClosest(candidateNode);
 }
+
 
 } // namespace carrier
 } // namespace elastos
