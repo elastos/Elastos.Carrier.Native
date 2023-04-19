@@ -24,19 +24,26 @@
 #include "messages/lookup_response.h"
 #include "task/closest_candidates.h"
 #include "task/lookup_task.h"
-#include "constants.h"
 #include "dht.h"
 
 namespace elastos {
 namespace carrier {
 
+bool LookupTask::isBogonAddress(const SocketAddress& addr) const {
+#ifdef CARRIER_DEVELOPMENT
+    return !addr.isAnyUnicast();
+#else
+    return addr.isBogon();
+#endif
+}
+
 void LookupTask::addCandidates(const std::list<Sp<NodeInfo>>& nodes) {
     std::list<Sp<NodeInfo>> candidates {};
 
     for(const auto& node: nodes) {
-        if (getDHT().isSelfAddress(node->getAddress()) ||
-            isBogonAddress(node->getAddress()) ||
+        if (isBogonAddress(node->getAddress()) ||
             getDHT().getNode().isLocalId(node->getId()) ||
+            getDHT().isSelfAddress(node->getAddress()) ||
             closestSet.contains(node->getId())) {
             continue;
         }
@@ -78,15 +85,6 @@ void LookupTask::callResponsed(RPCCall* call, Sp<Message> response) {
     candidateNode->setToken((std::static_pointer_cast<LookupResponse>(response))->getToken());
     addClosest(candidateNode);
 }
-
-bool LookupTask::isBogonAddress(const SocketAddress &addr) const {
-#ifdef CARRIER_DEVELOPMENT
-    return !addr.isAnyUnicast();
-#else
-    return addr.isBogon();
-#endif
-}
-
 
 } // namespace carrier
 } // namespace elastos
