@@ -20,26 +20,38 @@
  * SOFTWARE.
  */
 
-#include <cppunit/extensions/TestFactoryRegistry.h>
-#include <cppunit/ui/text/TestRunner.h>
-#include <cppunit/CompilerOutputter.h>
 #include <iostream>
 #include <stddef.h>
+#include <signal.h>
+#include <stdlib.h>
 
+#if defined(_WIN32) || defined(_WIN64)
+#include <windows.h>
+#include <io.h>
+#include <process.h>
+#include <debugapi.h>
+#endif
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 #ifdef HAVE_SYS_RESOURCE_H
 #include <sys/resource.h>
 #endif
 
-extern "C" {
-    #include <signal.h>
-    #include <unistd.h>
-    #include <getopt.h>
-}
+#include <cppunit/extensions/TestFactoryRegistry.h>
+#include <cppunit/ui/text/TestRunner.h>
+#include <cppunit/CompilerOutputter.h>
+#include <CLI/CLI.hpp>
 
 using namespace std;
 
 bool stopped = false;
 
+struct Options {
+    bool wait_for_attach {false};
+};
+
+#ifdef HAVE_SYS_RESOURCE_H
 int sys_coredump_set(bool enable)
 {
     const struct rlimit rlim = {
@@ -49,6 +61,7 @@ int sys_coredump_set(bool enable)
 
     return setrlimit(RLIMIT_CORE, &rlim);
 }
+#endif
 
 void signal_handler(int signum)
 {
@@ -56,44 +69,31 @@ void signal_handler(int signum)
     // exit(-1);
 }
 
-void usage(void)
+static Options parseArgs(int argc, char **argv)
 {
-    cout << "ad-hoc" << endl;
-    cout << "Usage: didtest [OPTION]..." << endl;
-    cout << "" << endl;
-    cout << "      --debug                      Wait for debugger to attach" << endl;
-    cout << "" << endl;
+    Options options;
+
+    CLI::App app("Elastos Carrier test case", "tests");
+    app.add_option("-d, --debug", options.wait_for_attach, "Wait for debugger to attach");
+
+    try {
+        app.parse(argc, argv);
+    } catch (const CLI::Error &e) {
+        int rc = app.exit(e);
+        std::exit(rc);
+    }
+
+    return options;
 }
 
 int main(int argc, char* argv[])
 {
-    int wait_for_attach = 0;
-    int opt;
-    int idx;
-
-    struct option options[] = {
-        { "help",           no_argument,        NULL, 'h' },
-        { "debug",          no_argument,        NULL,  1  },
-        { NULL,             0,                  NULL,  0  }
-    };
-
+#ifdef HAVE_SYS_RESOURCE_H
     sys_coredump_set(true);
+#endif
 
-    while ((opt = getopt_long(argc, argv, "h?", options, &idx)) != -1) {
-        switch (opt) {
-        case 1:
-            wait_for_attach = 1;
-            break;
-
-        case 'h':
-        case '?':
-        default:
-            usage();
-            return -1;
-        }
-    }
-
-    if (wait_for_attach) {
+    auto options = parseArgs(argc, argv);
+    if (options.wait_for_attach){
         printf("Wait for debugger attaching, process id is: %d.\n", getpid());
 #ifndef _MSC_VER
         printf("After debugger attached, press any key to continue......");

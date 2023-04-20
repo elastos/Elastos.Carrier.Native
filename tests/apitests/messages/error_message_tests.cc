@@ -59,7 +59,7 @@ void ErrorMessageTests::testErrorMessage() {
     auto parsed = Message::parse(serialized.data(), serialized.size());
     auto _msg = std::static_pointer_cast<ErrorMessage>(parsed);
 
-    CPPUNIT_ASSERT_EQUAL(Message::Type::ERROR, _msg->getType());
+    CPPUNIT_ASSERT_EQUAL(Message::Type::ERR, _msg->getType());
     CPPUNIT_ASSERT_EQUAL(Message::Method::PING, _msg->getMethod());
     CPPUNIT_ASSERT_EQUAL(txid, _msg->getTxid());
     CPPUNIT_ASSERT_EQUAL(code, _msg->getCode());
@@ -82,7 +82,7 @@ void ErrorMessageTests::testErrorMessagei18n() {
     auto parsed = Message::parse(serialized.data(), serialized.size());
     auto _msg = std::static_pointer_cast<ErrorMessage>(parsed);
 
-    CPPUNIT_ASSERT_EQUAL(Message::Type::ERROR, _msg->getType());
+    CPPUNIT_ASSERT_EQUAL(Message::Type::ERR, _msg->getType());
     CPPUNIT_ASSERT_EQUAL(Message::Method::UNKNOWN, _msg->getMethod());
     CPPUNIT_ASSERT_EQUAL(txid, _msg->getTxid());
     CPPUNIT_ASSERT_EQUAL(VERSION_STR, _msg->getReadableVersion());

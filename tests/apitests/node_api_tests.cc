@@ -22,10 +22,14 @@
 
 #include <stdio.h>
 #include <sys/stat.h>
-#include <unistd.h>
 #include <stdlib.h>
 #include <errno.h>
+#ifdef HAVE_DIRENT_H
 #include <dirent.h>
+#endif
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 #include <string.h>
 
 // std

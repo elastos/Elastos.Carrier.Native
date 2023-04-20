@@ -66,7 +66,7 @@ void IdTests::testIdFromHexString() {
 
 void IdTests::testIdFromBytes() {
     std::random_device rd;
-    std::uniform_int_distribution<uint8_t> dist(0, 9);
+    std::uniform_int_distribution<unsigned short> dist(0, 9);
 
     std::array<uint8_t, ID_BYTES> binId;
     std::generate_n(binId.begin(), ID_BYTES, [&]{ return dist(rd); });

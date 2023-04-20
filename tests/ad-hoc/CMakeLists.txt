@@ -5,6 +5,27 @@ if(HAVE_SYS_RESOURCE_H)
     add_definitions(-DHAVE_SYS_RESOURCE_H=1)
 endif()
 
+check_include_file(dirent.h HAVE_DIRENT_H)
+if(HAVE_DIRENT_H)
+    add_definitions(-DHAVE_DIRENT_H=1)
+endif()
+
+check_include_file(io.h HAVE_IO_H)
+if(HAVE_IO_H)
+    add_definitions(-DHAVE_IO_H=1)
+endif()
+
+check_include_file(unistd.h HAVE_UNISTD_H)
+if(HAVE_UNISTD_H)
+    add_definitions(-DHAVE_UNISTD_H=1)
+endif()
+
+if(WIN32)
+    add_definitions(-DWIN32_LEAN_AND_MEAN
+        -D_CRT_SECURE_NO_WARNINGS
+        -D_CRT_NONSTDC_NO_WARNINGS)
+endif()
+
 include_directories(
     .
     ../../include

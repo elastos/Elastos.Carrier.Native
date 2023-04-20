@@ -5,6 +5,39 @@ if(HAVE_SYS_RESOURCE_H)
     add_definitions(-DHAVE_SYS_RESOURCE_H=1)
 endif()
 
+check_include_file(unistd.h HAVE_UNISTD_H)
+if(HAVE_UNISTD_H)
+    add_definitions(-DHAVE_UNISTD_H=1)
+endif()
+
+check_include_file(io.h HAVE_IO_H)
+if(HAVE_IO_H)
+    add_definitions(-DHAVE_IO_H=1)
+endif()
+
+check_include_file(unistd.h HAVE_UNISTD_H)
+if(HAVE_UNISTD_H)
+    add_definitions(-DHAVE_UNISTD_H=1)
+endif()
+
+set(LIBS
+    cppunit)
+
+if(WIN32)
+    add_definitions(
+        -DWIN32_LEAN_AND_MEAN
+        -D_CRT_SECURE_NO_WARNINGS
+        -D_CRT_NONSTDC_NO_WARNINGS)
+
+    set(LIBS
+        ${LIBS}
+        libsodium.lib)
+else()
+    set(LIBS
+        ${LIBS}
+        sodium)
+endif()
+
 include_directories(
     .
     ../../include
@@ -39,13 +72,14 @@ list(APPEND APITESTS_SOURCES
 list(APPEND APITESTS_DEPENDS
     CppUnit
     carrier0
-    addons0)
+    addons0
+    libsodium)
 
 if(ENABLE_SHARED)
-    set(LIBS carrier-shared addons-shared cppunit)
+    set(LIBS carrier-shared addons-shared ${LIBS})
     set(SYSTEM_LIBS pthread dl)
 else()
-    set(LIBS carrier-static addons-static cppunit)
+    set(LIBS carrier-static addons-static ${LIBS})
 endif()
 
 add_executable(apitests ${APITESTS_SOURCES})
