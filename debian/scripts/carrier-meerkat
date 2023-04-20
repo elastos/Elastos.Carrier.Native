@@ -11,16 +11,16 @@
 
 # PATH should only include /usr/* if it runs after the mountnfs.sh script
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
-DESC="Elastos Carrier daemon"
-NAME=carrier
-DAEMON=/usr/bin/java
-CONFIG_FILE=/etc/carrier/default.conf
-DAEMON_ARGS="-cp '/usr/lib/carrier/lib/*' -Dlogback.configurationFile=/etc/carrier/logback.xml elastos.carrier.Launcher --config $CONFIG_FILE"
+DESC="Carrier Meerkat daemon"
+NAME=carrier-meerkat
+DAEMON=/usr/bin/carrier-meerkat
+CONFIG_FILE=/etc/carrier-meerkat/default.conf
+DAEMON_ARGS="-c $CONFIG_FILE"
 PIDDIR=/var/run/$NAME
 PIDFILE=$PIDDIR/$NAME.pid
 SCRIPTNAME=/etc/init.d/$NAME
-USER=carrier
-GROUP=carrier
+USER=carrier-meerkat
+GROUP=carrier-meerkat
 
 # Exit if the package is not installed
 [ -x "$DAEMON" ] || exit 0
