@@ -90,9 +90,9 @@ include_directories(
     .
     ${INCLUDE_DIR})
 
-if(WIN32)
-    list(APPEND CARRIER_HEADERS compat/msvc/unistd.h)
-endif()
+#if(WIN32)
+    #list(APPEND CARRIER_HEADERS compat/msvc/unistd.h)
+#endif()
 
 list(APPEND CARRIER_DEPENDS
     sqlite
@@ -100,13 +100,13 @@ list(APPEND CARRIER_DEPENDS
     spdlog
     spdlog-setup
     nlohmann
-    LibreSSL
+    #LibreSSL
 )
 
 list(APPEND LIBS
-    sqlite3
-    sodium
-    crypto)
+    sqlite3)
+    #sodium)
+    #crypto)
 
 if(WIN32)
     set(LIBS
@@ -119,7 +119,7 @@ else()
 endif()
 
 list(APPEND SYSTEM_LIBS
-    pthread
+    #pthread
     dl)
 
 add_custom_target(carrier0)

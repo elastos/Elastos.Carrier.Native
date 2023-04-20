@@ -32,6 +32,9 @@ namespace carrier {
 #include <random>
 #include <type_traits>
 
+#undef max
+#undef min
+
 template<typename T>
 class RandomGenerator {
     static_assert(std::is_integral<T>::value, "Only supports integral types");
@@ -56,7 +59,6 @@ private:
     std::mt19937 engine;
     std::uniform_int_distribution<T> distribution;
 };
-
 
 } // carrier
 } // elastos

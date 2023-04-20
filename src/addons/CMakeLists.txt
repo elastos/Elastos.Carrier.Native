@@ -27,11 +27,19 @@ list(APPEND ADDONS_DEPENDS
     carrier0)
 
 set(LIBS
-    uv_a
-    sodium)
+    uv_a)
+
+if(WIN32)
+    set(LIBS
+        ${LIBS}
+        libsodium.lib)
+else()
+    set(LIBS
+        ${LIBS}
+        sodium)
+endif()
 
 set(SYSTEM_LIBS
-    pthread
     dl)
 
 add_custom_target(addons0)
