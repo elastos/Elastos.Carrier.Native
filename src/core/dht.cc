@@ -71,7 +71,7 @@ Sp<NodeInfo> DHT::getNode(const Id& nodeId) const {
 }
 
 void DHT::bootstrap() {
-   if (!isRunning() || bootstrapNodes.empty()
+  if (!isRunning() || bootstrapNodes.empty()
        || currentTimeMillis() - lastBootstrap < Constants::BOOTSTRAP_MIN_INTERVAL)
        return;
 
@@ -278,7 +278,7 @@ void DHT::onMessage(Sp<Message> msg) {
         onResponse(msg);
         break;
 
-    case Message::Type::ERROR:
+    case Message::Type::ERR:
         onError(msg);
         break;
     }

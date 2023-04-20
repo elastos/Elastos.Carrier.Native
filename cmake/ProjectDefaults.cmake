@@ -29,17 +29,17 @@ set(PROJECT_DEPS_BUILD_PREFIX "external")
 
 # Intermediate distribution directory
 set(PROJECT_INT_DIST_DIR "${CMAKE_BINARY_DIR}/intermediates")
-#if(WIN32)
-#    file(TO_NATIVE_PATH
-#        "${PROJECT_INT_DIST_DIR}" PROJECT_INT_DIST_DIR)
-#endif()
+if(WIN32)
+    file(TO_NATIVE_PATH
+        "${PROJECT_INT_DIST_DIR}" PROJECT_INT_DIST_DIR)
+endif()
 
 # Host tools directory
 set(PROJECT_HOST_TOOLS_DIR "${CMAKE_BINARY_DIR}/host")
-#if(WIN32)
-#    file(TO_NATIVE_PATH
-#         "${PROJECT_HOST_TOOLS_DIR}" PROJECT_HOST_TOOLS_DIR)
-#endif()
+if(WIN32)
+    file(TO_NATIVE_PATH
+         "${PROJECT_HOST_TOOLS_DIR}" PROJECT_HOST_TOOLS_DIR)
+endif()
 
 if(WIN32)
     set(PATCH_EXE "${PROJECT_HOST_TOOLS_DIR}/usr/bin/patch.exe")
