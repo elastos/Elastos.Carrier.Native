@@ -27,7 +27,6 @@
 #include <algorithm>
 #include <memory>
 #include <cstdint>
-#include <alloca.h>
 
 #include "carrier/blob.h"
 
@@ -697,7 +696,7 @@ void ProxyConnection::processRelayPacket(const uint8_t* packet, size_t size) noe
     // log->trace("Connection {} got packet from server {}: type={}, ack={}, size={}",
     //        proxy.serverEndpoint(), id, type, ack, size);
 
-    if (type == PacketFlag::ERROR) {
+    if (type == PacketFlag::ERR) {
         size_t len = size - PACKET_HEADER_BYTES - CryptoBox::MAC_BYTES;
         uint8_t* plain = (uint8_t*)alloca(len);
         Blob _plain{plain, len};
@@ -705,7 +704,7 @@ void ProxyConnection::processRelayPacket(const uint8_t* packet, size_t size) noe
         proxy.decrypt(_plain, _cipher);
         int code = ntohs(*(uint16_t*)plain);
         char* msg = (char*)plain + sizeof(uint16_t);
-        log->error("Connection {} got ERROR response from the server {}, error({}): {}",
+        log->error("Connection {} got ERR response from the server {}, error({}): {}",
                 id, proxy.serverEndpoint(), code, msg);
         close();
         return;
@@ -777,7 +776,7 @@ void ProxyConnection::onAuthenticateResponse(const uint8_t* packet, size_t size)
     log->debug("Connection {} got AUTH ACK from server {}", id, proxy.serverEndpoint());
 
     std::array<uint8_t, AUTH_ACK_SIZE - PACKET_HEADER_BYTES - CryptoBox::MAC_BYTES> plain;
-    
+
     Blob _plain{plain};
     const Blob _cipher{packet + PACKET_HEADER_BYTES, AUTH_ACK_SIZE - PACKET_HEADER_BYTES};
     proxy.decryptWithNode(_plain, _cipher);
@@ -967,7 +966,7 @@ void ProxyConnection::closeUpstream(bool force) noexcept
                 delete request;
                 return;
             }
-            
+
             uv_close((uv_handle_t*)&pc->upstream, [](uv_handle_t* handle) {
                 ProxyConnection* pc = (ProxyConnection*)handle->data;
                 handle->data = nullptr;

@@ -23,6 +23,8 @@
 #include <iostream>
 #include <cstdlib>
 #include <csignal>
+#include <chrono>
+#include <thread>
 
 #ifndef _WIN32
 #include <unistd.h>
@@ -34,6 +36,7 @@
 #include <application_lock.h>
 #include <coredump.h>
 
+using namespace std::chrono_literals;
 using namespace elastos::carrier;
 
 static Sp<Node> g_node = nullptr;
@@ -198,7 +201,7 @@ int main(int argc, char *argv[])
     }
 
     while (!stopped)
-        sleep(1);
+        std::this_thread::sleep_for(1000ms);
 
     return 0;
 }

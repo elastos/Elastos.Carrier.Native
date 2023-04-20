@@ -83,11 +83,11 @@ public:
         }
 
         const uint8_t* cbegin() const noexcept {
-            return key.cbegin();
+            return key.data();
         }
 
         const uint8_t* cend() const noexcept {
-            return key.cend();
+            return key.data() + key.size();
         }
 
         const uint8_t* bytes() const noexcept {
@@ -167,11 +167,11 @@ public:
         }
 
         const uint8_t* cbegin() const noexcept {
-            return key.cbegin();
+            return key.data();
         }
 
         const uint8_t* cend() const noexcept {
-            return key.cend();
+            return key.data() + key.size();
         }
 
         const uint8_t* bytes() const noexcept {
@@ -364,11 +364,11 @@ public:
         }
 
         const uint8_t* cbegin() const noexcept {
-            return key.cbegin();
+            return key.data();
         }
 
         const uint8_t* cend() const noexcept {
-            return key.cend();
+            return key.data() + key.size();
         }
 
         const uint8_t* bytes() const noexcept {
@@ -440,11 +440,11 @@ public:
         }
 
         const uint8_t* cbegin() const noexcept {
-            return key.cbegin();
+            return key.data();
         }
 
         const uint8_t* cend() const noexcept {
-            return key.cend();
+            return key.data() + key.size();
         }
 
         const uint8_t* bytes() const noexcept {
@@ -514,11 +514,11 @@ public:
         }
 
         const uint8_t* cbegin() const noexcept {
-            return nonce.cbegin();
+            return nonce.data();
         }
 
         const uint8_t* cend() const noexcept {
-            return nonce.cend();
+            return nonce.data() + nonce.size();
         }
 
         const uint8_t* bytes() const noexcept {
@@ -649,11 +649,11 @@ public:
     }
 
     const uint8_t* cbegin() const noexcept {
-        return key.cbegin();
+        return key.data();
     }
 
     const uint8_t* cend() const noexcept {
-        return key.cend();
+        return key.data() + key.size();
     }
 
     const uint8_t* bytes() const noexcept {
@@ -667,7 +667,7 @@ public:
     const Blob blob() const noexcept {
         return key;
     }
-    
+
     void clear() noexcept {
         key.fill(0);
     }
@@ -704,7 +704,7 @@ public:
     static void decrypt(Blob& plain, const Blob& cipher, const Nonce& nonce,
             const PublicKey& pk, const PrivateKey& sk);
 
-    static std::vector<uint8_t> decrypt(const Blob& cipher, const Nonce &nonce, 
+    static std::vector<uint8_t> decrypt(const Blob& cipher, const Nonce &nonce,
             const PublicKey& pk, const PrivateKey& sk) {
         std::vector<uint8_t> plain(cipher.size() - MAC_BYTES);
         Blob _plain{plain};
