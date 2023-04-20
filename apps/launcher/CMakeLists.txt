@@ -21,11 +21,31 @@ list(APPEND LAUNCHER_DEPENDS
     addons0
     CLI11)
 
-if(ENABLE_SHARED)
-    set(LIBS carrier-shared addons-shared)
-    set(SYSTEM_LIBS pthread dl)
+if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+    set(SYSTEM_LIBS dl)
+endif()
+
+if(WIN32)
+    add_definitions(
+        -DWIN32_LEAN_AND_MEAN
+        -D_CRT_SECURE_NO_WARNINGS
+        -D_CRT_NONSTDC_NO_WARNINGS)
+
+    set(LIBS
+        libsodium.lib
+        Ws2_32
+        crypt32
+        iphlpapi)
 else()
-    set(LIBS carrier-static addons-static)
+    set(LIBS
+        sodium)
+endif()
+
+if(ENABLE_SHARED)
+    set(LIBS carrier-shared addons-shared ${LIBS})
+    #set(SYSTEM_LIBS pthread dl)
+else()
+    set(LIBS carrier-static addons-static ${LIBS})
 endif()
 
 add_executable(carrier-launcher ${LAUNCHER_SOURCES})

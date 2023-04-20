@@ -103,24 +103,31 @@ list(APPEND CARRIER_DEPENDS
     #LibreSSL
 )
 
-list(APPEND LIBS
-    sqlite3)
+#list(APPEND LIBS
+    #sqlite3)
     #sodium)
     #crypto)
+
+set(LIBS
+    sqlite3)
 
 if(WIN32)
     set(LIBS
         ${LIBS}
-        libsodium.lib)
+        libsodium.lib
+        Ws2_32
+        crypt32
+        iphlpapi
+        Shlwapi)
 else()
     set(LIBS
         ${LIBS}
         sodium)
 endif()
 
-list(APPEND SYSTEM_LIBS
-    #pthread
-    dl)
+if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+    set(SYSTEM_LIBS dl)
+endif()
 
 add_custom_target(carrier0)
 

@@ -32,15 +32,19 @@ set(LIBS
 if(WIN32)
     set(LIBS
         ${LIBS}
-        libsodium.lib)
+        libsodium.lib
+        Ws2_32
+        crypt32
+        iphlpapi)
 else()
     set(LIBS
         ${LIBS}
         sodium)
 endif()
 
-set(SYSTEM_LIBS
-    dl)
+if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+    set(SYSTEM_LIBS dl)
+endif()
 
 add_custom_target(addons0)
 

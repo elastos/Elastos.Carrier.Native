@@ -45,8 +45,36 @@ else()
     set(CARRIER_LIB carrier-static)
 endif()
 
+if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+    set(SYSTEM_LIBS pthread dl)
+endif()
+
+set(LIBS
+    cppunit)
+
+if(WIN32)
+    add_definitions(
+        -DWIN32_LEAN_AND_MEAN
+        -D_CRT_SECURE_NO_WARNINGS
+        -D_CRT_NONSTDC_NO_WARNINGS)
+
+    set(LIBS
+        ${LIBS}
+        sqlite3
+        libsodium.lib
+        Ws2_32
+        crypt32
+        iphlpapi
+        Shlwapi)
+else()
+    set(LIBS
+        ${LIBS}
+        sqlite3
+        sodium)
+endif()
+
 add_executable(ad-hoc ${TEST_SOURCES})
-target_link_libraries(ad-hoc LINK_PUBLIC ${CARRIER_LIB} cppunit pthread dl)
+target_link_libraries(ad-hoc LINK_PUBLIC ${CARRIER_LIB} ${LIBS} ${SYSTEM_LIBS})
 
 enable_testing()
 add_test(TEST ad-hoc)
