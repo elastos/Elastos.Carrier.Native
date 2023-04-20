@@ -10,7 +10,7 @@ Pre-Depends: adduser
 Depends: lsb-base (>= 3.0), libc6 (>= 2.14), init-system-helpers (>= 1.18~), libsystemd0, libsodium23
 Homepage: https://trinity-tech.io/
 Description: Carrier MeerKat Service
- Elastos Carrier is a decentralized DHT network and federal-based service framework.
+ Carrier is a decentralized DHT network and federal-based service framework.
  .
  This package contains the Carrier MeerKat service that runs on a regular Carrier Node to assist applications in utilizing the services from Carrier superNode.
 
