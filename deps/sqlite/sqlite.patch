@@ -1,0 +1,20 @@
+diff -ruN sqlite/Makefile.msc sqlite-mode/Makefile.msc
+--- sqlite/Makefile.msc	2022-11-16 21:42:39.000000000 +0800
++++ sqlite-mode/Makefile.msc	2023-04-21 10:20:37.000000000 +0800
+@@ -989,11 +989,11 @@
+ Replace.exe:
+ 	$(CSC) /target:exe $(TOP)\Replace.cs
+ 
+-sqlite3.def:	Replace.exe $(LIBOBJ)
+-	echo EXPORTS > sqlite3.def
+-	dumpbin /all $(LIBOBJ) \
+-		| .\Replace.exe "^\s+/EXPORT:_?(sqlite3(?:session|changeset|changegroup|rebaser|rbu)?_[^@,]*)(?:@\d+|,DATA)?$$" $$1 true \
+-		| sort >> sqlite3.def
++sqlite3.def:    Replace.exe $(LIBOBJ)
++    echo EXPORTS > sqlite3.def
++    dumpbin /symbols $(LIBOBJ) \
++        | grep "External\s*|\s*sqlite3_" | awk -F'|' '{print $2}' \
++        | sort >> sqlite3.def
+ 
+ $(SQLITE3EXE):	shell.c $(SHELL_CORE_DEP) $(LIBRESOBJS) $(SHELL_CORE_SRC) $(SQLITE3H)
+ 	$(LTLINK) $(SHELL_COMPILE_OPTS) $(READLINE_FLAGS) shell.c $(SHELL_CORE_SRC) \

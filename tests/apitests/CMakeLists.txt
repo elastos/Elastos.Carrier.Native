@@ -75,6 +75,7 @@ else()
 endif()
 
 list(APPEND APITESTS_DEPENDS
+    sqlite
     CppUnit
     carrier0
     addons0
@@ -92,7 +93,7 @@ else()
 endif()
 
 add_executable(apitests ${APITESTS_SOURCES})
-target_link_libraries(apitests LINK_PUBLIC ${LIBS} ${SYSTEM_LIBS})
+target_link_libraries(apitests ${LIBS} ${SYSTEM_LIBS})
 add_dependencies(apitests ${APITESTS_DEPENDS})
 
 configure_file(log_test.conf log_test.conf COPYONLY)

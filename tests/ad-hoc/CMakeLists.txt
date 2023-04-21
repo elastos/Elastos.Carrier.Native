@@ -50,6 +50,7 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
 endif()
 
 set(LIBS
+    sqlite3
     cppunit)
 
 if(WIN32)
@@ -60,7 +61,6 @@ if(WIN32)
 
     set(LIBS
         ${LIBS}
-        sqlite3
         libsodium.lib
         Ws2_32
         crypt32
@@ -69,7 +69,6 @@ if(WIN32)
 else()
     set(LIBS
         ${LIBS}
-        sqlite3
         sodium)
 endif()
 

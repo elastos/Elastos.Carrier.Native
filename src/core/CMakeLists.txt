@@ -3,6 +3,8 @@ project(carrier-core CXX)
 include(ProjectDefaults)
 include(CheckIncludeFile)
 
+add_definitions(-DSODIUM_STATIC)
+
 if(WIN32)
     add_definitions(
         -D_WINSOCK_DEPRECATED_NO_WARNINGS
