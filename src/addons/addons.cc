@@ -46,8 +46,8 @@ bool loadAddons(Sp<Node> node, std::map<std::string, std::any>& addons) {
         if (addon != nullptr) {
             auto configure = std::any_cast<std::map<std::string, std::any>>(value);
             g_addons[name] = addon;
-            auto future = addon->initialize(node, configure);
             try {
+                auto future = addon->initialize(node, configure);
                 future.get();
             } catch(...) {
                 return false;
