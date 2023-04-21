@@ -201,12 +201,12 @@ void ActiveProxy::start()
         ActiveProxy* ap = (ActiveProxy*)handle->data;
         ap->onStop();
     });
-    stopHandle.data = this;
     if (rc < 0) {
         log->error("ActiveProxy failed to initialize the stop handle({}): {}", rc, uv_strerror(rc));
         uv_loop_close(&loop);
         throw networking_error(uv_strerror(rc));
     }
+    stopHandle.data = this;
 
     // init the idle/iteration handle
     uv_idle_init(&loop, &idleHandle); // always success
@@ -231,6 +231,7 @@ void ActiveProxy::start()
     }, IDLE_CHECK_INTERVAL, IDLE_CHECK_INTERVAL);
     if (rc < 0) {
         log->error("ActiveProxy failed to start the idle check timer({}): {}", rc, uv_strerror(rc));
+        uv_idle_stop(&idleHandle);
         uv_close((uv_handle_t*)&idleHandle, nullptr);
         uv_close((uv_handle_t*)&stopHandle, nullptr);
         uv_close((uv_handle_t*)&idleCheckTimer, nullptr);
