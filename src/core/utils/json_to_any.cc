@@ -20,6 +20,7 @@
  * SOFTWARE.
  */
 
+#include <iostream>
 #include "json_to_any.h"
 
 std::any jsonToAny(const nlohmann::json& j)

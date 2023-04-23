@@ -26,6 +26,8 @@
 #pragma GCC diagnostic ignored "-Wunqualified-std-cast-call"
 #endif
 
+#include <iostream>
+
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/sinks/syslog_sink.h"

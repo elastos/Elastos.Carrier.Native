@@ -20,6 +20,8 @@
 * SOFTWARE.
 */
 
+#include <iostream>
+
 #include "utils/list.h"
 #include "kbucket.h"
 #include "messages/message.h"

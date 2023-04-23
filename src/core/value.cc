@@ -20,6 +20,8 @@
  * SOFTWARE.
  */
 
+#include <sstream>
+
 #include "carrier/value.h"
 #include "utils/misc.h"
 #include "utils/hex.h"
