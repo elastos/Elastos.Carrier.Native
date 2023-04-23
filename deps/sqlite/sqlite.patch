@@ -1,7 +1,7 @@
 diff -ruN sqlite/Makefile.msc sqlite-mode/Makefile.msc
 --- sqlite/Makefile.msc	2022-11-16 21:42:39.000000000 +0800
-+++ sqlite-mode/Makefile.msc	2023-04-21 10:20:37.000000000 +0800
-@@ -989,11 +989,11 @@
++++ sqlite-mode/Makefile.msc	2023-04-23 11:53:10.000000000 +0800
+@@ -989,17 +989,17 @@
  Replace.exe:
  	$(CSC) /target:exe $(TOP)\Replace.cs
  
@@ -10,11 +10,18 @@ diff -ruN sqlite/Makefile.msc sqlite-mode/Makefile.msc
 -	dumpbin /all $(LIBOBJ) \
 -		| .\Replace.exe "^\s+/EXPORT:_?(sqlite3(?:session|changeset|changegroup|rebaser|rbu)?_[^@,]*)(?:@\d+|,DATA)?$$" $$1 true \
 -		| sort >> sqlite3.def
-+sqlite3.def:    Replace.exe $(LIBOBJ)
++sqlite3.def:    $(LIBOBJ)
 +    echo EXPORTS > sqlite3.def
 +    dumpbin /symbols $(LIBOBJ) \
-+        | grep "External\s*|\s*sqlite3_" | awk -F'|' '{print $2}' \
++        | $(CYGWIN_PATH)\grep "External\s*|\s*sqlite3_" \
++        | $(CYGWIN_PATH)\gawk -F"|" "{print $$2}" \
 +        | sort >> sqlite3.def
  
  $(SQLITE3EXE):	shell.c $(SHELL_CORE_DEP) $(LIBRESOBJS) $(SHELL_CORE_SRC) $(SQLITE3H)
  	$(LTLINK) $(SHELL_COMPILE_OPTS) $(READLINE_FLAGS) shell.c $(SHELL_CORE_SRC) \
+ 		/link $(SQLITE3EXEPDB) $(LDFLAGS) $(LTLINKOPTS) $(SHELL_LINK_OPTS) $(LTLIBPATHS) $(LIBRESOBJS) $(LIBREADLINE) $(LTLIBS) $(TLIBS)
+ 
+-
+ # Rule to build the amalgamation
+ #
+ sqlite3.lo:	$(SQLITE3C)

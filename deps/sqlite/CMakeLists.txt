@@ -10,7 +10,7 @@ if(WIN32)
 
     set(BUILD_CMD nmake)
     set(BUILD_ARGS
-        "/f" "Makefile.msc")
+        "CYGWIN_PATH=${PROJECT_HOST_TOOLS_DIR}\\usr\\bin" "/f" "Makefile.msc")
 
     set(INSTALL_CMD
         echo F | xcopy "sqlite3.h" "${PROJECT_INT_DIST_DIR}\\include\\sqlite3.h" /i /q /y &&
