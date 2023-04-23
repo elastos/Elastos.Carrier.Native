@@ -57,7 +57,7 @@ jobs:
         mkdir -p build/macos
         cd build/macos
         cmake -DCMAKE_INSTALL_PREFIX=dist \
-          -DCMAKE_BUILD_TYPE=Debug \
+          -DCMAKE_BUILD_TYPE=Release \
           -DENABLE_CARRIER_DEVELOPMENT=TRUE ../..
         make -j8 && make install
 
@@ -88,7 +88,7 @@ jobs:
         mkdir -p build/ios
         cd build/ios
         cmake -DCMAKE_INSTALL_PREFIX=dist \
-          -DCMAKE_BUILD_TYPE=Debug \
+          -DCMAKE_BUILD_TYPE=Release \
           -DIOS_PLATFORM=${{matrix.build_for_ios_platform_type}} \
           -DCMAKE_TOOLCHAIN_FILE=../../cmake/iOSToolchain.cmake ../..
         make -j8 && make install
