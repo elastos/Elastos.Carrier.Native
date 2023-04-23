@@ -20,6 +20,8 @@
  * SOFTWARE.
  */
 
+#include <sstream>
+
 #include "error_message.h"
 
 namespace elastos {

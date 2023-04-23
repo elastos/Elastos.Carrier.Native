@@ -21,6 +21,8 @@
  */
 
 #include <string>
+#include <sstream>
+
 #include "announce_peer_request.h"
 #include "serializers.h"
 

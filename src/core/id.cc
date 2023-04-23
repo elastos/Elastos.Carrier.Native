@@ -20,6 +20,7 @@
  * SOFTWARE.
  */
 
+#include <iostream>
 #include <climits>
 
 #include "carrier/id.h"
