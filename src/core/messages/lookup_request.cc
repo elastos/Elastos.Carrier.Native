@@ -20,6 +20,8 @@
  * SOFTWARE.
  */
 
+#include <sstream>
+
 #include "serializers.h"
 #include "lookup_request.h"
 

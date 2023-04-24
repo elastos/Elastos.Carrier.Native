@@ -20,6 +20,8 @@
  * SOFTWARE.
  */
 
+#include <sstream>
+
 #include "utils/time.h"
 #include "utils/list.h"
 #include "task/peer_lookup.h"
