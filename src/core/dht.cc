@@ -400,8 +400,7 @@ void DHT::onRequest(Sp<Message> message) {
 }
 
 void DHT::onResponse(Sp<Message> msg) {
-    log->debug("Error from {}/{} - {}, txid {}", msg->getOrigin().toString(),
-        msg->getReadableVersion(), static_cast<std::string>(*msg), msg->getTxid());
+    // Nothing to do
 }
 
 void DHT::onError(Sp<Message> msg) {

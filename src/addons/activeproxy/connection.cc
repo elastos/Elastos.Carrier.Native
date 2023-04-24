@@ -180,12 +180,14 @@ void ProxyConnection::close() noexcept
 
     if (relay.data) {
         uv_read_stop((uv_stream_t*)&relay);
-        uv_close((uv_handle_t*)&relay, [](uv_handle_t* handle) {
-            ProxyConnection* pc = (ProxyConnection*)handle->data;
-            handle->data = nullptr;
-            log->info("Connection {} closed.", pc->id);
-            pc->unref(); // relay.data
-        });
+        if (!uv_is_closing((uv_handle_t*)&relay)) {
+            uv_close((uv_handle_t*)&relay, [](uv_handle_t* handle) {
+                ProxyConnection* pc = (ProxyConnection*)handle->data;
+                handle->data = nullptr;
+                log->info("Connection {} closed.", pc->id);
+                pc->unref(); // relay.data
+            });
+        }
     }
 
     onClosed();
@@ -225,6 +227,7 @@ int ProxyConnection::connectServer() noexcept
         log->error("Connection {} connect to server {} failed({}): {}", id, rc, uv_strerror(rc));
         delete request;
         unref(); // relay.data
+        uv_close((uv_handle_t*)&relay, nullptr);
         return rc;
     }
 
@@ -285,7 +288,7 @@ void ProxyConnection::establish() noexcept {
         // which does not indicate an error or EOF.
         // This is equivalent to EAGAIN or EWOULDBLOCK under read(2).
 
-        delete buf->base;
+        delete[] buf->base;
     });
     if (rc < 0) {
         log->error("Connection {} start read from server {} failed({}): {}",
@@ -777,7 +780,7 @@ void ProxyConnection::onAuthenticateResponse(const uint8_t* packet, size_t size)
     log->debug("Connection {} got AUTH ACK from server {}", id, proxy.serverEndpoint());
 
     std::array<uint8_t, AUTH_ACK_SIZE - PACKET_HEADER_BYTES - CryptoBox::MAC_BYTES> plain;
-    
+
     Blob _plain{plain};
     const Blob _cipher{packet + PACKET_HEADER_BYTES, AUTH_ACK_SIZE - PACKET_HEADER_BYTES};
     proxy.decryptWithNode(_plain, _cipher);
@@ -967,7 +970,7 @@ void ProxyConnection::closeUpstream(bool force) noexcept
                 delete request;
                 return;
             }
-            
+
             uv_close((uv_handle_t*)&pc->upstream, [](uv_handle_t* handle) {
                 ProxyConnection* pc = (ProxyConnection*)handle->data;
                 handle->data = nullptr;
@@ -1035,7 +1038,7 @@ void ProxyConnection::startReadUpstream() noexcept
         // which does not indicate an error or EOF.
         // This is equivalent to EAGAIN or EWOULDBLOCK under read(2).
 
-        delete buf->base;
+        delete[] buf->base;
    });
    if (rc < 0) {
         log->error("Connection {} start read from upstream {} failed({}): {}",
