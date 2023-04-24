@@ -277,8 +277,10 @@ void ActiveProxy::stop() noexcept
     if (running) {
         log->info("ActiveProxy stopping...");
         uv_async_send(&stopHandle);
-
-        runner.join();
+        try {
+            runner.join();
+        } catch(...) {
+        }
     }
     else {
         stopPromise.set_value();

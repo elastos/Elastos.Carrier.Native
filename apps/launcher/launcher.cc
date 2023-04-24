@@ -142,6 +142,9 @@ static void daemonize() {
 
 static void stop()
 {
+    if (stopped)
+        return;
+
     stopped = true;
     unloadAddons();
 
