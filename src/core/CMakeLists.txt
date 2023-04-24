@@ -183,7 +183,6 @@ if(ENABLE_SHARED)
         RUNTIME DESTINATION "bin"
         ARCHIVE DESTINATION "lib"
         LIBRARY DESTINATION "lib")
-
 endif()
 
 install(FILES ${CARRIER_HEADERS} DESTINATION "include/carrier")

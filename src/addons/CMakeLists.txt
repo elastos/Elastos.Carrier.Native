@@ -19,7 +19,8 @@ list(APPEND ADDONS_HEADERS
 
 include_directories(
     ${INCLUDE_DIR}
-    ./activeproxy)
+    ./activeproxy
+    ${CARRIER_INT_DIST_DIR}/include)
 
 list(APPEND ADDONS_DEPENDS
     libsodium
@@ -30,12 +31,18 @@ set(LIBS
     uv_a)
 
 if(WIN32)
+    add_definitions(
+        -DWIN32_LEAN_AND_MEAN
+        -D_CRT_SECURE_NO_WARNINGS
+        -D_CRT_NONSTDC_NO_WARNINGS)
+
     set(LIBS
         ${LIBS}
         libsodium.lib
         Ws2_32
         crypt32
-        iphlpapi)
+        iphlpapi
+        userenv)
 else()
     set(LIBS
         ${LIBS}
@@ -47,6 +54,12 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
 endif()
 
 add_custom_target(addons0)
+
+if(ENABLE_SHARED)
+    set(LIBS carrier-shared ${LIBS})
+else()
+    set(LIBS carrier-static ${LIBS})
+endif()
 
 if(ENABLE_STATIC)
     add_library(addons-static STATIC ${ADDONS_SOURCES} ${ADDONS_HEADERS})

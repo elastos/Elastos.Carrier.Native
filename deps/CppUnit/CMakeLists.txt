@@ -17,7 +17,6 @@ if(WIN32)
     set(CONFIGURE_ARGS "Done")
 
     set(BUILD_CMD "msbuild")
-    #set(BUILD_ARGS ${WIN_BUILD_OPTIONS} "src/cppunit/cppunit_dll.vcxproj")
     set(BUILD_ARGS ${WIN_BUILD_OPTIONS} "src/cppunit/cppunit.vcxproj")
 
     set(INSTALL_CMD

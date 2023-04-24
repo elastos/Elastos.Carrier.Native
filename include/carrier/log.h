@@ -27,6 +27,7 @@
 
 #include "spdlog/spdlog.h"
 #include "types.h"
+#include "def.h"
 
 using namespace spdlog;
 namespace elastos {
@@ -110,7 +111,7 @@ enum PatternTimeType {
 #    define CARRIER_LOGGER_CRITICAL(logger, ...) (void)0
 #endif
 
-class Logger {
+class CARRIER_PUBLIC Logger {
 public:
     Logger() = default;
     Logger(const Sp<spdlog::logger> spd_logger) : spd_logger(spd_logger) {}

@@ -325,7 +325,7 @@ elseif(WIN32)
 
         CONFIGURE_COMMAND echo Done
         BUILD_COMMAND echo Done
-        INSTALL_COMMAND xcopy /s /e /q /y . ${PROJECT_HOST_TOOLS_DIR}\\usr
+        INSTALL_COMMAND xcopy /s /e /q /y .\\usr ${PROJECT_HOST_TOOLS_DIR}\\usr
     )
 
     ExternalProject_Add(

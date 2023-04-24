@@ -1,13 +1,27 @@
 diff -ruN wineditline/src/CMakeLists.txt wineditline-mode/src/CMakeLists.txt
 --- wineditline/src/CMakeLists.txt	2023-04-12 11:41:49.000000000 +0800
-+++ wineditline-mode/src/CMakeLists.txt	2023-04-13 11:48:27.000000000 +0800
-@@ -20,9 +20,3 @@
- install (FILES editline/readline.h
-   DESTINATION "${CMAKE_SOURCE_DIR}/include/editline")
- string(TOUPPER "${CMAKE_BUILD_TYPE}" uppercase_CMAKE_BUILD_TYPE)
++++ wineditline-mode/src/CMakeLists.txt	2023-04-24 14:33:50.000000000 +0800
+@@ -13,16 +13,10 @@
+ add_executable(edit_test libedit_test.c)
+ target_link_libraries(edit_test edit)
+ add_executable(edit_test_dll libedit_test_dll.c)
+-install (TARGETS edit edit_test edit_test_dll
+-  DESTINATION "${CMAKE_SOURCE_DIR}/bin${LIB_SUFFIX}")
+-install (TARGETS edit_a
+-  DESTINATION "${CMAKE_SOURCE_DIR}/lib${LIB_SUFFIX}")
+-install (FILES editline/readline.h
+-  DESTINATION "${CMAKE_SOURCE_DIR}/include/editline")
+-string(TOUPPER "${CMAKE_BUILD_TYPE}" uppercase_CMAKE_BUILD_TYPE)
 -if (MSVC AND uppercase_CMAKE_BUILD_TYPE MATCHES "DEBUG")
 -  install (FILES ${CMAKE_CURRENT_BINARY_DIR}/Debug/edit_a.pdb
 -    DESTINATION "${CMAKE_SOURCE_DIR}/lib${LIB_SUFFIX}")
 -  install (FILES ${CMAKE_CURRENT_BINARY_DIR}/Debug/edit.pdb
 -    DESTINATION "${CMAKE_SOURCE_DIR}/bin${LIB_SUFFIX}")
 -endif()
++
++install(TARGETS edit
++    RUNTIME DESTINATION "bin"
++    ARCHIVE DESTINATION "lib"
++    LIBRARY DESTINATION "lib")
++
++install(FILES editline/readline.h DESTINATION "include/editline")
