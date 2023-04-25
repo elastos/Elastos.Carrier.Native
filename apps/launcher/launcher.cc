@@ -37,7 +37,7 @@
 using namespace elastos::carrier;
 
 static Sp<Node> g_node = nullptr;
-static bool stopped = false;
+static bool broke = false;
 static ApplicationLock lock;
 
 struct Options {
@@ -142,10 +142,6 @@ static void daemonize() {
 
 static void stop()
 {
-    if (stopped)
-        return;
-
-    stopped = true;
     unloadAddons();
 
     if (g_node != nullptr) {
@@ -156,7 +152,7 @@ static void stop()
 
 static void signalHandler(int sig)
 {
-    stop();
+    broke = true;
 }
 
 static void setupSignals()
@@ -200,8 +196,9 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    while (!stopped)
+    while (!broke)
         sleep(1);
 
+    stop();
     return 0;
 }
