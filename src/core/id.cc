@@ -188,6 +188,9 @@ const std::string Id::toBinaryString() const {
 
 void Id::fromBase58String(const std::string& str) {
     std::vector<uint8_t> data = base58_decode(str.c_str());
+    if(data.size() != ID_BYTES)
+        throw std::out_of_range("Invalid id string, the size of data from decoding string is 32 bytes.");
+
     std::memcpy(bytes.data(), data.data(), ID_BYTES);
 }
 
