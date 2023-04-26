@@ -28,10 +28,11 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
     set(SYSTEM_LIBS dl)
 endif()
 
+add_definitions(-DUTF8PROC_STATIC)
+
 set(LIBS
     utf8proc
-    edit
-    ncurses)
+    edit)
 
 if(WIN32)
     add_definitions(
@@ -53,7 +54,6 @@ endif()
 
 if(ENABLE_SHARED)
     set(LIBS carrier-shared addons-shared ${LIBS})
-    #set(SYSTEM_LIBS pthread dl)
 else()
     set(LIBS carrier-static addons-static ${LIBS})
 endif()

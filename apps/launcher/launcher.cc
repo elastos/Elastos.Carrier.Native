@@ -154,23 +154,21 @@ static void stop()
     }
 }
 
-static void signalHandler(int sig)
+static void signal_handler(int sig)
 {
     stop();
 }
 
 static void setupSignals()
 {
-
-    signal(SIGCHLD, SIG_IGN);   /* ignore child */
-    signal(SIGTSTP, SIG_IGN);   /* ignore tty signals */
-    signal(SIGTTOU, SIG_IGN);
-    signal(SIGTTIN, SIG_IGN);
-#ifndef _MSC_VER
-    signal(SIGHUP, SIG_IGN);    /* catch hangup signal */
+    signal(SIGINT,  signal_handler);
+    signal(SIGTERM, signal_handler);
+#ifdef HAVE_SIGKILL
+    signal(SIGKILL, signal_handler);
 #endif
-    signal(SIGINT, signalHandler); /* catch interrupt signal */
-    signal(SIGTERM, signalHandler); /* catch kill signal */
+#ifdef HAVE_SIGHUP
+    signal(SIGHUP, signal_handler);
+#endif
 }
 
 int main(int argc, char *argv[])
