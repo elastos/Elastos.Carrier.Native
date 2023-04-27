@@ -16,7 +16,14 @@ list(APPEND TEST_SOURCES
     main.cc
     node_tests.cc
     routingtable_tests.cc
+    activeproxy_tests.cc
 )
+
+list(APPEND ADHOC_DEPENDS
+    CppUnit
+    cpp-httplib
+    carrier0
+    addons0)
 
 if(ENABLE_SHARED)
     set(CARRIER_LIB carrier-shared)
@@ -26,6 +33,7 @@ endif()
 
 add_executable(ad-hoc ${TEST_SOURCES})
 target_link_libraries(ad-hoc LINK_PUBLIC ${CARRIER_LIB} cppunit pthread dl)
+add_dependencies(ad-hoc ${ADHOC_DEPENDS})
 
 enable_testing()
 add_test(TEST ad-hoc)

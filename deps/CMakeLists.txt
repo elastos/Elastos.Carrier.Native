@@ -39,4 +39,7 @@ endif()
 if (ENABLE_TESTS)
     add_submodule(CppUnit
         DEPENDS platform-specific)
+
+    add_submodule(cpp-httplib
+        DEPENDS platform-specific)
 endif()
