@@ -4,12 +4,41 @@ include(ProjectDefaults)
 include(ExternalProject)
 include(ExternalConfigureArgs)
 
-set(CONFIGURE_CMD "./configure")
-set(CONFIGURE_ARGS
-    "--prefix=${PROJECT_INT_DIST_DIR}"
-    "--disable-shared"
-    "--enable-static"
-    ${CONFIGURE_ARGS_INIT})
+if(WIN32)
+    set_win_build_options(WIN_BUILD_OPTIONS "")
+
+    if("${CMAKE_BUILD_TYPE}" MATCHES "(Debug|RelWithDebInfo)")
+        set(BUILD_SUFFIX "d")
+    endif()
+
+    set(AUTOCONF_CMD "echo")
+    set(AUTOCONF_ARGS "Done")
+
+    set(CONFIGURE_CMD "echo")
+    set(CONFIGURE_ARGS "Done")
+
+    set(BUILD_CMD "msbuild")
+    set(BUILD_ARGS ${WIN_BUILD_OPTIONS} "src/cppunit/cppunit.vcxproj")
+
+    set(INSTALL_CMD
+        xcopy "include\\cppunit" "${PROJECT_INT_DIST_DIR}\\include\\cppunit" /e /i /h /y &&
+        copy "lib\\cppunit${BUILD_SUFFIX}.lib" "${PROJECT_INT_DIST_DIR}\\lib\\cppunit.lib" /y)
+else()
+    set(AUTOCONF_CMD "autoreconf")
+    set(AUTOCONF_ARGS "-if")
+
+    set(CONFIGURE_CMD "./configure")
+    set(CONFIGURE_ARGS
+        "--prefix=${PROJECT_INT_DIST_DIR}"
+        "--disable-shared"
+        "--enable-static"
+        ${CONFIGURE_ARGS_INIT})
+
+    set(BUILD_CMD "make")
+
+    set(INSTALL_CMD "make")
+    set(INSTALL_ARGS "install")
+endif()
 
 ExternalProject_Add(
     CppUnit
@@ -24,5 +53,8 @@ ExternalProject_Add(
 
     BUILD_IN_SOURCE 1
 
-    CONFIGURE_COMMAND  autoreconf -if && ${CONFIGURE_CMD} ${CONFIGURE_ARGS}
+    CONFIGURE_COMMAND ${AUTOCONF_CMD} ${AUTOCONF_ARGS}
+        COMMAND ${CONFIGURE_CMD} ${CONFIGURE_ARGS}
+    BUILD_COMMAND ${BUILD_CMD} ${BUILD_ARGS}
+    INSTALL_COMMAND ${INSTALL_CMD} ${INSTALL_ARGS}
 )
