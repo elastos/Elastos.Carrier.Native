@@ -166,7 +166,7 @@ private:
     std::vector<uint8_t> stickyBuffer {};
 
     uv_timer_t keepAliveTimer { 0 };
-    uint64_t keepAliveTimestamp;
+    uint64_t keepAliveTimestamp { 0 };
 
     AuthorizedHandle authorizedHandle;
     StatusHandler openHandler;

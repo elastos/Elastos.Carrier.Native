@@ -131,7 +131,7 @@ static const std::string StateNames[] = {
 
 std::string ProxyConnection::status() const noexcept
 {
-    std::string s;
+    std::string s {};
     s.reserve(128);
 
     s.append("Connection[").append(std::to_string(id)).append("]: ");
