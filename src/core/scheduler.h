@@ -25,10 +25,14 @@
 #include <functional>
 #include <map>
 #include <chrono>
+#include <cstdint>
+
 #include "utils/time.h"
 
 namespace elastos {
 namespace carrier {
+
+#undef max
 
 using clock = std::chrono::steady_clock;
 

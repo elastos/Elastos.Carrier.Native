@@ -31,6 +31,9 @@
 namespace elastos {
 namespace carrier {
 
+#undef max
+#undef min
+
 long KBucketEntry::backoffWindowEnd() const {
     if (failedRequests == 0 || lastSend <= 0)
         return -1;

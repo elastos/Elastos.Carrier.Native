@@ -36,8 +36,9 @@
 
 namespace fs = std::filesystem;
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
     static const std::string PATH_SEP = "\\";
+    #define S_ISDIR(m)      (((m) & S_IFMT) == S_IFDIR)
 #else
     static const std::string PATH_SEP = "/";
 #endif

@@ -24,6 +24,10 @@
 #include <cstdint>
 #include <cstring>
 
+#if defined(_WIN32) || defined(_WIN64)
+#include <winsock2.h>
+#endif
+
 #include "utils/time.h"
 #include "utils/random_generator.h"
 #include "carrier/node.h"
@@ -108,10 +112,10 @@ static int bindSocket(const SocketAddress& addr, SocketAddress& bound)
 
     int set = 1;
 #ifdef SO_NOSIGPIPE
-    setsockopt(sock, SOL_SOCKET, SO_NOSIGPIPE, &set, sizeof(set));
+    setsockopt(sock, SOL_SOCKET, SO_NOSIGPIPE, (char*)&set, sizeof(set));
 #endif
     if (addr.family() == AF_INET6)
-        setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, &set, sizeof(set));
+        setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, (char*)&set, sizeof(set));
 
     setNonblocking(sock);
     int rc = bind(sock, addr.addr(), addr.length());
@@ -126,34 +130,6 @@ static int bindSocket(const SocketAddress& addr, SocketAddress& bound)
     bound = {bound_addr};
     return sock;
 }
-
-#ifdef _WIN32
-static void udpPipe(int fds[2])
-{
-    int lst = socket(AF_INET, SOCK_DGRAM, 0);
-    if (lst < 0)
-        throw std::runtime_error(std::string("Can't open socket: ") + strerror(WSAGetLastError()));
-    sockaddr_in inaddr;
-    sockaddr addr;
-    memset(&inaddr, 0, sizeof(inaddr));
-    memset(&addr, 0, sizeof(addr));
-    inaddr.sin_family = AF_INET;
-    inaddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-    inaddr.sin_port = 0;
-    int yes = 1;
-    setsockopt(lst, SOL_SOCKET, SO_REUSEADDR, (char*)&yes, sizeof(yes));
-    int rc = bind(lst, (sockaddr*)&inaddr, sizeof(inaddr));
-    if (rc < 0) {
-        close(lst);
-        throw std::runtime_error("Can't bind socket on " + print_addr((sockaddr*)&inaddr, sizeof(inaddr)) + " " + strerror(rc));
-    }
-    socklen_t len = sizeof(addr);
-    getsockname(lst, &addr, &len);
-    fds[0] = lst;
-    fds[1] = socket(AF_INET, SOCK_DGRAM, 0);
-    connect(fds[1], &addr, len);
-}
-#endif
 
 int RPCServer::sendData(Sp<Message>& msg) {
     const auto& remoteAddr = msg->getRemoteAddress();
@@ -194,7 +170,7 @@ int RPCServer::sendData(Sp<Message>& msg) {
     std::memcpy(buffer.data(), msg->getId().data(), ID_BYTES);
     std::memcpy(buffer.data() + ID_BYTES, encrypted.data(), encrypted.size());
 
-    int ret = sendto(sockfd, buffer.data(), buffer.size(), flags, remoteAddr.addr(), remoteAddr.length());
+    int ret = sendto(sockfd, (char*)buffer.data(), buffer.size(), flags, remoteAddr.addr(), remoteAddr.length());
     if (ret == 0 || (ret == -1 && errno == EAGAIN)) {
         messageQueue.push(msg);
         return EAGAIN;

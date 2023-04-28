@@ -49,11 +49,11 @@ ssize_t Hex::decode(const char* data, size_t data_size, uint8_t* out, size_t out
         return -1;
 
     auto hex2bin = [](char c) -> uint8_t {
-        if (c >= 'a' and c <= 'f')
+        if (c >= 'a' && c <= 'f')
             return 10 + c - 'a';
-        else if (c >= 'A' and c <= 'F')
+        else if (c >= 'A' && c <= 'F')
             return 10 + c - 'A';
-        else if (c >= '0' and c <= '9')
+        else if (c >= '0' && c <= '9')
             return c - '0';
         else
             throw std::domain_error("not an hex character");
