@@ -519,7 +519,7 @@ void RPCServer::handlePacket(const uint8_t *buf, size_t buflen, const SocketAddr
 #endif
 
     // transaction id should be a non-zero integer
-    if (msg->getType() != Message::Type::ERROR && msg->getTxid() == 0) {
+    if (msg->getType() != Message::Type::ERR && msg->getTxid() == 0) {
         log->warn("Received a message with invalid transaction id.");
 
         sendError(msg, ErrorCode::ProtocolError,
@@ -590,7 +590,7 @@ void RPCServer::handlePacket(const uint8_t *buf, size_t buflen, const SocketAddr
         return;
     }
 
-    if (msg->getType() == Message::Type::ERROR) {
+    if (msg->getType() == Message::Type::ERR) {
         handleMessage(msg);
         return;
     }

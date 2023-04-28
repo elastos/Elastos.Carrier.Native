@@ -700,7 +700,7 @@ void ProxyConnection::processRelayPacket(const uint8_t* packet, size_t size) noe
     // log->trace("Connection {} got packet from server {}: type={}, ack={}, size={}",
     //        proxy.serverEndpoint(), id, type, ack, size);
 
-    if (type == PacketFlag::ERROR) {
+    if (type == PacketFlag::ERR) {
         size_t len = size - PACKET_HEADER_BYTES - CryptoBox::MAC_BYTES;
         uint8_t* plain = (uint8_t*)alloca(len);
         Blob _plain{plain, len};
@@ -708,7 +708,7 @@ void ProxyConnection::processRelayPacket(const uint8_t* packet, size_t size) noe
         proxy.decrypt(_plain, _cipher);
         int code = ntohs(*(uint16_t*)plain);
         char* msg = (char*)plain + sizeof(uint16_t);
-        log->error("Connection {} got ERROR response from the server {}, error({}): {}",
+        log->error("Connection {} got ERR response from the server {}, error({}): {}",
                 id, proxy.serverEndpoint(), code, msg);
         close();
         return;

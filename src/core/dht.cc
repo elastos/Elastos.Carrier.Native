@@ -71,7 +71,7 @@ Sp<NodeInfo> DHT::getNode(const Id& nodeId) const {
 }
 
 void DHT::bootstrap() {
-   if (!isRunning() || bootstrapNodes.empty()
+  if (!isRunning() || bootstrapNodes.empty()
        || currentTimeMillis() - lastBootstrap < Constants::BOOTSTRAP_MIN_INTERVAL)
        return;
 
@@ -95,7 +95,7 @@ void DHT::bootstrap() {
         auto call = std::make_shared<RPCCall>(this, node, q);
         call->addStateChangeHandler([=](RPCCall* call, RPCCall::State previous, RPCCall::State current) {
             log->debug("RPCCall::OnStateChange for FindNodeRequest message invoked .....");
-            if (current == RPCCall::State::RESPONDED || current == RPCCall::State::ERROR
+            if (current == RPCCall::State::RESPONDED || current == RPCCall::State::ERR
                     || current == RPCCall::State::TIMEOUT) {
                 auto r = std::dynamic_pointer_cast<FindNodeResponse>(call->getResponse());
                 if (r != nullptr) {
@@ -278,7 +278,7 @@ void DHT::onMessage(Sp<Message> msg) {
         onResponse(msg);
         break;
 
-    case Message::Type::ERROR:
+    case Message::Type::ERR:
         onError(msg);
         break;
     }

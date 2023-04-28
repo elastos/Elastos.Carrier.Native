@@ -90,7 +90,7 @@ void RPCCall::sent(RPCServer* server) {
 void RPCCall::responsed(Sp<Message> response) {
     assert(response != nullptr);
     assert(response->getType() == Message::Type::RESPONSE ||
-           response->getType() == Message::Type::ERROR);
+           response->getType() == Message::Type::ERR);
 
     if (timeoutTimer != nullptr)
         timeoutTimer->cancel();
@@ -102,8 +102,8 @@ void RPCCall::responsed(Sp<Message> response) {
     case Message::Type::RESPONSE:
         updateState(State::RESPONDED);
         break;
-    case Message::Type::ERROR:
-        updateState(State::ERROR);
+    case Message::Type::ERR:
+        updateState(State::ERR);
         break;
     default:
         throw std::runtime_error("Unexpected message type received.");
