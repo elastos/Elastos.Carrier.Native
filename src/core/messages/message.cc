@@ -87,7 +87,7 @@ Message::Type Message::ofType(int messageType) {
     static const std::unordered_map<int, Type> typeMap {
         {0x20, Type::REQUEST},
         {0x40, Type::RESPONSE},
-        {0x00, Type::ERROR}
+        {0x00, Type::ERR}
     };
 
     int type = messageType & MSG_TYPE_MASK;
@@ -121,7 +121,7 @@ const std::string& Message::getKeyString() const {
     static std::unordered_map<Message::Type, std::string> keyMap = {
         { Type::REQUEST, KEY_REQUEST },
         { Type::RESPONSE, KEY_RESPONSE },
-        { Type::ERROR, KEY_ERROR }
+        { Type::ERR, KEY_ERROR }
     };
     return keyMap[getType()];
 }
@@ -131,11 +131,11 @@ const std::string& Message::getTypeString() const {
 #ifdef MSG_PRINT_DETAIL
         { Type::REQUEST, "request" },
         { Type::RESPONSE, "response" },
-        { Type::ERROR, "error" }
+        { Type::ERR, "error" }
 #else
         { Type::REQUEST, KEY_REQUEST },
         { Type::RESPONSE, KEY_RESPONSE },
-        { Type::ERROR, KEY_ERROR }
+        { Type::ERR, KEY_ERROR }
 #endif
     };
     return nameMap[getType()];
@@ -211,7 +211,7 @@ Sp<Message> Message::createMessage(int messageType) {
             throw std::invalid_argument("Invalid response method: " + std::to_string(static_cast<int>(method)));
         return rspCreator->second();
     }
-    case Type::ERROR: {
+    case Type::ERR: {
         return std::make_shared<ErrorMessage>(method);
     }
     default: {

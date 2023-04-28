@@ -100,9 +100,9 @@ public:
     };
 
     enum class Type {
+        ERR         = 0x00,
         REQUEST     = 0x20,
-        RESPONSE    = 0x40,
-        ERROR       = 0x00
+        RESPONSE    = 0x40
     };
 
     Method getMethod() const {

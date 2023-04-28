@@ -42,7 +42,7 @@ public:
         STALLED,
         TIMEOUT,
         CANCELED,
-        ERROR,
+        ERR,
         RESPONDED
     };
 

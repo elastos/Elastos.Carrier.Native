@@ -31,9 +31,9 @@ namespace carrier {
 class ErrorMessage : public Message {
 public:
     ErrorMessage(Method method, int txid, int _code, const std::string& _message)
-        : Message(Message::Type::ERROR, method, txid), code(_code), message(_message) {}
+        : Message(Message::Type::ERR, method, txid), code(_code), message(_message) {}
 
-    ErrorMessage(Method method): Message(Message::Type::ERROR, method) {}
+    ErrorMessage(Method method): Message(Message::Type::ERR, method) {}
 
     ~ErrorMessage() = default;
 

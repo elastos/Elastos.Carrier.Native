@@ -39,7 +39,7 @@ namespace carrier {
 std::atomic<int> Task::nextTaskId(0);
 std::vector<RPCCall::State> Task::callStatesTobeUpdate = {
     RPCCall::State::RESPONDED,
-    RPCCall::State::ERROR,
+    RPCCall::State::ERR,
     RPCCall::State::STALLED,
     RPCCall::State::TIMEOUT
 };
@@ -174,7 +174,7 @@ bool Task::sendCall(Sp<NodeInfo> node, Sp<Message> request, std::function<void(S
             }
             break;
 
-        case RPCCall::State::ERROR:
+        case RPCCall::State::ERR:
             removeCall(inFlight, c);
             if (!isFinished())
                 callError(c);

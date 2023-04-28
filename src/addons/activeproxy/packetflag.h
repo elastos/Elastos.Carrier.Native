@@ -39,7 +39,7 @@ public:
     const static uint8_t CONNECT    = 0x20;
     const static uint8_t DISCONNECT = 0x30;
     const static uint8_t DATA       = 0x40;
-    const static uint8_t ERROR      = 0x70;
+    const static uint8_t ERR      = 0x70;
 
     static uint8_t auth() {
         return random(AUTH_MIN, AUTH_MAX);
@@ -91,32 +91,29 @@ public:
 
     static uint8_t getType(uint8_t flag) {
         uint8_t type = flag & TYPE_MASK;
-        switch (type) {
-        case AUTH_MIN ... AUTH_MAX:
+        if(type >= AUTH_MIN && type <= AUTH_MAX)
             return AUTH;
 
-        case ATTACH_MIN ... ATTACH_MAX:
+        if (type >= ATTACH_MIN && type <= ATTACH_MAX)
             return ATTACH;
 
-        case PING_MIN ... PING_MAX:
+        if (type >= PING_MIN && type <= PING_MAX)
             return PING;
 
-        case CONNECT_MIN ... CONNECT_MAX:
+        if(type >= CONNECT_MIN && type <= CONNECT_MAX)
             return CONNECT;
 
-        case DISCONNECT_MIN ... DISCONNECT_MAX:
+        if(type >= DISCONNECT_MIN && type <= DISCONNECT_MAX)
             return DISCONNECT;
 
-        case DATA_MIN ... DATA_MAX:
+        if(type >= DATA_MIN && type <= DATA_MAX)
             return DATA;
 
-        case ERROR_MIN ... ERROR_MAX:
-            return ERROR;
+        if(type >= ERROR_MIN && type <= ERROR_MAX)
+            return ERR;
 
-        default:
-            assert("Should never happen");
-            return ERROR;
-        }
+        assert("Should never happen");
+        return ERR;
     }
 
 private:
@@ -139,7 +136,7 @@ private:
     const static uint8_t DATA_MIN       = DATA;
     const static uint8_t DATA_MAX       = 0x6F;
 
-    const static uint8_t ERROR_MIN      = ERROR;
+    const static uint8_t ERROR_MIN      = ERR;
     const static uint8_t ERROR_MAX      = 0x7F;
 
     const static uint8_t ACK_MASK       = 0x80;
