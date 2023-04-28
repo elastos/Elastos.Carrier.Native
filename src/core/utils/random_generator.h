@@ -32,6 +32,9 @@ namespace carrier {
 #include <random>
 #include <type_traits>
 
+#undef max
+#undef min
+
 template<typename T>
 class RandomGenerator {
     static_assert(std::is_integral<T>::value, "Only supports integral types");

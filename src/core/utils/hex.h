@@ -26,6 +26,10 @@
 #include <vector>
 #include <array>
 
+#if defined(_WIN32) || defined(_WIN64)
+typedef ptrdiff_t       ssize_t;
+#endif
+
 namespace elastos {
 namespace carrier {
 

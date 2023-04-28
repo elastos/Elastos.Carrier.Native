@@ -29,7 +29,6 @@
 #include <iso646.h>
 #include <stdint.h>
 #include <winsock2.h>
-#include <ws2config.h>
 #include <ws2tcpip.h>
 #endif
 
