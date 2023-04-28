@@ -25,11 +25,19 @@
 #include <chrono>
 #include <random>
 #include <cstring>
-#include <netdb.h>
-#include <arpa/inet.h>
 #include <sys/types.h>
+
+#ifndef _WIN32
+#include <arpa/inet.h>
 #include <sys/socket.h>
 #include <ifaddrs.h>
+#else
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#include <iphlpapi.h>
+#include <stdio.h>
+#include <WinNT.h>
+#endif
 
 #include "carrier/socket_address.h"
 
@@ -42,6 +50,68 @@ namespace carrier {
 
 std::string getLocalIpAddresses(bool ipv4 = true) {
     std::string ipAddress {};
+
+#if defined(_WIN32) || defined(_WIN64)
+    DWORD dwRetVal = 0;
+    unsigned int i = 0;
+
+    ULONG family = AF_UNSPEC;
+
+    // Set the flags to pass to GetAdaptersAddresses
+    ULONG flags = GAA_FLAG_INCLUDE_PREFIX;
+    LPVOID lpMsgBuf = NULL;
+    ULONG outBufLen = 0;
+    PIP_ADAPTER_ADDRESSES pAddresses = NULL;
+    PIP_ADAPTER_ADDRESSES pCurrAddresses = NULL;
+    PIP_ADAPTER_ANYCAST_ADDRESS pAnycast = NULL;
+
+    outBufLen = sizeof(IP_ADAPTER_ADDRESSES);
+    pAddresses = (IP_ADAPTER_ADDRESSES*)malloc(outBufLen);
+
+    // Make an initial call to GetAdaptersAddresses to get the
+    // size needed into the outBufLen variable
+    if (GetAdaptersAddresses(family, flags, NULL, pAddresses, &outBufLen)
+            == ERROR_BUFFER_OVERFLOW) {
+        free(pAddresses);
+        pAddresses = (IP_ADAPTER_ADDRESSES*)malloc(outBufLen);
+    }
+
+    if (pAddresses == NULL)
+        return ipAddress;
+
+    family = ipv4 ? AF_INET : AF_INET6;
+
+    dwRetVal = GetAdaptersAddresses(family, flags, NULL, pAddresses, &outBufLen);
+    if (dwRetVal == NO_ERROR) {
+        pCurrAddresses = pAddresses;
+        while (pCurrAddresses) {
+            for (i = 0; pAnycast != NULL; i++) {
+                pAnycast = pCurrAddresses->FirstAnycastAddress;
+                while(pAnycast) {
+                    SOCKET_ADDRESS address = pAnycast->Address;
+
+                    char ip[INET6_ADDRSTRLEN];
+                    int len = INET6_ADDRSTRLEN;
+                    int ret = WSAAddressToString(address.lpSockaddr, address.iSockaddrLength, NULL, ip, (LPDWORD)&len);
+                    if (ret != 0) {
+                        pAnycast = pAnycast->Next;
+                    } else {
+                        ipAddress = std::string(ip);
+                        break;
+                    }
+                }
+            }
+
+            if (!ipAddress.empty())
+                break;
+
+            pCurrAddresses = pCurrAddresses->Next;
+        }
+    }
+
+    free(pAddresses);
+
+#else
     struct ifaddrs* ifAddrStruct = nullptr;
     struct ifaddrs* ifa = nullptr;
 
@@ -72,7 +142,7 @@ std::string getLocalIpAddresses(bool ipv4 = true) {
     if (ifAddrStruct != nullptr) {
         freeifaddrs(ifAddrStruct);
     }
-
+#endif
     return ipAddress;
 }
 
