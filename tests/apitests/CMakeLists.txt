@@ -5,6 +5,21 @@ if(HAVE_SYS_RESOURCE_H)
     add_definitions(-DHAVE_SYS_RESOURCE_H=1)
 endif()
 
+check_include_file(unistd.h HAVE_UNISTD_H)
+if(HAVE_UNISTD_H)
+    add_definitions(-DHAVE_UNISTD_H=1)
+endif()
+
+check_include_file(io.h HAVE_IO_H)
+if(HAVE_IO_H)
+    add_definitions(-DHAVE_IO_H=1)
+endif()
+
+check_include_file(unistd.h HAVE_UNISTD_H)
+if(HAVE_UNISTD_H)
+    add_definitions(-DHAVE_UNISTD_H=1)
+endif()
+
 include_directories(
     .
     ../../include
@@ -36,20 +51,49 @@ list(APPEND APITESTS_SOURCES
     node_api_tests.cc
 )
 
+set(LIBS
+    sqlite3
+    cppunit)
+
+if(WIN32)
+    add_definitions(
+        -DWIN32_LEAN_AND_MEAN
+        -D_CRT_SECURE_NO_WARNINGS
+        -D_CRT_NONSTDC_NO_WARNINGS)
+
+    set(LIBS
+        ${LIBS}
+        libsodium.lib
+        Ws2_32
+        crypt32
+        iphlpapi
+        Shlwapi)
+else()
+    set(LIBS
+        ${LIBS}
+        sodium)
+endif()
+
 list(APPEND APITESTS_DEPENDS
+    sqlite
     CppUnit
     carrier0
-    addons0)
+    addons0
+    libsodium)
+
+if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+    set(SYSTEM_LIBS pthread dl)
+endif()
 
 if(ENABLE_SHARED)
-    set(LIBS carrier-shared addons-shared cppunit)
-    set(SYSTEM_LIBS pthread dl)
+    set(LIBS carrier-shared addons-shared ${LIBS})
+    #set(SYSTEM_LIBS pthread dl)
 else()
-    set(LIBS carrier-static addons-static cppunit)
+    set(LIBS carrier-static addons-static ${LIBS})
 endif()
 
 add_executable(apitests ${APITESTS_SOURCES})
-target_link_libraries(apitests LINK_PUBLIC ${LIBS} ${SYSTEM_LIBS})
+target_link_libraries(apitests ${LIBS} ${SYSTEM_LIBS})
 add_dependencies(apitests ${APITESTS_DEPENDS})
 
 configure_file(log_test.conf log_test.conf COPYONLY)

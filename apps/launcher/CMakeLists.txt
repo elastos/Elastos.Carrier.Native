@@ -22,7 +22,7 @@ list(APPEND LAUNCHER_DEPENDS
     CLI11)
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
-    set(SYSTEM_LIBS dl)
+    set(SYSTEM_LIBS pthread dl)
 endif()
 
 if(WIN32)
