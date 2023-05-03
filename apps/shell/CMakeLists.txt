@@ -24,11 +24,39 @@ list(APPEND SHELL_DEPENDS
     carrier0
     addons0)
 
-if(ENABLE_SHARED)
-    set(LIBS carrier-shared addons-shared utf8proc edit ncurses)
-    set(SYSTEM_LIBS pthread dl)
+if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+    set(SYSTEM_LIBS dl)
+endif()
+
+add_definitions(-DUTF8PROC_STATIC)
+
+set(LIBS
+    utf8proc
+    edit)
+
+if(WIN32)
+    add_definitions(
+        -DWIN32_LEAN_AND_MEAN
+        -D_CRT_SECURE_NO_WARNINGS
+        -D_CRT_NONSTDC_NO_WARNINGS)
+
+    set(LIBS
+        ${LIBS}
+        libsodium.lib
+        Ws2_32
+        crypt32
+        iphlpapi)
 else()
-    set(LIBS carrier-static addons-static utf8proc edit ncurses)
+    set(LIBS
+        ${LIBS}
+        ncurses
+        sodium)
+endif()
+
+if(ENABLE_SHARED)
+    set(LIBS carrier-shared addons-shared ${LIBS})
+else()
+    set(LIBS carrier-static addons-static ${LIBS})
 endif()
 
 add_executable(carrier-shell ${SHELL_SOURCES})
