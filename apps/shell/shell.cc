@@ -143,10 +143,12 @@ int main(int argc, char **argv)
 {
     sys_coredump_set(true);
 
+#ifndef WIN32
     rl_initialize();
     stifle_history(256);
     rl_bind_key('\t', rl_complete);
     rl_readline_name = "carrier-shell";
+#endif
 
     // We can add auto completion later
     // rl_attempted_completion_function = custom_completion;
