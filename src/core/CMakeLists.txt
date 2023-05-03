@@ -3,6 +3,8 @@ project(carrier-core CXX)
 include(ProjectDefaults)
 include(CheckIncludeFile)
 
+add_definitions(-DSODIUM_STATIC)
+
 if(WIN32)
     add_definitions(
         -D_WINSOCK_DEPRECATED_NO_WARNINGS
@@ -90,37 +92,34 @@ include_directories(
     .
     ${INCLUDE_DIR})
 
-if(WIN32)
-    list(APPEND CARRIER_HEADERS compat/msvc/unistd.h)
-endif()
-
 list(APPEND CARRIER_DEPENDS
     sqlite
     libsodium
     spdlog
     spdlog-setup
     nlohmann
-    LibreSSL
 )
 
-list(APPEND LIBS
-    sqlite3
-    sodium
-    crypto)
+set(LIBS
+    sqlite3)
 
 if(WIN32)
     set(LIBS
         ${LIBS}
-        libsodium.lib)
+        libsodium.lib
+        Ws2_32
+        crypt32
+        iphlpapi
+        Shlwapi)
 else()
     set(LIBS
         ${LIBS}
         sodium)
 endif()
 
-list(APPEND SYSTEM_LIBS
-    pthread
-    dl)
+if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+    set(SYSTEM_LIBS dl)
+endif()
 
 add_custom_target(carrier0)
 
@@ -174,7 +173,6 @@ if(ENABLE_SHARED)
         RUNTIME DESTINATION "bin"
         ARCHIVE DESTINATION "lib"
         LIBRARY DESTINATION "lib")
-
 endif()
 
 install(FILES ${CARRIER_HEADERS} DESTINATION "include/carrier")

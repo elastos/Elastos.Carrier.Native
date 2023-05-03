@@ -27,7 +27,6 @@
 #include <algorithm>
 #include <memory>
 #include <cstdint>
-#include <alloca.h>
 
 #include "carrier/blob.h"
 

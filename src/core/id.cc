@@ -22,6 +22,7 @@
 
 #include <iostream>
 #include <climits>
+#include <string>
 
 #include "carrier/id.h"
 #include "utils/hex.h"
