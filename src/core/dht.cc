@@ -400,7 +400,7 @@ void DHT::onRequest(Sp<Message> message) {
 }
 
 void DHT::onResponse(Sp<Message> msg) {
-    // Nothing to do
+    //Nothing to do
 }
 
 void DHT::onError(Sp<Message> msg) {
