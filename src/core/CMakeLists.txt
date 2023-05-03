@@ -118,7 +118,7 @@ else()
 endif()
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
-    set(SYSTEM_LIBS dl)
+    set(SYSTEM_LIBS pthread dl)
 endif()
 
 add_custom_target(carrier0)
