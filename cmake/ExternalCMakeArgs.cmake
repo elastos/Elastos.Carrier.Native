@@ -5,7 +5,6 @@ set(__external_cmake_args_included TRUE)
 
 include(ProjectDefaults)
 
-#[[
 set(CMAKE_ARGS_INIT
     "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}")
 
@@ -20,7 +19,6 @@ set(CMAKE_ARGS_INIT "${CMAKE_ARGS_INIT}"
 
 set(CMAKE_ARGS_INIT "${CMAKE_ARGS_INIT}"
     "-DCMAKE_SHARED_LINKER_FLAGS_INIT=${CMAKE_SHARED_LINKER_FLAGS}")
-]]
 
 set(CMAKE_ARGS_INIT
     "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"

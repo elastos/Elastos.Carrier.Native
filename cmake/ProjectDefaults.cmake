@@ -29,17 +29,17 @@ set(PROJECT_DEPS_BUILD_PREFIX "external")
 
 # Intermediate distribution directory
 set(PROJECT_INT_DIST_DIR "${CMAKE_BINARY_DIR}/intermediates")
-#if(WIN32)
-#    file(TO_NATIVE_PATH
-#        "${PROJECT_INT_DIST_DIR}" PROJECT_INT_DIST_DIR)
-#endif()
+if(WIN32)
+    file(TO_NATIVE_PATH
+        "${PROJECT_INT_DIST_DIR}" PROJECT_INT_DIST_DIR)
+endif()
 
 # Host tools directory
 set(PROJECT_HOST_TOOLS_DIR "${CMAKE_BINARY_DIR}/host")
-#if(WIN32)
-#    file(TO_NATIVE_PATH
-#         "${PROJECT_HOST_TOOLS_DIR}" PROJECT_HOST_TOOLS_DIR)
-#endif()
+if(WIN32)
+    file(TO_NATIVE_PATH
+         "${PROJECT_HOST_TOOLS_DIR}" PROJECT_HOST_TOOLS_DIR)
+endif()
 
 if(WIN32)
     set(PATCH_EXE "${PROJECT_HOST_TOOLS_DIR}/usr/bin/patch.exe")
@@ -82,11 +82,10 @@ set(CMAKE_C_FLAGS
 set(CMAKE_CXX_FLAGS
     "${CMAKE_CXX_FLAGS} -fexceptions -I${PROJECT_INT_DIST_DIR}/include")
 
-set(CMAKE_SHARED_LINKER_FLAGS
-    "${CMAKE_SHARED_LINKER_FLAGS} -L${PROJECT_INT_DIST_DIR}/lib")
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS}")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}")
 
-set(CMAKE_EXE_LINKER_FLAGS
-    "${CMAKE_EXE_LINKER_FLAGS} -L${PROJECT_INT_DIST_DIR}/lib")
+link_directories("${PROJECT_INT_DIST_DIR}/lib")
 
 # Rpath setup
 set(CMAKE_MACOSX_RPATH TRUE)
