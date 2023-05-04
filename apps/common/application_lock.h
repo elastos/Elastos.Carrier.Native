@@ -22,29 +22,72 @@
 
 #pragma once
 
-#include <sys/file.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
+#ifdef HAVE_SYS_FILE_H
+#include <sys/file.h>
+#endif
 
+#ifdef _WIN32
+#include <Windows.h>
+#include <cstdlib>
+#include <cstdio>
+#include <io.h>
+#include <windef.h>
+#else
 #include <string>
 #include <stdexcept>
 #include <filesystem>
-
-namespace fs = std::filesystem;
+#endif
 
 namespace elastos {
 namespace carrier {
 
 class ApplicationLock {
 public:
-    ApplicationLock() : fd(-1) {};
+    ApplicationLock() {};
     ~ApplicationLock() { release(); };
 
     int acquire(const std::string& filename) {
         // Make sure the existence of the parent directory
-        fs::path lockPath = filename;
+#ifdef _WIN32
+        #define WC_LINK L""
+
+        if (!_access(filename.c_str(), 0)) {
+            size_t pathLen = mbstowcs(0, filename.c_str(), 0);
+            size_t wcLen = 2 * pathLen + 1;
+            wchar_t* wcharPathBuf = new wchar_t[wcLen];
+            mbstowcs(wcharPathBuf, filename.c_str(), wcLen);
+
+            aHandle = CreateFileA(reinterpret_cast<LPCSTR>(wcharPathBuf), GENERIC_READ | GENERIC_WRITE, NULL, NULL,
+                    OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+            delete wcharPathBuf;
+            if(aHandle == INVALID_HANDLE_VALUE) {
+                DWORD errCode = GetLastError();
+                CloseHandle(aHandle);
+                return -1;
+            }
+        }
+
+        this->filename = filename;
+
+        DWORD dwHigh = 0;
+        dwLow = GetFileSize(aHandle, (LPDWORD)&dwHigh);
+        if(dwLow == INVALID_FILE_SIZE)
+            return -1;
+
+        bool retLockFile = LockFile(aHandle, NULL, NULL, dwLow, NULL);
+        if (!retLockFile) {
+            CloseHandle(aHandle);
+            aHandle = INVALID_HANDLE_VALUE;
+            return -1;
+        }
+#else
+        std::filesystem::path lockPath = filename;
         auto parent = lockPath.parent_path();
-        if (!fs::exists(parent))
-            fs::create_directories(parent);
+        if (!std::filesystem::exists(parent))
+            std::filesystem::create_directories(parent);
 
         this->filename = filename;
         fd = open(filename.c_str(), O_RDWR | O_CREAT, 0666);
@@ -57,16 +100,24 @@ public:
             fd = -1;
             return -1;
         }
-
+#endif
         return 0;
     }
 
     void release() {
+#ifdef _WIN32
+        if (aHandle != INVALID_HANDLE_VALUE) {
+            UnlockFile(aHandle, NULL, NULL, dwLow, NULL);
+            CloseHandle(aHandle);
+            std::remove(filename.c_str());
+        }
+#else
         if (fd >= 0) {
             flock(fd, LOCK_UN);
             close(fd);
             std::remove(filename.c_str());
         }
+#endif
     }
 
 private:
@@ -74,7 +125,13 @@ private:
     ApplicationLock& operator=(const ApplicationLock&) = delete;
 
     std::string filename;
-    int fd;
+
+#ifdef _WIN32
+    HANDLE aHandle = INVALID_HANDLE_VALUE;
+    DWORD dwLow = 0;
+#else
+    int fd = -1;
+#endif
 };
 
 } // namespace carrier
