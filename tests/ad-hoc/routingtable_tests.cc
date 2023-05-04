@@ -22,10 +22,14 @@
 
 #include <stdio.h>
 #include <sys/stat.h>
-#include <unistd.h>
 #include <stdlib.h>
 #include <errno.h>
+#ifdef HAVE_DIRENT_H
 #include <dirent.h>
+#endif
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 #include <string.h>
 
 // std
@@ -33,12 +37,15 @@
 #include <string>
 #include <cctype>
 #include <algorithm>
+#include <chrono>
+#include <thread>
 
 // carrier
 #include <carrier.h>
 #include <utils.h>
 #include "routingtable_tests.h"
 
+using namespace std::chrono_literals;
 using namespace elastos::carrier;
 extern bool stopped;
 
@@ -75,7 +82,7 @@ void RoutingTableTester::testRoutingTable() {
     }
 
     while (!stopped) {
-        sleep(1);
+        std::this_thread::sleep_for(1000ms);
     }
 }
 
