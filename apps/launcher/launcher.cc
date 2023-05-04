@@ -26,7 +26,7 @@
 #include <chrono>
 #include <thread>
 
-#ifndef _WIN32
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
 

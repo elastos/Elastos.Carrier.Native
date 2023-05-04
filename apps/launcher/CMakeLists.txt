@@ -1,9 +1,19 @@
 include(ProjectDefaults)
 include(CheckSymbolExists)
 
+check_include_file(unistd.h HAVE_UNISTD_H)
+if(HAVE_UNISTD_H)
+    add_definitions(-DHAVE_UNISTD_H=1)
+endif()
+
 check_include_file(sys/resource.h HAVE_SYS_RESOURCE_H)
 if(HAVE_SYS_RESOURCE_H)
     add_definitions(-DHAVE_SYS_RESOURCE_H=1)
+endif()
+
+check_include_file(sys/file.h HAVE_SYS_FILE_H)
+if(HAVE_SYS_FILE_H)
+    add_definitions(-DHAVE_SYS_FILE_H=1)
 endif()
 
 check_symbol_exists(SIGKILL signal.h HAVE_SIGKILL)
