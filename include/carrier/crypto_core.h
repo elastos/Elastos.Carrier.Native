@@ -83,11 +83,11 @@ public:
         }
 
         const uint8_t* cbegin() const noexcept {
-            return key.cbegin();
+            return key.data();
         }
 
         const uint8_t* cend() const noexcept {
-            return key.cend();
+            return key.data() + key.size();
         }
 
         const uint8_t* bytes() const noexcept {
@@ -167,11 +167,11 @@ public:
         }
 
         const uint8_t* cbegin() const noexcept {
-            return key.cbegin();
+            return key.data();
         }
 
         const uint8_t* cend() const noexcept {
-            return key.cend();
+            return key.data() + key.size();
         }
 
         const uint8_t* bytes() const noexcept {
@@ -315,7 +315,7 @@ private:
     SignState state;
 };
 
-class CryptoBox {
+class CARRIER_PUBLIC CryptoBox {
 public:
     class KeyPair;
 
@@ -364,11 +364,11 @@ public:
         }
 
         const uint8_t* cbegin() const noexcept {
-            return key.cbegin();
+            return key.data();
         }
 
         const uint8_t* cend() const noexcept {
-            return key.cend();
+            return key.data() + key.size();
         }
 
         const uint8_t* bytes() const noexcept {
@@ -395,7 +395,7 @@ public:
         std::array<uint8_t, BYTES> key { 0 };
     };
 
-    class PublicKey {
+    class CARRIER_PUBLIC PublicKey {
     public:
         static const uint32_t BYTES { 32 };
 
@@ -440,11 +440,11 @@ public:
         }
 
         const uint8_t* cbegin() const noexcept {
-            return key.cbegin();
+            return key.data();
         }
 
         const uint8_t* cend() const noexcept {
-            return key.cend();
+            return key.data() + key.size();
         }
 
         const uint8_t* bytes() const noexcept {
@@ -471,7 +471,7 @@ public:
         std::array<uint8_t, BYTES> key { 0 };
     };
 
-    class Nonce {
+    class CARRIER_PUBLIC Nonce {
     public:
         static const uint32_t BYTES { 24 };
 
@@ -514,11 +514,11 @@ public:
         }
 
         const uint8_t* cbegin() const noexcept {
-            return nonce.cbegin();
+            return nonce.data();
         }
 
         const uint8_t* cend() const noexcept {
-            return nonce.cend();
+            return nonce.data() + nonce.size();
         }
 
         const uint8_t* bytes() const noexcept {
@@ -546,7 +546,7 @@ public:
         std::array<uint8_t, BYTES> nonce {};
     };
 
-    class KeyPair {
+    class CARRIER_PUBLIC KeyPair {
     public:
         static const uint32_t SEED_BYTES { 32 };
 
@@ -649,11 +649,11 @@ public:
     }
 
     const uint8_t* cbegin() const noexcept {
-        return key.cbegin();
+        return key.data();
     }
 
     const uint8_t* cend() const noexcept {
-        return key.cend();
+        return key.data() + key.size();
     }
 
     const uint8_t* bytes() const noexcept {
@@ -716,7 +716,7 @@ private:
     std::array<uint8_t, SYMMETRIC_KEY_BYTES> key {};
 };
 
-class SHA256 {
+class CARRIER_PUBLIC SHA256 {
 public:
     static const uint32_t BYTES { 32 };
 
@@ -751,7 +751,7 @@ private:
     DigestState state;
 };
 
-class Random {
+class CARRIER_PUBLIC Random {
 public:
     // [0, upbound)
     static uint8_t uint8();
