@@ -20,12 +20,17 @@
  * SOFTWARE.
  */
 
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+#ifdef HAVE_DIRENT_H
+#include <dirent.h>
+#endif
+
 #include <stdio.h>
 #include <sys/stat.h>
-#include <unistd.h>
 #include <stdlib.h>
 #include <errno.h>
-#include <dirent.h>
 #include <string.h>
 
 // std
@@ -37,8 +42,9 @@
 // carrier
 #include <carrier.h>
 #include <utils.h>
-#include "activeproxy_tests.h"
 #include <httplib.h>
+
+#include "activeproxy_tests.h"
 
 using namespace elastos::carrier;
 using namespace httplib;
