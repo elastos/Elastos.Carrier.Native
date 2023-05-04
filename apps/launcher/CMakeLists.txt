@@ -1,9 +1,39 @@
 include(ProjectDefaults)
-
+include(CheckSymbolExists)
 
 check_include_file(sys/resource.h HAVE_SYS_RESOURCE_H)
 if(HAVE_SYS_RESOURCE_H)
     add_definitions(-DHAVE_SYS_RESOURCE_H=1)
+endif()
+
+check_symbol_exists(SIGKILL signal.h HAVE_SIGKILL)
+if(HAVE_SIGKILL)
+    add_definitions(-DHAVE_SIGKILL=1)
+endif()
+
+check_symbol_exists(SIGHUP signal.h HAVE_SIGHUP)
+if(HAVE_SIGHUP)
+    add_definitions(-DHAVE_SIGHUP=1)
+endif()
+
+check_symbol_exists(SIGTSTP signal.h HAVE_SIGTSTP)
+if(HAVE_SIGTSTP)
+    add_definitions(-DHAVE_SIGTSTP=1)
+endif()
+
+check_symbol_exists(SIGCHLD signal.h HAVE_SIGCHLD)
+if(HAVE_SIGCHLD)
+    add_definitions(-DHAVE_SIGCHLD=1)
+endif()
+
+check_symbol_exists(SIGTTOU signal.h HAVE_SIGTTOU)
+if(HAVE_SIGTTOU)
+    add_definitions(-DHAVE_SIGTTOU=1)
+endif()
+
+check_symbol_exists(SIGTTIN signal.h HAVE_SIGTTIN)
+if(HAVE_SIGTTIN)
+    add_definitions(-DHAVE_SIGTTIN=1)
 endif()
 
 include_directories(

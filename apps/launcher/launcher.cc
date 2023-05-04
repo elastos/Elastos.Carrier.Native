@@ -165,8 +165,20 @@ static void setupSignals()
 #ifdef HAVE_SIGKILL
     signal(SIGKILL, signal_handler);
 #endif
+#ifdef HAVE_SIGCHLD
+    signal(SIGCHLD, SIG_IGN); /* ignore child */
+#endif
+#ifdef HAVE_SIGTSTP
+    signal(SIGTSTP, SIG_IGN); /* ignore tty signals */
+#endif
+#ifdef HAVE_SIGTTOU
+    signal(SIGTTOU, SIG_IGN);
+#endif
+#ifdef HAVE_SIGTTIN
+    signal(SIGTTIN, SIG_IGN);
+#endif
 #ifdef HAVE_SIGHUP
-    signal(SIGHUP, signal_handler);
+    signal(SIGHUP, SIG_IGN);
 #endif
 }
 
