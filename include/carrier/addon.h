@@ -32,16 +32,16 @@
 namespace elastos {
 namespace carrier {
 
-class Addon {
+class CARRIER_PUBLIC Addon {
 public:
     virtual std::future<void> initialize(Sp<Node> node, const std::map<std::string, std::any>& config) = 0;
     virtual std::future<void> deinitialize() = 0;
     virtual bool isInitialized() = 0;
 };
 
-bool loadAddons(Sp<Node> node, std::map<std::string, std::any>& addons);
-void unloadAddons();
-std::map<std::string, std::shared_ptr<Addon>>& getAddons();
+CARRIER_PUBLIC bool loadAddons(Sp<Node> node, std::map<std::string, std::any>& addons);
+CARRIER_PUBLIC void unloadAddons();
+CARRIER_PUBLIC std::map<std::string, std::shared_ptr<Addon>>& getAddons();
 
 } // namespace carrier
 } // namespace elastos
