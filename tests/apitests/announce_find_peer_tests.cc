@@ -24,6 +24,8 @@
 #include <iostream>
 #include <array>
 #include <carrier.h>
+#include <chrono>
+#include <thread>
 
 #include "utils.h"
 #include "utils/misc.h"
@@ -123,7 +125,7 @@ AnnounceFindPeerTests::testPeer() {
         CPPUNIT_ASSERT(result6);
     }
 
-    sleep(2);
+    std::this_thread::sleep_for(2000ms);
 
     auto future7 = node2->findPeer(peerId1, 3);
     auto peers7 = future7.get();
