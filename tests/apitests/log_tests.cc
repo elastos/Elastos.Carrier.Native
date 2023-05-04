@@ -24,10 +24,17 @@
 
 #include <stdio.h>
 #include <sys/stat.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
+#ifdef HAVE_DIRENT_H
+#include <dirent.h>
+#endif
+#ifdef HAVE_IO_H
+#include <io.h>
+#endif
 #include <stdlib.h>
 #include <errno.h>
-#include <dirent.h>
 #include <string.h>
 
 // std
@@ -35,6 +42,8 @@
 #include <string>
 #include <cctype>
 #include <algorithm>
+
+#include "utils.h"
 
 // carrier
 #define CARRIER_LOG_ACTIVE_LEVEL CARRIER_LOG_LEVEL_TRACE
@@ -47,52 +56,6 @@ CPPUNIT_TEST_SUITE_REGISTRATION(LoggerTester);
 void
 LoggerTester::setUp() {
 
-}
-
-bool isFileExists(const std::string& path, const std::string& name) {
-    auto fullpath = path + "/" + name;
-    return (access(fullpath.c_str(), F_OK ) != -1 );
-}
-
-bool removeDir(const std::string& path, const std::string& dirName) {
-    auto fullpath = path + "/" + dirName;
-    auto filepath = fullpath;
-    DIR *dir;
-    struct dirent *dirp;
-    struct stat buf;
-
-    if ((dir = opendir(fullpath.c_str())) == NULL)
-        return false;
-
-    bool ret = true;
-    while ((dirp = readdir(dir)) != NULL) {
-        if ((strcmp(dirp->d_name,".") == 0) || (strcmp(dirp->d_name,"..") == 0))
-            continue;
-
-        filepath = fullpath + "/" + dirp->d_name;
-        auto file = filepath.c_str();
-        if (stat(file, &buf) == - 1) {
-            ret = false;
-            break;
-        }
-
-        if (S_ISDIR(buf.st_mode)) {
-            if (rmdir(file) == -1){
-                ret = false;
-                break;
-            }
-        }
-        else {
-            if(remove(file) == -1){
-                ret = false;
-                break;
-            }
-        }
-
-    }
-
-    closedir(dir);
-    return ret;
 }
 
 void LoggerTester::testNormal() {
@@ -213,19 +176,16 @@ void LoggerTester::testConf() {
     //  std::string path = "/Users/kuit/Elastos/Carrier/build/mac";
     std::string path = ".";
     std::string file = "log_test.conf";
-    auto exist = isFileExists(path, file);
-    if (!exist) {
-        file = "tests/apitests/log_test.conf";
-        exist = isFileExists(path, file);
-    }
-    CPPUNIT_ASSERT_MESSAGE("Can't find the conf file!", exist);
-
-    auto dir = "log";
-    if (isFileExists(path, dir)) {
-        CPPUNIT_ASSERT(removeDir(path, dir));
-    }
-
     auto fullpath = path + "/" + file;
+    bool exist = false;
+    if (!Utils::isFileExists(fullpath)) {
+        file = "tests/apitests/log_test.conf";
+        fullpath = path + "/" + file;
+        exist = Utils::isFileExists(fullpath);
+    }
+    Utils::removeStorage("./log");
+
+    fullpath = path + "/" + file;
     Logger::initialize(fullpath);
     auto log = Logger::get("root");
     auto name = log->getName();
@@ -239,7 +199,7 @@ void LoggerTester::testConf() {
     path = path + "/log";
     file = "test.log";
     fullpath = path + "/" + file;
-    CPPUNIT_ASSERT(isFileExists(path, file));
+    CPPUNIT_ASSERT(Utils::isFileExists(fullpath));
     std::ifstream infile(fullpath);
     CPPUNIT_ASSERT(infile.is_open());
     std::string line = "";
@@ -260,7 +220,7 @@ void LoggerTester::testConf() {
 
     file = "test_err.log";
     fullpath = path + "/" + file;
-    CPPUNIT_ASSERT(isFileExists(path, file));
+    CPPUNIT_ASSERT(Utils::isFileExists(fullpath));
     std::ifstream infile_err(fullpath.c_str());
     CPPUNIT_ASSERT(infile_err.is_open());
     // CPPUNIT_ASSERT(getline(infile_err, line));

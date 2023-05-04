@@ -28,14 +28,27 @@
 #include <functional>
 #include <random>
 #include <list>
+
+#ifndef _WIN32
 #include <arpa/inet.h>
-#include <cstring>
-#include <unistd.h>
 #include <netdb.h>
-#include <vector>
-#include <sys/types.h>
+#include <unistd.h>
 #include <sys/socket.h>
 #include <ifaddrs.h>
+#else
+#include <random>
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#include <iphlpapi.h>
+#include <stdio.h>
+#include <WinNT.h>
+#include <iostream>
+#include <iomanip>
+#endif
+
+#include <cstring>
+#include <vector>
+#include <sys/types.h>
 #include <filesystem>
 
 #include "carrier/node_info.h"
@@ -56,10 +69,7 @@ static int getRandomInteger(int base) {
 }
 
 static int getRandom(int min, int max) {
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<> distrib(min, max);
-    return distrib(gen);
+    return RandomGenerator<int>(min,max)();
 }
 
 static int getRandomValue() {
@@ -71,17 +81,16 @@ static std::vector<uint8_t> getRandomData(int length) {
     static constexpr const char chars[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!#$%&()*+,./:;<=>?@[]^_`{|}~";
     std::vector<uint8_t> b;
     b.resize(length);
-    RandomGenerator<uint8_t> generator(0, (sizeof(chars)/sizeof(char)) - 2);
-    std::generate_n(b.begin(), length, generator );
+    setRandomBytes(b.data(), b.size());
     return b;
 }
 
 static void setRandomBytes(unsigned char* buf, size_t buf_len) {
     std::random_device rd;
-    std::uniform_int_distribution<uint32_t> rand_int;
+    RandomGenerator<uint32_t> generator;
     auto first = reinterpret_cast<uint32_t*>(buf);
     auto last = reinterpret_cast<uint32_t*>(buf + buf_len);
-    std::generate(first, last, std::bind(rand_int, std::ref(rd)));
+    std::generate(first, last, generator);
 }
 
 template<typename T>
@@ -131,7 +140,67 @@ static bool addressEquals(std::string address1, std::string address2) {
 }
 
 static std::string getLocalIpAddresses() {
-    std::string ipAddress;
+    std::string ipAddress {};
+#if defined(_WIN32) || defined(_WIN64)
+    DWORD dwRetVal = 0;
+    unsigned int i = 0;
+
+    ULONG family = AF_UNSPEC;
+
+    // Set the flags to pass to GetAdaptersAddresses
+    ULONG flags = GAA_FLAG_INCLUDE_PREFIX;
+    LPVOID lpMsgBuf = NULL;
+    ULONG outBufLen = 0;
+    PIP_ADAPTER_ADDRESSES pAddresses = NULL;
+    PIP_ADAPTER_ADDRESSES pCurrAddresses = NULL;
+    PIP_ADAPTER_ANYCAST_ADDRESS pAnycast = NULL;
+
+    outBufLen = sizeof(IP_ADAPTER_ADDRESSES);
+    pAddresses = (IP_ADAPTER_ADDRESSES*)malloc(outBufLen);
+
+    // Make an initial call to GetAdaptersAddresses to get the
+    // size needed into the outBufLen variable
+    if (GetAdaptersAddresses(family, flags, NULL, pAddresses, &outBufLen)
+            == ERROR_BUFFER_OVERFLOW) {
+        free(pAddresses);
+        pAddresses = (IP_ADAPTER_ADDRESSES*)malloc(outBufLen);
+    }
+
+    if (pAddresses == NULL)
+        return ipAddress;
+
+    family = AF_INET;
+
+    dwRetVal = GetAdaptersAddresses(family, flags, NULL, pAddresses, &outBufLen);
+    if (dwRetVal == NO_ERROR) {
+        pCurrAddresses = pAddresses;
+        while (pCurrAddresses) {
+            for (i = 0; pAnycast != NULL; i++) {
+                pAnycast = pCurrAddresses->FirstAnycastAddress;
+                while(pAnycast) {
+                    SOCKET_ADDRESS address = pAnycast->Address;
+
+                    char ip[INET6_ADDRSTRLEN];
+                    int len = INET6_ADDRSTRLEN;
+                    int ret = WSAAddressToString(address.lpSockaddr, address.iSockaddrLength, NULL, ip, (LPDWORD)&len);
+                    if (ret != 0) {
+                        pAnycast = pAnycast->Next;
+                    } else {
+                        ipAddress = std::string(ip);
+                        break;
+                    }
+                }
+            }
+
+            if (!ipAddress.empty())
+                break;
+
+            pCurrAddresses = pCurrAddresses->Next;
+        }
+    }
+
+    free(pAddresses);
+#else
     struct ifaddrs* ifAddrStruct = nullptr;
     struct ifaddrs* ifa = nullptr;
     void* tmpAddrPtr = nullptr;
@@ -146,7 +215,8 @@ static std::string getLocalIpAddresses() {
             tmpAddrPtr = &((struct sockaddr_in*)ifa->ifa_addr)->sin_addr;
             char addressBuffer[INET_ADDRSTRLEN];
             inet_ntop(AF_INET, tmpAddrPtr, addressBuffer, INET_ADDRSTRLEN);
-            if (strcmp(addressBuffer, "127.0.0.1") != 0) {
+            auto socketaddress = SocketAddress(addressBuffer);
+            if (socketaddress.isAnyUnicast()) {
                 ipAddress = std::string(addressBuffer);
                 break;
             }
@@ -155,13 +225,18 @@ static std::string getLocalIpAddresses() {
     if (ifAddrStruct != nullptr) {
         freeifaddrs(ifAddrStruct);
     }
-
+#endif
     return ipAddress;
 }
 
 static void removeStorage(const std::string path) {
     fs::path tmp{path};
     fs::remove_all(tmp);
+}
+
+static bool isFileExists(const std::string path) {
+    fs::path tmp{path};
+    return fs::exists(fs::status(tmp));
 }
 
 static std::string getPwdStorage(const std::string dir) {
