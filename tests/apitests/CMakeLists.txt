@@ -118,3 +118,5 @@ if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
         ARCHIVE DESTINATION "lib"
         LIBRARY DESTINATION "lib")
 endif()
+
+install(FILES log_test.conf DESTINATION "bin")
