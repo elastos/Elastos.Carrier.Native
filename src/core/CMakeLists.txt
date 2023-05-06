@@ -177,3 +177,8 @@ endif()
 
 install(FILES ${CARRIER_HEADERS} DESTINATION "include/carrier")
 install(FILES "${INCLUDE_DIR}/carrier.h" DESTINATION "include")
+if(WIN32)
+    file(TO_CMAKE_PATH
+        "${PROJECT_INT_DIST_DIR}\\bin\\sqlite3.dll" SHARED_SQLITE3_NAME)
+    install(FILES ${SHARED_SQLITE3_NAME} DESTINATION "bin")
+endif()
