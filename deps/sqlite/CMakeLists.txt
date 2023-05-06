@@ -2,7 +2,6 @@ project(deps_sqlite)
 
 include(ProjectDefaults)
 include(ExternalProject)
-include(ExternalCMakeArgs)
 
 if(WIN32)
     set(AUTOCONF_CMD "echo")
@@ -20,7 +19,14 @@ if(WIN32)
         echo F | xcopy "sqlite3.lib" "${PROJECT_INT_DIST_DIR}\\lib\\sqlite3.lib" /i /q /y &&
         echo F | xcopy "sqlite3.dll" "${PROJECT_INT_DIST_DIR}\\bin\\sqlite3.dll" /i /q /y &&
         echo F | xcopy "sqlite3.exe" "${PROJECT_INT_DIST_DIR}\\bin\\sqlite3.exe" /i /q /y)
+
 else()
+    include(ExternalConfigureArgs)
+
+if(${CMAKE_CROSSCOMPILING} AND IOS)
+    set(SHELL_CFLAGS_FOR_IOS "SHELL_CFLAGS=-DSQLITE_NOHAVE_SYSTEM")
+endif()
+
     set(AUTOCONF_CMD "autoreconf")
     set(AUTOCONF_ARGS "-if")
 
@@ -30,6 +36,10 @@ else()
         "--disable-shared"
         "--enable-static"
         "--with-pic"
+        "--disable-editline"
+        "--disable-readline"
+        "--disable-debug"
+        ${SHELL_CFLAGS_FOR_IOS}
         ${CONFIGURE_ARGS_INIT})
 
     set(INSTALL_CMD
