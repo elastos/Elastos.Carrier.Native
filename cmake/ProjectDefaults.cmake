@@ -137,6 +137,11 @@ function(export_static_library MODULE_NAME)
     file(RELATIVE_PATH STATIC_LIBRARY_NAME ${CMAKE_CURRENT_LIST_DIR}
         ${STATIC_LIBRARY_NAME})
 
+    if(WIN32)
+        file(TO_CMAKE_PATH
+            "${STATIC_LIBRARY_NAME}" STATIC_LIBRARY_NAME)
+    endif()
+
     install(FILES "${STATIC_LIBRARY_NAME}"
         DESTINATION ${_INSTALL_DESTINATION})
 endfunction()
@@ -156,6 +161,11 @@ function(export_shared_library MODULE_NAME)
 
     file(RELATIVE_PATH SHARED_LIBRARY_NAME ${CMAKE_CURRENT_LIST_DIR}
         ${SHARED_LIBRARY_NAME})
+
+    if(WIN32)
+        file(TO_CMAKE_PATH
+            "${SHARED_LIBRARY_NAME}" SHARED_LIBRARY_NAME)
+    endif()
 
     install(PROGRAMS "${SHARED_LIBRARY_NAME}"
         DESTINATION ${_INSTALL_DESTINATION})
