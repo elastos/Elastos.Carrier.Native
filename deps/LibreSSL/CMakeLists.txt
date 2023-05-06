@@ -34,10 +34,6 @@ if(WIN32)
     string(REPLACE ":" "." SSL_VERSION ${SSL_VERSION})
     string(REGEX REPLACE "\\..*" "" SSL_MAJOR_VERSION ${SSL_VERSION})
 
-    message("==========================")
-    message("${SSL_MAJOR_VERSION}")
-    message("==========================")
-
     ExternalProject_Add_Step(
         LibreSSL post-install
         DEPENDEES install
