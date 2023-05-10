@@ -98,11 +98,16 @@ static bool arrayEquals(std::list<std::shared_ptr<T>> &t1, std::list<std::shared
     if (t1.size() != t2.size())
         return false;
 
-    for (auto t : t1) {
-        auto result = std::find_if(t2.begin(), t2.end(), [&](std::shared_ptr<T> item) {
-            return (*item == *t);
-        });
-        if (result == t1.end())
+    for (auto tt1 : t1) {
+        bool equals = false;
+        for (auto tt2 : t2) {
+            if (*tt1 == *tt2) {
+                equals = true;
+                break;
+            }
+        }
+
+        if (!equals)
             return false;
     }
 

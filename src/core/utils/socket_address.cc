@@ -38,6 +38,7 @@
 #include <algorithm>
 #include <cstring>
 #include <stdexcept>
+#include <iostream>
 
 #include "carrier/socket_address.h"
 #include "carrier/blob.h"
@@ -118,13 +119,24 @@ SocketAddress::SocketAddress(const std::string& ip, const std::string& service)
     hints.ai_family = AF_UNSPEC;
     hints.ai_flags = AI_NUMERICHOST;
 
+#ifdef _WIN32
+    WSADATA wsaData;
+    int err = WSAStartup(MAKEWORD(2, 2), &wsaData);
+    if (err)
+        throw std::runtime_error(gai_strerror(err));
+#endif
+
     addrinfo* ais = nullptr;
     auto rc = getaddrinfo(ip.c_str(), service.empty() ? nullptr : service.c_str(), &hints, &ais);
-    if (rc < 0)
+    if (rc)
         throw std::runtime_error(gai_strerror(rc));
 
     std::memcpy(&ss, ais->ai_addr, sslen(ais->ai_addr->sa_family)); // use the first one
     freeaddrinfo(ais);
+
+#ifdef _WIN32
+    WSACleanup();
+#endif
 }
 
 socklen_t SocketAddress::sslen(sa_family_t family) {
