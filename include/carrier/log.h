@@ -125,6 +125,10 @@ public:
 
     static void setLogFile(std::string file);
 
+    static void setDefaultLevel(std::string level);
+
+    static void setDefaultPattern(std::string pattern);
+
     //---- Print -----
     template<typename... Args>
     inline void log(Level level, format_string_t<Args...> fmt, Args &&... args) const {

@@ -279,6 +279,25 @@ void Node::stop() {
     log->info("Carrier Kademlia node {} stopped", static_cast<std::string>(id));
 }
 
+void Node::ping(Sp<NodeInfo> node, std::function<void(Sp<NodeInfo>)> completeHandler) const {
+    if (node->isIPv4()) {
+        dht4->ping(node, completeHandler);
+    }
+    else {
+        dht6->ping(node, completeHandler);
+    }
+}
+
+void Node::getNodes(const Id& id, Sp<NodeInfo> node, std::function<void(std::list<Sp<NodeInfo>>)> completeHandler) const {
+    if (node->isIPv4()) {
+        dht4->getNodes(id, node, completeHandler);
+    }
+    else {
+        dht6->getNodes(id, node, completeHandler);
+    }
+
+}
+
 std::future<std::list<Sp<NodeInfo>>> Node::findNode(const Id& id, LookupOption option) const {
     if (!isRunning())
         throw std::runtime_error("Node is not running");

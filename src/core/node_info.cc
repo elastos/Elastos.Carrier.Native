@@ -22,6 +22,7 @@
 
 #include <sstream>
 #include "carrier/node_info.h"
+#include "carrier/version.h"
 
 namespace elastos {
 namespace carrier {
@@ -41,6 +42,10 @@ NodeInfo::operator std::string() const {
 std::ostream& operator<< (std::ostream& os, const NodeInfo& ni) {
     os << static_cast<std::string>(ni);
     return os;
+}
+
+std::string NodeInfo::getReadableVersion() const {
+    return Version::toString(version);
 }
 
 }

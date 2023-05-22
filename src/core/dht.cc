@@ -564,6 +564,48 @@ void DHT::onSend(const Id& id) {
     routingTable.onSend(id);
 }
 
+void DHT::ping(Sp<NodeInfo> node, std::function<void(Sp<NodeInfo>)> completeHandler) {
+    auto q = std::make_shared<PingRequest>();
+
+    auto call = std::make_shared<RPCCall>(this, node, q);
+    call->addStateChangeHandler([=](RPCCall* call, RPCCall::State previous, RPCCall::State current) {
+        log->debug("RPCCall::OnStateChange for FindNodeRequest message invoked .....");
+        if (current == RPCCall::State::RESPONDED) {
+            auto r = std::dynamic_pointer_cast<PingResponse>(call->getResponse());
+            if (r != nullptr) {
+                node->setVersion(r->getVersion());
+            }
+            completeHandler(node);
+        }
+        else if (current == RPCCall::State::ERR || current == RPCCall::State::TIMEOUT) {
+            completeHandler(NULL);
+        }
+    });
+    rpcServer->sendCall(call);
+}
+
+void DHT::getNodes(const Id& id, Sp<NodeInfo> node, std::function<void(std::list<Sp<NodeInfo>>)> completeHandler) {
+    auto q = std::make_shared<FindNodeRequest>(id);
+
+    q->setWant4(type == Type::IPV4);
+    q->setWant6(type == Type::IPV6);
+
+    auto call = std::make_shared<RPCCall>(this, node, q);
+    call->addStateChangeHandler([=](RPCCall* call, RPCCall::State previous, RPCCall::State current) {
+        log->debug("RPCCall::OnStateChange for FindNodeRequest message invoked .....");
+        if (current == RPCCall::State::RESPONDED || current == RPCCall::State::ERR
+                || current == RPCCall::State::TIMEOUT) {
+            auto r = std::dynamic_pointer_cast<FindNodeResponse>(call->getResponse());
+            if (r != nullptr) {
+                auto list = r->getNodes(getType());
+                completeHandler(list);
+            }
+        }
+    });
+    rpcServer->sendCall(call);
+}
+
+
 Sp<Task> DHT::findNode(const Id& id, std::function<void(Sp<NodeInfo>)> completeHandler) {
     auto task = std::make_shared<NodeLookup>(this, id);
 
