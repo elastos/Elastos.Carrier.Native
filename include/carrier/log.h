@@ -125,9 +125,9 @@ public:
 
     static void setLogFile(std::string file);
 
-    static void setDefaultLevel(std::string level);
+    static void setLogLevel(std::string level);
 
-    static void setDefaultPattern(std::string pattern);
+    static void setLogPattern(std::string pattern);
 
     //---- Print -----
     template<typename... Args>

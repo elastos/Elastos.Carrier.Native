@@ -85,7 +85,7 @@ void Logger::setDefaultSettings(std::any value) {
 
     if (settings.count("level")) {
         std::string level = std::any_cast<std::string>(settings.at("level"));
-        setDefaultLevel(level);
+        setLogLevel(level);
     }
 
     if (settings.count("logFile")) {
@@ -103,7 +103,7 @@ void Logger::setLogFile(std::string filename) {
         userSettings.fileSink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(filename);
 }
 
-void Logger::setDefaultLevel(std::string level) {
+void Logger::setLogLevel(std::string level) {
     static std::unordered_map<std::string, level::level_enum> levelMap = {
         { "trace", level::trace },
         { "debug", level::debug },
@@ -118,7 +118,7 @@ void Logger::setDefaultLevel(std::string level) {
         userSettings.defalutLevel = levelMap[level];
 }
 
-void Logger::setDefaultPattern(std::string pattern) {
+void Logger::setLogPattern(std::string pattern) {
     userSettings.pattern = pattern;
 }
 
