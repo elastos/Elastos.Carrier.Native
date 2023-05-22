@@ -103,6 +103,9 @@ public:
         return findPeer(id, expectedNum, defaultLookupOption);
     }
 
+    void ping(Sp<NodeInfo> node, std::function<void(Sp<NodeInfo>)> completeHandler) const;
+    void getNodes(const Id& id, Sp<NodeInfo> node, std::function<void(std::list<Sp<NodeInfo>>)> completeHandler) const;
+
     std::future<std::list<Sp<NodeInfo>>> findNode(const Id& id, LookupOption option) const;
     std::future<Sp<Value>> findValue(const Id& id, LookupOption option) const;
     std::future<bool> storeValue(const Sp<Value> value) const;

@@ -76,15 +76,6 @@ std::shared_ptr<Logger> Logger::get(const std::string& name) {
 }
 
 void Logger::setDefaultSettings(std::any value) {
-    static std::unordered_map<std::string, level::level_enum> levelMap = {
-        { "trace", level::trace },
-        { "debug", level::debug },
-        { "info", level::info },
-        { "warn", level::warn },
-        { "err", level::err },
-        { "critical", level::critical },
-        { "off", level::off },
-    };
 
     if (value.type() != typeid(std::map<std::string, std::any>)) {
         std::cout << "Logger : invalid configure! " << std::endl;
@@ -94,8 +85,7 @@ void Logger::setDefaultSettings(std::any value) {
 
     if (settings.count("level")) {
         std::string level = std::any_cast<std::string>(settings.at("level"));
-        if (levelMap.count(level))
-            userSettings.defalutLevel = levelMap[level];
+        setDefaultLevel(level);
     }
 
     if (settings.count("logFile")) {
@@ -111,6 +101,25 @@ void Logger::setDefaultSettings(std::any value) {
 void Logger::setLogFile(std::string filename) {
     if (!filename.empty())
         userSettings.fileSink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(filename);
+}
+
+void Logger::setDefaultLevel(std::string level) {
+    static std::unordered_map<std::string, level::level_enum> levelMap = {
+        { "trace", level::trace },
+        { "debug", level::debug },
+        { "info", level::info },
+        { "warn", level::warn },
+        { "err", level::err },
+        { "critical", level::critical },
+        { "off", level::off },
+    };
+
+    if (levelMap.count(level))
+        userSettings.defalutLevel = levelMap[level];
+}
+
+void Logger::setDefaultPattern(std::string pattern) {
+    userSettings.pattern = pattern;
 }
 
 void Logger::setLevel(Level level) {

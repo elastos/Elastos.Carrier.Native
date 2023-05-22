@@ -137,6 +137,9 @@ public:
         return running;
     }
 
+    void ping(Sp<NodeInfo> node, std::function<void(Sp<NodeInfo>)> completeHandler);
+    void getNodes(const Id& id, Sp<NodeInfo> node, std::function<void(std::list<Sp<NodeInfo>>)> completeHandler);
+
     Sp<Task> findNode(const Id& id, std::function<void(Sp<NodeInfo>)> completeHandler);
     Sp<Task> findValue(const Id& id, LookupOption option, std::function<void(Sp<Value>)> completeHandler);
     Sp<Task> storeValue(const Sp<Value> value, std::function<void(std::list<Sp<NodeInfo>>)> completeHandler);

@@ -56,15 +56,20 @@ struct CARRIER_PUBLIC NodeInfo {
     const Id& getId() const noexcept {
         return nodeId;
     }
+
     const SocketAddress& getAddress() const noexcept {
         return sockaddr;
     }
+
     int getPort() const noexcept {
         return sockaddr.port();
     }
+
     int getVersion() const noexcept {
         return version;
     }
+
+    std::string getReadableVersion() const;
 
     bool isIPv4() const noexcept { return sockaddr.family() == AF_INET;  }
     bool isIPv6() const noexcept { return sockaddr.family() == AF_INET6; }
@@ -84,7 +89,6 @@ struct CARRIER_PUBLIC NodeInfo {
     operator std::string() const;
     friend std::ostream& operator<< (std::ostream& s, const NodeInfo& ni);
 
-protected:
     void setVersion(int version) {
         this->version = version;
     }
