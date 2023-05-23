@@ -564,6 +564,7 @@ void DHT::onSend(const Id& id) {
     routingTable.onSend(id);
 }
 
+#ifdef CARRIER_CRAWLER
 void DHT::ping(Sp<NodeInfo> node, std::function<void(Sp<NodeInfo>)> completeHandler) {
     auto q = std::make_shared<PingRequest>();
 
@@ -604,7 +605,7 @@ void DHT::getNodes(const Id& id, Sp<NodeInfo> node, std::function<void(std::list
     });
     rpcServer->sendCall(call);
 }
-
+#endif
 
 Sp<Task> DHT::findNode(const Id& id, std::function<void(Sp<NodeInfo>)> completeHandler) {
     auto task = std::make_shared<NodeLookup>(this, id);

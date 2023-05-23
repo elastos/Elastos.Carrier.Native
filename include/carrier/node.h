@@ -103,8 +103,10 @@ public:
         return findPeer(id, expectedNum, defaultLookupOption);
     }
 
+#ifdef CARRIER_CRAWLER
     void ping(Sp<NodeInfo> node, std::function<void(Sp<NodeInfo>)> completeHandler) const;
     void getNodes(const Id& id, Sp<NodeInfo> node, std::function<void(std::list<Sp<NodeInfo>>)> completeHandler) const;
+#endif
 
     std::future<std::list<Sp<NodeInfo>>> findNode(const Id& id, LookupOption option) const;
     std::future<Sp<Value>> findValue(const Id& id, LookupOption option) const;

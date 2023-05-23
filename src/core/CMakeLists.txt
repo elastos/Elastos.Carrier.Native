@@ -16,6 +16,10 @@ if (ENABLE_CARRIER_DEVELOPMENT)
     add_definitions(-DCARRIER_DEVELOPMENT)
 endif()
 
+if (ENABLE_CARRIER_CRAWLER)
+    add_definitions(-DCARRIER_CRAWLER)
+endif()
+
 set(INCLUDE_DIR ../../include)
 
 list(APPEND CARRIER_SOURCES
