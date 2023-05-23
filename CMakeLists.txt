@@ -33,6 +33,7 @@ set(ENABLE_TESTS ${ENABLE_TESTS_DEFAULT} CACHE BOOL "Build test cases")
 set(ENABLE_APPS ${ENABLE_APPS_DEFAULT} CACHE BOOL "Build applications")
 set(ENABLE_DOCS FALSE CACHE BOOL "Build APIs documentation")
 set(ENABLE_CARRIER_DEVELOPMENT FALSE CACHE BOOL "Eanble carrier development mode")
+set(ENABLE_CARRIER_CRAWLER FALSE CACHE BOOL "Eanble carrier crawler")
 
 add_subdirectory(deps)
 add_subdirectory(src/core)
@@ -49,6 +50,10 @@ endif()
 if (ENABLE_APPS)
     add_subdirectory(apps/shell)
     add_subdirectory(apps/launcher)
+endif()
+
+if(ENABLE_CARRIER_CRAWLER)
+    add_subdirectory(apps/crawler)
 endif()
 
 if(ENABLE_DOCS)

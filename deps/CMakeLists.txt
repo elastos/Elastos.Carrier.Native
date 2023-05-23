@@ -36,6 +36,11 @@ if (ENABLE_APPS)
         DEPENDS platform-specific)
 endif()
 
+if(ENABLE_CARRIER_CRAWLER)
+    add_submodule(IP2Location8
+        DEPENDS platform-specific)
+endif()
+
 if (ENABLE_TESTS)
     add_submodule(CppUnit
         DEPENDS platform-specific)

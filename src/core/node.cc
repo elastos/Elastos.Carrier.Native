@@ -279,6 +279,7 @@ void Node::stop() {
     log->info("Carrier Kademlia node {} stopped", static_cast<std::string>(id));
 }
 
+#ifdef CARRIER_CRAWLER
 void Node::ping(Sp<NodeInfo> node, std::function<void(Sp<NodeInfo>)> completeHandler) const {
     if (node->isIPv4()) {
         dht4->ping(node, completeHandler);
@@ -297,6 +298,7 @@ void Node::getNodes(const Id& id, Sp<NodeInfo> node, std::function<void(std::lis
     }
 
 }
+#endif
 
 std::future<std::list<Sp<NodeInfo>>> Node::findNode(const Id& id, LookupOption option) const {
     if (!isRunning())
