@@ -84,10 +84,11 @@ void Crawler::pingNode(Sp<NodeInfo> ni) {
             auto ip_str = ni->getAddress().toString();
 
             auto loc_str = ip2location(ip_str);
+            auto str = "Id: " + ni->getId().toBase58String() + ", Ip: " + ip_str +
+                        ", Version: " + ni->getReadableVersion() + ", " + loc_str;
             if (storageFile != nullptr)
-                (*storageFile) << ni->getId().toBase58String() << "," << ip_str << "," << ni->getReadableVersion() << '\n';
-            std::cout << "ip: " << ip_str << " local: " << loc_str << std::endl;
-            log->debug("Node - {}, {}, {}", ni->getId().toBase58String(), ip_str, loc_str);
+                (*storageFile) << str << '\n';
+            log->info(str);
         }
     };
 
@@ -186,7 +187,7 @@ void Crawler::ip2location_init(std::string database)
         throw std::invalid_argument("IP2Location - open database failed, check config file!");
     }
 
-    if (IP2Location_open_mem(ip2LocationObj, IP2LOCATION_FILE_IO) == -1) {
+    if (IP2Location_open_mem(ip2LocationObj, IP2LOCATION_SHARED_MEMORY) == -1) {
         throw "IP2Location - open shared memory failed.";
     }
 }
@@ -212,7 +213,7 @@ std::string Crawler::ip2location(std::string ip) {
 
         if (record) {
             std::stringstream ss;
-            ss << record->country_long << "," << record->region << "," << record->city;
+            ss << "Country: " << record->country_long << ", Region: " << record->region << ", City: " << record->city;
             result = ss.str();
             IP2Location_free_record(record);
         }
