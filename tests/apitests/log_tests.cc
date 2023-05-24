@@ -173,19 +173,18 @@ void LoggerTester::testMacro() {
 
 void LoggerTester::testConf() {
     puts("\n*--- test conf ---*");
-    //  std::string path = "/Users/kuit/Elastos/Carrier/build/mac";
     std::string path = ".";
     std::string file = "log_test.conf";
-    auto fullpath = path + "/" + file;
+    auto fullpath = path + Utils::PATH_SEP + file;
     bool exist = false;
     if (!Utils::isFileExists(fullpath)) {
         file = "tests/apitests/log_test.conf";
-        fullpath = path + "/" + file;
+        fullpath = path + Utils::PATH_SEP + file;
         exist = Utils::isFileExists(fullpath);
     }
     Utils::removeStorage("./log");
 
-    fullpath = path + "/" + file;
+    fullpath = path + Utils::PATH_SEP + file;
     Logger::initialize(fullpath);
     auto log = Logger::get("root");
     auto name = log->getName();
@@ -196,9 +195,9 @@ void LoggerTester::testConf() {
     log->debug("debug test.");
     log->trace("trace test.");
 
-    path = path + "/log";
+    path = path + Utils::PATH_SEP + "log";
     file = "test.log";
-    fullpath = path + "/" + file;
+    fullpath = path + Utils::PATH_SEP + file;
     CPPUNIT_ASSERT(Utils::isFileExists(fullpath));
     std::ifstream infile(fullpath);
     CPPUNIT_ASSERT(infile.is_open());
@@ -219,7 +218,7 @@ void LoggerTester::testConf() {
     infile.close();
 
     file = "test_err.log";
-    fullpath = path + "/" + file;
+    fullpath = path + Utils::PATH_SEP + file;
     CPPUNIT_ASSERT(Utils::isFileExists(fullpath));
     std::ifstream infile_err(fullpath.c_str());
     CPPUNIT_ASSERT(infile_err.is_open());

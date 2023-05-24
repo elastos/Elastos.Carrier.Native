@@ -36,17 +36,16 @@ CPPUNIT_TEST_SUITE_REGISTRATION(ValueTests);
 
 void
 ValueTests::setUp() {
-    std::string path = getenv("PWD");
-    std::string path1 = path + "/carrier.db";
-    std::string path2 = path + "/carriernode.db";
+    std::string path1 = Utils::getPwdStorage("carrier.db");
+    std::string path2 = Utils::getPwdStorage("carriernode.db");
 
     Utils::removeStorage(path1);
     Utils::removeStorage(path2);
 
     //create node1 and node2
     auto b1 = DefaultConfiguration::Builder {};
-
     auto ipAddresses = Utils::getLocalIpAddresses();
+
     b1.setIPv4Address(ipAddresses);
     b1.setListeningPort(42222);
     b1.setStoragePath(path1);
@@ -202,10 +201,11 @@ ValueTests::tearDown() {
     if (node2)
         node2->stop();
 
-    std::string pwd = getenv("PWD");
+    std::string path1 = Utils::getPwdStorage("carrier.db");
+    std::string path2 = Utils::getPwdStorage("carriernode.db");
 
-    Utils::removeStorage(pwd + "/carrier.db");
-    Utils::removeStorage(pwd + "/carriernode.db");
+    Utils::removeStorage(path1);
+    Utils::removeStorage(path2);
 }
 
 }  // namespace test

@@ -49,7 +49,7 @@ namespace test {
 CPPUNIT_TEST_SUITE_REGISTRATION(NodeTester);
 
 void NodeTester::setUp() {
-    dataDir = Utils::getPwdStorage("/node_test_data");
+    dataDir = Utils::getPwdStorage("node_test_data");
     Utils::removeStorage(dataDir);
 
     auto b1 = DefaultConfiguration::Builder {};

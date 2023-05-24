@@ -40,7 +40,7 @@ protected:
     void printMessage(Message msg, std::vector<uint8_t> bin) {
 		std::cout << "======== " << msg.getTypeString() << ":" << msg.getMethodString() << std::endl;
 		std::cout << "String: " << static_cast<std::string>(msg);
-		std::cout << "   Hex: " << bin.size() << "/" << msg.estimateSize() << " : " << Hex::encode(bin);
+		std::cout << "   Hex: " << bin.size() << Utils::PATH_SEP << msg.estimateSize() << " : " << Hex::encode(bin);
         nlohmann::json j = nlohmann::json::from_cbor(bin);
 		std::cout << "  JSON: " << j.dump();
 	}

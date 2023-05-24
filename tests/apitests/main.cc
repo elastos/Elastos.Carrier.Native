@@ -30,6 +30,8 @@
 #include <io.h>
 #include <process.h>
 #include <debugapi.h>
+#include <winsock2.h>
+#include <ws2tcpip.h>
 #endif
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
@@ -111,6 +113,13 @@ int main(int argc, char* argv[])
     signal(SIGHUP, signal_handler);
 #endif
 
+#ifdef _WIN32
+    WSADATA wsaData;
+    int err = WSAStartup(MAKEWORD(2, 2), &wsaData);
+    if (err)
+        throw std::runtime_error(gai_strerror(err));
+#endif
+
     CppUnit::TestFactoryRegistry &registry = CppUnit::TestFactoryRegistry::getRegistry();
     CppUnit::Test *suite = registry.makeTest();
     if (suite->countTestCases() == 0) {
@@ -120,6 +129,10 @@ int main(int argc, char* argv[])
     CppUnit::TextUi::TestRunner runner;
     runner.addTest(suite);
     auto result = runner.run() ? 0 : 1;
+
+#ifdef _WIN32
+    WSACleanup();
+#endif
 
     return result;
 }

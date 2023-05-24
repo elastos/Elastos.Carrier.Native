@@ -120,7 +120,11 @@ static int bindSocket(const SocketAddress& addr, SocketAddress& bound)
     setNonblocking(sock);
     int rc = bind(sock, addr.addr(), addr.length());
     if (rc < 0) {
+#if defined(_WIN32) || defined(_WIN64)
+        closesocket(sock);
+#else
         close(sock);
+#endif
         throw std::runtime_error("Can't bind socket on " + addr.toString() + " " + std::string(std::strerror(errno)));
     }
 
@@ -266,6 +270,7 @@ RPCServer::openSockets()
 
                 timeout.tv_sec = 0;
                 timeout.tv_usec = 100000;
+
                 int rc = select(selectFd, &readfds, NULL, NULL, &timeout);
                 if (rc < 0) {
                     if (errno != EINTR) {
@@ -303,7 +308,11 @@ RPCServer::openSockets()
                             if (lk.owns_lock()) {
                                 if (not running) break;
                                 if (ls4 >= 0) {
-                                    close(ls4);
+                                    #if defined(_WIN32) || defined(_WIN64)
+                                            closesocket(ls4);
+                                    #else
+                                            close(ls4);
+                                    #endif
                                     try {
                                         ls4 = bindSocket(bound4, bound4);
                                     } catch (const DhtException& e) {
@@ -312,7 +321,11 @@ RPCServer::openSockets()
                                     }
                                 }
                                 if (ls6 >= 0) {
-                                    close(ls6);
+                                    #if defined(_WIN32) || defined(_WIN64)
+                                            closesocket(ls6);
+                                    #else
+                                            close(ls6);
+                                    #endif
                                     try {
                                         ls6 = bindSocket(bound6, bound6);
                                     } catch (const DhtException& e) {
@@ -338,10 +351,22 @@ RPCServer::openSockets()
             if (log)
                 log->error("Error in RPCServer rx thread: {}", e.what());
         }
-        if (ls4 >= 0)
+
+        if (ls4 >= 0) {
+#if defined(_WIN32) || defined(_WIN64)
+            closesocket(ls4);
+#else
             close(ls4);
-        if (ls6 >= 0)
+#endif
+        }
+        if (ls6 >= 0) {
+#if defined(_WIN32) || defined(_WIN64)
+            closesocket(ls6);
+#else
             close(ls6);
+#endif
+        }
+
         std::unique_lock<std::mutex> lk(lock, std::try_to_lock);
         if (lk.owns_lock()) {
             sock4 = -1;

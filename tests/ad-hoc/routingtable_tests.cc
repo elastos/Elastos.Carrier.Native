@@ -55,7 +55,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(RoutingTableTester);
 #define TEST_COUNT 16
 
 void RoutingTableTester::setUp() {
-    dataDir = Utils::getPwdStorage("/routingtable_test_data");
+    dataDir = Utils::getPwdStorage("routingtable_test_data");
     Utils::removeStorage(dataDir);
     nodes.clear();
 }
