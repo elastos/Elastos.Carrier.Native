@@ -5,16 +5,6 @@ if(HAVE_SYS_RESOURCE_H)
     add_definitions(-DHAVE_SYS_RESOURCE_H=1)
 endif()
 
-check_include_file(dirent.h HAVE_DIRENT_H)
-if(HAVE_DIRENT_H)
-    add_definitions(-DHAVE_DIRENT_H=1)
-endif()
-
-check_include_file(io.h HAVE_IO_H)
-if(HAVE_IO_H)
-    add_definitions(-DHAVE_IO_H=1)
-endif()
-
 check_include_file(unistd.h HAVE_UNISTD_H)
 if(HAVE_UNISTD_H)
     add_definitions(-DHAVE_UNISTD_H=1)
@@ -33,19 +23,14 @@ include_directories(
     ../common
     ${CARRIER_INT_DIST_DIR}/include)
 
-list(APPEND TEST_SOURCES
+list(APPEND SOURCES
     main.cc
     ../common/utils.cc
-    node_tests.cc
-    routingtable_tests.cc
-    activeproxy_tests.cc
 )
 
-list(APPEND ADHOC_DEPENDS
-    CppUnit
+list(APPEND DEPENDS
     cpp-httplib
-    carrier0
-    addons0)
+    carrier0)
 
 if(ENABLE_SHARED)
     set(CARRIER_LIB carrier-shared)
@@ -58,8 +43,7 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
 endif()
 
 set(LIBS
-    sqlite3
-    cppunit)
+    sqlite3)
 
 if(WIN32)
     add_definitions(
@@ -80,15 +64,12 @@ else()
         sodium)
 endif()
 
-add_executable(ad-hoc ${TEST_SOURCES})
-target_link_libraries(ad-hoc LINK_PUBLIC ${CARRIER_LIB} ${LIBS} ${SYSTEM_LIBS})
-add_dependencies(ad-hoc ${ADHOC_DEPENDS})
-
-enable_testing()
-add_test(TEST ad-hoc)
+add_executable(sybil_attacher ${SOURCES})
+target_link_libraries(sybil_attacher LINK_PUBLIC ${CARRIER_LIB} ${LIBS} ${SYSTEM_LIBS})
+add_dependencies(sybil_attacher ${DEPENDS})
 
 if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
-    install(TARGETS ad-hoc
+    install(TARGETS sybil_attacher
         RUNTIME DESTINATION "bin"
         ARCHIVE DESTINATION "lib"
         LIBRARY DESTINATION "lib")

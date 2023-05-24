@@ -40,6 +40,7 @@ include_directories(
 
 list(APPEND APITESTS_SOURCES
     main.cc
+    ../common/utils.cc
     messages/ping_tests.cc
     messages/find_node_tests.cc
     messages/store_value_tests.cc
@@ -98,7 +99,6 @@ endif()
 
 if(ENABLE_SHARED)
     set(LIBS carrier-shared addons-shared ${LIBS})
-    #set(SYSTEM_LIBS pthread dl)
 else()
     set(LIBS carrier-static addons-static ${LIBS})
 endif()

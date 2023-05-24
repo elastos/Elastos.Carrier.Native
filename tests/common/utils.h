@@ -21,52 +21,24 @@
  */
 
 #pragma once
-
-#include <cstdlib>
-#include <chrono>
-#include <algorithm>
-#include <functional>
-#include <random>
 #include <list>
 
-#ifndef _WIN32
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <unistd.h>
-#include <sys/socket.h>
-#include <ifaddrs.h>
-#else
-#include <random>
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#include <iphlpapi.h>
-#include <stdio.h>
-#include <WinNT.h>
-#include <iostream>
-#include <iomanip>
-#endif
-
-#include <cstring>
-#include <vector>
-#include <sys/types.h>
-#include <filesystem>
-
-#include "carrier/node_info.h"
 #include "utils/random_generator.h"
 
 using namespace elastos::carrier;
-namespace fs = std::filesystem;
+
+#if defined(_WIN32) || defined(_WIN64)
+    #define PATH_MAX                MAX_PATH
+    #define getcwd(buf, size)       _getcwd(buf, size)
+#endif
 
 namespace test {
-
 class Utils {
 public:
+static std::string PATH_SEP;
+
 //getRandomInteger/getRandom/getRandomValue are all getting integer.
-static int getRandomInteger(int base) {
-    std::srand(std::time(nullptr));
-    int v = std::rand() % base;
-    return (v == 0) ? v + 1 : v;
-}
+static int getRandomInteger(int base);
 
 static int getRandom(int min, int max) {
     return RandomGenerator<int>(min,max)();
@@ -77,21 +49,8 @@ static int getRandomValue() {
 }
 
 //getRandomData is getting data in std::vector<uint8>
-static std::vector<uint8_t> getRandomData(int length) {
-    static constexpr const char chars[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!#$%&()*+,./:;<=>?@[]^_`{|}~";
-    std::vector<uint8_t> b;
-    b.resize(length);
-    setRandomBytes(b.data(), b.size());
-    return b;
-}
-
-static void setRandomBytes(unsigned char* buf, size_t buf_len) {
-    std::random_device rd;
-    RandomGenerator<uint32_t> generator;
-    auto first = reinterpret_cast<uint32_t*>(buf);
-    auto last = reinterpret_cast<uint32_t*>(buf + buf_len);
-    std::generate(first, last, generator);
-}
+static std::vector<uint8_t> getRandomData(int length);
+static void setRandomBytes(unsigned char* buf, size_t buf_len);
 
 template<typename T>
 static bool arrayEquals(std::list<std::shared_ptr<T>> &t1, std::list<std::shared_ptr<T>> &t2) {
@@ -114,140 +73,15 @@ static bool arrayEquals(std::list<std::shared_ptr<T>> &t1, std::list<std::shared
     return true;
 }
 
-static bool addressEquals(std::string address1, std::string address2) {
-    char buf1[sizeof(struct in6_addr)] = {0};
-    char buf2[sizeof(struct in6_addr)] = {0};
-    sa_family_t family1;
-    sa_family_t family2;
-    size_t len;
+static bool addressEquals(std::string address1, std::string address2);
 
-    if (address1.find(".") != std::string::npos) {
-        family1 = AF_INET;
-        len = sizeof(struct in_addr);
-    } else {
-        family1 = AF_INET6;
-        len = sizeof(struct in6_addr);
-    }
+static std::string getLocalIpAddresses();
 
-    if (address2.find(".") != std::string::npos) {
-        family2 = AF_INET;
-    } else {
-        family2 = AF_INET6;
-    }
+static std::string getPwdStorage(const std::string dir);
+static void removeStorage(const std::string path);
+static bool isFileExists(const std::string path);
 
-    if (family1 != family2)
-        return false;
-
-    inet_pton(family1, address1.c_str(), buf1);
-    inet_pton(family2, address2.c_str(), buf2);
-
-    return std::strncmp(buf1, buf2, len) == 0;
-}
-
-static std::string getLocalIpAddresses() {
-    std::string ipAddress {};
-#if defined(_WIN32) || defined(_WIN64)
-    DWORD dwRetVal = 0;
-    unsigned int i = 0;
-
-    ULONG family = AF_UNSPEC;
-
-    // Set the flags to pass to GetAdaptersAddresses
-    ULONG flags = GAA_FLAG_INCLUDE_PREFIX;
-    LPVOID lpMsgBuf = NULL;
-    ULONG outBufLen = 0;
-    PIP_ADAPTER_ADDRESSES pAddresses = NULL;
-    PIP_ADAPTER_ADDRESSES pCurrAddresses = NULL;
-    PIP_ADAPTER_ANYCAST_ADDRESS pAnycast = NULL;
-
-    outBufLen = sizeof(IP_ADAPTER_ADDRESSES);
-    pAddresses = (IP_ADAPTER_ADDRESSES*)malloc(outBufLen);
-
-    // Make an initial call to GetAdaptersAddresses to get the
-    // size needed into the outBufLen variable
-    if (GetAdaptersAddresses(family, flags, NULL, pAddresses, &outBufLen)
-            == ERROR_BUFFER_OVERFLOW) {
-        free(pAddresses);
-        pAddresses = (IP_ADAPTER_ADDRESSES*)malloc(outBufLen);
-    }
-
-    if (pAddresses == NULL)
-        return ipAddress;
-
-    family = AF_INET;
-
-    dwRetVal = GetAdaptersAddresses(family, flags, NULL, pAddresses, &outBufLen);
-    if (dwRetVal == NO_ERROR) {
-        pCurrAddresses = pAddresses;
-        while (pCurrAddresses) {
-            for (i = 0; pAnycast != NULL; i++) {
-                pAnycast = pCurrAddresses->FirstAnycastAddress;
-                while(pAnycast) {
-                    SOCKET_ADDRESS address = pAnycast->Address;
-
-                    char ip[INET6_ADDRSTRLEN];
-                    int len = INET6_ADDRSTRLEN;
-                    int ret = WSAAddressToString(address.lpSockaddr, address.iSockaddrLength, NULL, ip, (LPDWORD)&len);
-                    if (ret != 0) {
-                        pAnycast = pAnycast->Next;
-                    } else {
-                        ipAddress = std::string(ip);
-                        break;
-                    }
-                }
-            }
-
-            if (!ipAddress.empty())
-                break;
-
-            pCurrAddresses = pCurrAddresses->Next;
-        }
-    }
-
-    free(pAddresses);
-#else
-    struct ifaddrs* ifAddrStruct = nullptr;
-    struct ifaddrs* ifa = nullptr;
-    void* tmpAddrPtr = nullptr;
-
-    getifaddrs(&ifAddrStruct);
-
-    for (ifa = ifAddrStruct; ifa != nullptr; ifa = ifa->ifa_next) {
-        if (!ifa->ifa_addr) {
-            continue;
-        }
-        if (ifa->ifa_addr->sa_family == AF_INET) {
-            tmpAddrPtr = &((struct sockaddr_in*)ifa->ifa_addr)->sin_addr;
-            char addressBuffer[INET_ADDRSTRLEN];
-            inet_ntop(AF_INET, tmpAddrPtr, addressBuffer, INET_ADDRSTRLEN);
-            auto socketaddress = SocketAddress(addressBuffer);
-            if (socketaddress.isAnyUnicast()) {
-                ipAddress = std::string(addressBuffer);
-                break;
-            }
-        }
-    }
-    if (ifAddrStruct != nullptr) {
-        freeifaddrs(ifAddrStruct);
-    }
-#endif
-    return ipAddress;
-}
-
-static void removeStorage(const std::string path) {
-    fs::path tmp{path};
-    fs::remove_all(tmp);
-}
-
-static bool isFileExists(const std::string path) {
-    fs::path tmp{path};
-    return fs::exists(fs::status(tmp));
-}
-
-static std::string getPwdStorage(const std::string dir) {
-    return getenv("PWD") + dir;
-}
-
+static uint64_t currentTimeMillis();
 };
 
 }
