@@ -49,7 +49,7 @@ namespace test {
 CPPUNIT_TEST_SUITE_REGISTRATION(NodeApiTester);
 
 void NodeApiTester::setUp() {
-    dataDir = Utils::getPwdStorage("/node_api_tests_data");
+    dataDir = Utils::getPwdStorage("node_api_tests_data");
     Utils::removeStorage(dataDir);
 
     auto b1 = DefaultConfiguration::Builder {};
@@ -57,7 +57,7 @@ void NodeApiTester::setUp() {
 
     b1.setIPv4Address(ipAddresses);
     b1.setListeningPort(42222);
-    b1.setStoragePath(dataDir + "/temp1");
+    b1.setStoragePath(dataDir + Utils::PATH_SEP + "temp1");
 
     node1 = std::make_shared<Node>(b1.build());
     node1->start();
@@ -65,7 +65,7 @@ void NodeApiTester::setUp() {
     auto b2 = DefaultConfiguration::Builder {};
     b2.setIPv4Address(ipAddresses);
     b2.setListeningPort(42223);
-    b2.setStoragePath(dataDir + "/temp2");
+    b2.setStoragePath(dataDir + Utils::PATH_SEP + "temp2");
 
     node2 = std::make_shared<Node>(b2.build());
     node2->start();
@@ -123,7 +123,7 @@ void NodeApiTester::testSelfNodes() {
 
     //The node2(announcePeer node) can't save the peer now (the same as Java), so new the node3 for test
     auto b3 = DefaultConfiguration::Builder {};
-    std::string _path = dataDir + "/temp3";
+    std::string _path = dataDir + Utils::PATH_SEP + "temp3";
     Utils::removeStorage(_path);
 
     b3.setStoragePath(_path);

@@ -54,8 +54,9 @@ void increment(std::vector<uint8_t> value) {
 }
 
 void DataStorageTests::setUp() {
-    path = getenv("PWD");
-    path = path + "storagetests_out";
+    path = Utils::getPwdStorage("storagetests_out");
+    path1 = path + "/carrier.db";
+    path2 = path + "/carriernode.db";
 
     Utils::removeStorage(path1);
     Utils::removeStorage(path2);

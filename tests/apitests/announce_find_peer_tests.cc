@@ -26,6 +26,7 @@
 #include <carrier.h>
 #include <chrono>
 #include <thread>
+#include <limits.h>
 
 #include "utils.h"
 #include "utils/misc.h"
@@ -39,10 +40,9 @@ CPPUNIT_TEST_SUITE_REGISTRATION(AnnounceFindPeerTests);
 
 void
 AnnounceFindPeerTests::setUp() {
-    std::string path = getenv("PWD");
-    std::string path1 = path + "/carrier1";
-    std::string path2 = path + "/carrier2";
-    std::string path3 = path + "/carrier3";
+    std::string path1 = Utils::getPwdStorage("carrier1");
+    std::string path2 = Utils::getPwdStorage("carrier2");
+    std::string path3 = Utils::getPwdStorage("carrier3");
 
     Utils::removeStorage(path1);
     Utils::removeStorage(path2);
@@ -174,10 +174,13 @@ AnnounceFindPeerTests::tearDown() {
     if (node3)
         node3->stop();
 
-    std::string pwd = getenv("PWD");
-    Utils::removeStorage(pwd + "/carrier1");
-    Utils::removeStorage(pwd + "/carrier2");
-    Utils::removeStorage(pwd + "/carrier3");
+    std::string path1 = Utils::getPwdStorage("carrier1");
+    std::string path2 = Utils::getPwdStorage("carrier2");
+    std::string path3 = Utils::getPwdStorage("carrier3");
+
+    Utils::removeStorage(path1);
+    Utils::removeStorage(path2);
+    Utils::removeStorage(path3);
 }
 
 }  // namespace test
