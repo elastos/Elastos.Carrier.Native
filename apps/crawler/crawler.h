@@ -82,10 +82,8 @@ private:
 
     std::vector<Sp<NodeInfo>> nodes_list {};
     uint32_t     sendedNo {0};    /* index of the oldest node that we haven't sent a getnodes request to */
-    time_t       last_new_node {0};   /* Last time we found an unknown node */
-    time_t       last_getnodes_request {0};
-
-    time_t       stamp {0};
+    time_t       last_new_node_stamp {0};   /* Last time we found an unknown node */
+    time_t       last_getnodes_request_stamp {0};
 
     IP2Location *ip2LocationObj = nullptr;
     Sp<Node> node = nullptr;
