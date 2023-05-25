@@ -63,7 +63,7 @@ void Crawler::start() {
         pingNode(ni);
     }
 
-    last_new_node = now();
+    last_new_node_stamp = now();
 }
 
 void Crawler::stop() {
@@ -89,6 +89,7 @@ void Crawler::pingNode(Sp<NodeInfo> ni) {
             if (storageFile != nullptr)
                 (*storageFile) << str << '\n';
             log->info(str);
+            last_new_node_stamp = now();
         }
     };
 
@@ -103,7 +104,7 @@ void Crawler::sendNodeRequests() {
     size_t count = 0;
     uint32_t i = 0;
 
-    if (!timedout(last_getnodes_request, setting.request_interval))
+    if (!timedout(last_getnodes_request_stamp, setting.request_interval))
         return;
 
     auto completeHandler = [=](std::list<Sp<NodeInfo>> nis) {
@@ -112,7 +113,7 @@ void Crawler::sendNodeRequests() {
                 continue;
 
             pingNode(ni);
-            last_new_node = now();
+            last_new_node_stamp = now();
         }
     };
 
@@ -150,7 +151,7 @@ void Crawler::sendNodeRequests() {
     }
 
     sendedNo = i;
-    last_getnodes_request = now();
+    last_getnodes_request_stamp = now();
 }
 
 bool Crawler::crawled(Sp<NodeInfo> node) {
@@ -168,7 +169,7 @@ bool Crawler::crawled(Sp<NodeInfo> node) {
 bool Crawler::finished() {
     auto num_nodes = nodes_list.size();
     if ((sendedNo == num_nodes &&
-            timedout(last_new_node, setting.timeout))) {
+            timedout(last_new_node_stamp, setting.timeout))) {
         return true;
     }
 
@@ -208,7 +209,7 @@ std::string Crawler::ip2location(std::string ip) {
         }
 
         pthread_mutex_lock(&db_lock);
-        record = IP2Location_get_all(ip2LocationObj, (char *)"19.5.10.1");
+        record = IP2Location_get_all(ip2LocationObj, (char *)ip.c_str());
         pthread_mutex_unlock(&db_lock);
 
         if (record) {
