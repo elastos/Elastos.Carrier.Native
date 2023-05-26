@@ -7,90 +7,28 @@ on:
     branches: [ "master" ]
 
 jobs:
-  build-on-linux:
-    runs-on: ${{matrix.os}}
+  build-for-windows:
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04]
-
+        os: [windows-2019]
+        arch: [x86, amd64]
     steps:
-    - uses: actions/checkout@v3
-    - name: Install Dependencies
-      run: |
-        sudo apt update
-        sudo apt install build-essential
-        sudo apt install autoconf
-        sudo apt install automake
-        sudo apt install autopoint
-        sudo apt install cmake
-
-    - name: Build Projects
-      run: |
-        mkdir -p build/linux
-        cd build/linux
-        cmake -DCMAKE_INSTALL_PREFIX=dist \
-          -DCMAKE_BUILD_TYPE=Release \
-          -DENABLE_CARRIER_DEVELOPMENT=TRUE ../..
-        make -j8 && make install
-
-    - name: Run tests
-      run:
-        cd build/linux && ./tests/apitests/apitests
-
-  build-on-macos:
-    runs-on: macos-latest
-
-    steps:
-    - uses: actions/checkout@v3
-    - name: Install Dependencies
-      run: |
-        brew list --formula
-        brew install autoconf
-        brew install automake
-        brew install gettext
-        brew install libtool
-        brew install cmake
-
-    - name: Build Projects
-      run: |
-        mkdir -p build/macos
-        cd build/macos
-        cmake -DCMAKE_INSTALL_PREFIX=dist \
-          -DCMAKE_BUILD_TYPE=Release \
-          -DENABLE_CARRIER_DEVELOPMENT=TRUE ../..
-        make -j8 && make install
-
-    - name: Run tests
-      run:
-        cd build/macos && ./tests/apitests/apitests
-
-  build-for-ios:
-    runs-on: macos-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        build_for_ios_platform_type: [iphoneos, iphonesimulator]
-
-    steps:
-    - uses: actions/checkout@v3
-    - name: Install Dependencies
-      run: |
-        brew list --formula
-        brew install autoconf
-        brew install automake
-        brew install gettext
-        brew install libtool
-        brew install cmake
-
-    - name: Build Projects
-      run: |
-        mkdir -p build/ios
-        cd build/ios
-        cmake -DCMAKE_INSTALL_PREFIX=dist \
-          -DCMAKE_BUILD_TYPE=Release \
-          -DIOS_PLATFORM=${{matrix.build_for_ios_platform_type}} \
-          -DCMAKE_TOOLCHAIN_FILE=../../cmake/iOSToolchain.cmake ../..
-        make -j8 && make install
+      - uses: actions/checkout@v2
+      - name: build and test
+        shell: cmd
+        run: |
+          if exist "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\Tools\VsDevCmd.bat" (
+            call   "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\Tools\VsDevCmd.bat" -arch=${{matrix.arch}}
+          )
+          mkdir build\windows
+          cd build\windows
+          cmake -G "NMake Makefiles" -DENABLE_CARRIER_DEVELOPMENT=TRUE -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_VS_PLATFORM_TOOLSET=v141 -DCMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION=10.0.17763.0 ..\..
+          nmake
+          nmake install
+      - name: Run tests
+        run:
+          cd build\windows\dist\bin && apitests.exe
 
 

@@ -61,13 +61,21 @@ elseif(WIN32)
     set(CYGWIN_GREP_HASH "67ae6d611f0cb2e71e61a917f3e695a5")
     set(CYGWIN_GAWK_HASH "c1a234f5f67e2bc97e1383a0ad991026")
 
-    set(URL_PREFIX "http://mirrors.kernel.org/sourceware/cygwin/x86_64/release")
+    set(URL_PREFIX "http://mirrors.kernel.org/sourceware/cygwin/x86_64/release"
+            "https://mirrors.aliyun.com/cygwin/x86_64/release"
+            "https://ftp.iij.ad.jp/pub/cygwin/x86_64/release"
+            "https://download.nus.edu.sg/mirror/cygwin/x86_64/release"
+            "https://ftp.lip6.fr/pub/cygwin/x86_64/release"
+            "https://ftp.fau.de/cygwin/x86_64/release"
+            "https://mirrors.xmission.com/cygwin/x86_64/release")
+
+    list(TRANSFORM URL_PREFIXES APPEND "/cygwin/cygwin-3.1.6-1.tar.xz" OUTPUT_VARIABLE CYGWIN_URLS)
 
     ExternalProject_Add(
         cygwin-runtime
 
         PREFIX ${PROJECT_DEPS_BUILD_PREFIX}
-        URL "${URL_PREFIX}/cygwin/cygwin-3.1.6-1.tar.xz"
+        URL ${CYGWIN_URLS}
         URL_HASH MD5=${CYGWIN_RUNTIME_HASH}
         DOWNLOAD_NAME "cygwin-3.1.6-1.tar.xz"
         DOWNLOAD_DIR ${PROJECT_DEPS_TARBALL_DIR}
