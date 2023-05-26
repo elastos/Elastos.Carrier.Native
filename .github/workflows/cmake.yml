@@ -93,4 +93,30 @@ jobs:
           -DCMAKE_TOOLCHAIN_FILE=../../cmake/iOSToolchain.cmake ../..
         make -j8 && make install
 
+  build-for-windows:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2019]
+        arch: [x86, amd64]
+    steps:
+      - uses: actions/checkout@v2
+      - name: build and test
+        shell: cmd
+        run: |
+          if exist "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\Tools\VsDevCmd.bat" (
+            call   "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\Tools\VsDevCmd.bat" -arch=${{matrix.arch}}
+          )
+          mkdir build\windows
+          cd build\windows
+          cmake -G "NMake Makefiles" -DENABLE_CARRIER_DEVELOPMENT=TRUE -DCMAKE_INSTALL_PREFIX=dist -DCMAKE_VS_PLATFORM_TOOLSET=v141 -DCMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION=10.0.17763.0 ..\..
+          nmake
+          nmake install
+
+      - name: Run tests
+        run:
+          cd build\windows\dist\bin && apitests.exe
+
+
 
