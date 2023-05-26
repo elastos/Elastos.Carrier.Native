@@ -29,16 +29,17 @@ ExternalProject_Add(
 )
 
 if(WIN32)
-    file(READ ${CMAKE_CURRENT_BINARY_DIR}/external/src/LibreSSL/ssl/VERSION SSL_VERSION)
-    string(STRIP ${SSL_VERSION} SSL_VERSION)
-    string(REPLACE ":" "." SSL_VERSION ${SSL_VERSION})
-    string(REGEX REPLACE "\\..*" "" SSL_MAJOR_VERSION ${SSL_VERSION})
+    set(SSL_MAJOR_VERSION 48)
+    set(CRYPTO_MAJOR_VERSION 46)
+    set(TLS_MAJOR_VERSION 20)
 
     ExternalProject_Add_Step(
         LibreSSL post-install
         DEPENDEES install
         WORKING_DIRECTORY "${PROJECT_INT_DIST_DIR}/lib"
         COMMAND copy ssl-${SSL_MAJOR_VERSION}.lib ssl.lib
+        COMMAND copy crypto-${CRYPTO_MAJOR_VERSION}.lib crypto.lib
+        COMMAND copy tls-${TLS_MAJOR_VERSION}.lib tls.lib
     )
 endif()
 
