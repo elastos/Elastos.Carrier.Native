@@ -45,20 +45,20 @@ if(ANDROID)
         android-toolchain
         flatcc-parser)
 elseif(WIN32)
-    set(CYGWIN_RUNTIME_HASH "a1c9b3761e3e9c8e863de0415ed71722")
-    set(CYGWIN_LIBATTR_HASH "7423e99e8de393819ba982239061e7a2")
-    set(CYGWIN_LIBICONV_HASH "9fd5294883bacfadb3d50a28abc2ccfd")
+    set(CYGWIN_RUNTIME_HASH "bbc3d17d3e9a2cd6ce29459d055ebc11")
+    set(CYGWIN_LIBATTR_HASH "24a78c4342e8b2f2c1686d4a57f1c2cd")
+    set(CYGWIN_LIBICONV_HASH "af70e0b4817c78e9d9db93de32665d90")
     set(CYGWIN_LIBSIGSEGV_HASH "3C74C7599DCEAAF18EE182F54F66BBCC")
-    set(CYGWIN_LIBINTL8_HASH "c3453c7896bce5419afefacae6ed5ec9")
+    set(CYGWIN_LIBINTL8_HASH "01e53b522f96dac03e19dfc489626a33")
     set(CYGWIN_PCRE2_HASH "069e2f9115b839fa3a22613717c3effe")
     set(CYGWIN_GMP10_HASH "1ad0e65cb6eeba404fb7da22c8d48ee6")
     set(CYGWIN_MPFR6_HASH "7ba134f28d1a7583f254cfddbaa2166b")
     set(CYGWIN_NCURESESW_HASH "6c73a3f53d1b3b54c59f4bccbded2fc9")
-    set(CYGWIN_GCC_HASH "c49e65a2f092ce18c6b881ad74a18974")
+    set(CYGWIN_GCC_HASH "ceb9ee918fab0edbad972fe45ab6d630")
     set(CYGWIN_READLINE7_HASH "6bced7ea9c1b5ad1e8fb17d62a431cc9")
-    set(CYGWIN_PATCH_HASH "e2a7c92fa552903f3710bb0277e2a461")
-    set(CYGWIN_DIFF_HASH "4B254F727F2A2165CB75943960D27370")
-    set(CYGWIN_GREP_HASH "67ae6d611f0cb2e71e61a917f3e695a5")
+    set(CYGWIN_PATCH_HASH "c254e28e0687685e74b8213af0b2c6c0")
+    set(CYGWIN_DIFF_HASH "7a2adbf1d2c3fda1d7471e799c1eb47b")
+    set(CYGWIN_GREP_HASH "11903e139a6d670f802b65768e054619")
     set(CYGWIN_GAWK_HASH "c1a234f5f67e2bc97e1383a0ad991026")
 
     set(URL_PREFIX "http://mirrors.kernel.org/sourceware/cygwin/x86_64/release")
@@ -67,9 +67,9 @@ elseif(WIN32)
         cygwin-runtime
 
         PREFIX ${PROJECT_DEPS_BUILD_PREFIX}
-        URL "${URL_PREFIX}/cygwin/cygwin-3.1.6-1.tar.xz"
+        URL "${URL_PREFIX}/cygwin/cygwin-3.4.2-1.tar.xz"
         URL_HASH MD5=${CYGWIN_RUNTIME_HASH}
-        DOWNLOAD_NAME "cygwin-3.1.6-1.tar.xz"
+        DOWNLOAD_NAME "cygwin-3.4.2-1.tar.xz"
         DOWNLOAD_DIR ${PROJECT_DEPS_TARBALL_DIR}
         DOWNLOAD_NO_PROGRESS 1
 
@@ -87,9 +87,9 @@ elseif(WIN32)
         DEPENDS cygwin-runtime
 
         PREFIX ${PROJECT_DEPS_BUILD_PREFIX}
-        URL "${URL_PREFIX}/attr/libattr1/libattr1-2.4.46-1.tar.bz2"
+        URL "${URL_PREFIX}/attr/libattr1/libattr1-2.4.48-2.tar.xz"
         URL_HASH MD5=${CYGWIN_LIBATTR_HASH}
-        DOWNLOAD_NAME "libattr1-2.4.46-1.tar.bz2"
+        DOWNLOAD_NAME "libattr1-2.4.48-2.tar.xz"
         DOWNLOAD_DIR ${PROJECT_DEPS_TARBALL_DIR}
         DOWNLOAD_NO_PROGRESS 1
 
@@ -97,7 +97,7 @@ elseif(WIN32)
 
         CONFIGURE_COMMAND echo Done
         BUILD_COMMAND echo Done
-        INSTALL_COMMAND xcopy /s /e /q /y . ${PROJECT_HOST_TOOLS_DIR}\\usr
+        INSTALL_COMMAND xcopy /s /e /q /y .\\usr ${PROJECT_HOST_TOOLS_DIR}\\usr
     )
 
     ExternalProject_Add(
@@ -106,9 +106,9 @@ elseif(WIN32)
         DEPENDS cygwin-runtime
 
         PREFIX ${PROJECT_DEPS_BUILD_PREFIX}
-        URL "${URL_PREFIX}/libiconv/libiconv2/libiconv2-1.14-3.tar.xz"
+        URL "${URL_PREFIX}/libiconv/libiconv2/libiconv2-1.17-1.tar.xz"
         URL_HASH MD5=${CYGWIN_LIBICONV_HASH}
-        DOWNLOAD_NAME "libiconv2-1.14-3.tar.xz"
+        DOWNLOAD_NAME "libiconv2-1.17-1.tar.xz"
         DOWNLOAD_DIR ${PROJECT_DEPS_TARBALL_DIR}
         DOWNLOAD_NO_PROGRESS 1
 
@@ -144,9 +144,9 @@ elseif(WIN32)
         DEPENDS cygwin-runtime
 
         PREFIX ${PROJECT_DEPS_BUILD_PREFIX}
-        URL "${URL_PREFIX}/gettext/libintl8/libintl8-0.19.8.1-2.tar.xz"
+        URL "${URL_PREFIX}/gettext/libintl8/libintl8-0.21.1-2.tar.xz"
         URL_HASH MD5=${CYGWIN_LIBINTL8_HASH}
-        DOWNLOAD_NAME "libintl8-0.19.8.1-2.tar.xz"
+        DOWNLOAD_NAME "libintl8-0.21.1-2.tar.xz"
         DOWNLOAD_DIR ${PROJECT_DEPS_TARBALL_DIR}
         DOWNLOAD_NO_PROGRESS 1
 
@@ -220,9 +220,9 @@ elseif(WIN32)
         DEPENDS cygwin-runtime
 
         PREFIX ${PROJECT_DEPS_BUILD_PREFIX}
-        URL "${URL_PREFIX}/gcc/libgcc1/libgcc1-7.4.0-1.tar.xz"
+        URL "${URL_PREFIX}/gcc/libgcc1/libgcc1-10.2.0-1.tar.xz"
         URL_HASH MD5=${CYGWIN_GCC_HASH}
-        DOWNLOAD_NAME "libgcc1-7.4.0-1.tar.xz"
+        DOWNLOAD_NAME "libgcc1-10.2.0-1.tar.xz"
         DOWNLOAD_DIR ${PROJECT_DEPS_TARBALL_DIR}
         DOWNLOAD_NO_PROGRESS 1
 
@@ -277,9 +277,9 @@ elseif(WIN32)
         DEPENDS cygwin-runtime cygwin-libattr cygwin-libintl8 cygwin-libiconv
 
         PREFIX ${PROJECT_DEPS_BUILD_PREFIX}
-        URL "${URL_PREFIX}/patch/patch-2.7.4-1.tar.xz"
+        URL "${URL_PREFIX}/patch/patch-2.7.6-17.tar.xz"
         URL_HASH MD5=${CYGWIN_PATCH_HASH}
-        DOWNLOAD_NAME "patch-2.7.4-1.tar.xz"
+        DOWNLOAD_NAME "patch-2.7.6-17.tar.xz"
         DOWNLOAD_DIR ${PROJECT_DEPS_TARBALL_DIR}
         DOWNLOAD_NO_PROGRESS 1
 
@@ -296,9 +296,9 @@ elseif(WIN32)
         DEPENDS cygwin-runtime cygwin-libattr cygwin-libintl8 cygwin-libiconv
 
         PREFIX ${PROJECT_DEPS_BUILD_PREFIX}
-        URL "${URL_PREFIX}/diffutils/diffutils-3.5-2.tar.xz"
+        URL "${URL_PREFIX}/diffutils/diffutils-3.9-1.tar.xz"
         URL_HASH MD5=${CYGWIN_DIFF_HASH}
-        DOWNLOAD_NAME "diffutils-3.5-2.tar.xz"
+        DOWNLOAD_NAME "diffutils-3.9-1.tar.xz"
         DOWNLOAD_DIR ${PROJECT_DEPS_TARBALL_DIR}
         DOWNLOAD_NO_PROGRESS 1
 
@@ -334,9 +334,9 @@ elseif(WIN32)
         DEPENDS cygwin-runtime cygwin-libattr cygwin-libintl8 cygwin-libiconv cygwin-pcre2
 
         PREFIX ${PROJECT_DEPS_BUILD_PREFIX}
-        URL "${URL_PREFIX}/grep/grep-3.8-2.tar.xz"
+        URL "${URL_PREFIX}/grep/grep-3.9-1.tar.xz"
         URL_HASH MD5=${CYGWIN_GREP_HASH}
-        DOWNLOAD_NAME "grep-3.8-2.tar.xz"
+        DOWNLOAD_NAME "grep-3.9-1.tar.xz"
         DOWNLOAD_DIR ${PROJECT_DEPS_TARBALL_DIR}
         DOWNLOAD_NO_PROGRESS 1
 
