@@ -68,6 +68,7 @@ private:
     }
 
     void pingNode(Sp<NodeInfo> ni);
+    bool pinged(Sp<NodeInfo> node);
     bool crawled(Sp<NodeInfo> node);
     bool checkPersistence(const std::string& path);
     void openStorageFile();
@@ -81,6 +82,7 @@ private:
     void initCarrierNode();
 
     std::vector<Sp<NodeInfo>> nodes_list {};
+    std::vector<Sp<NodeInfo>> pinged_list {};
     uint32_t     sendedNo {0};    /* index of the oldest node that we haven't sent a getnodes request to */
     time_t       last_new_node_stamp {0};   /* Last time we found an unknown node */
     time_t       last_getnodes_request_stamp {0};
