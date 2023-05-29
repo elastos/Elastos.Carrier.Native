@@ -94,6 +94,7 @@ void Crawler::pingNode(Sp<NodeInfo> ni) {
     };
 
     node->ping(ni, completeHandler);
+    pinged_list.emplace_back(ni);
 }
 
 /*
@@ -109,7 +110,7 @@ void Crawler::sendNodeRequests() {
 
     auto completeHandler = [=](std::list<Sp<NodeInfo>> nis) {
         for(auto ni: nis) {
-            if (crawled(ni))
+            if (pinged(ni))
                 continue;
 
             pingNode(ni);
@@ -152,6 +153,17 @@ void Crawler::sendNodeRequests() {
 
     sendedNo = i;
     last_getnodes_request_stamp = now();
+}
+
+bool Crawler::pinged(Sp<NodeInfo> node) {
+    auto id = node->getId();
+    for (auto ni : pinged_list) {
+        if (ni->getId() == id) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 bool Crawler::crawled(Sp<NodeInfo> node) {
