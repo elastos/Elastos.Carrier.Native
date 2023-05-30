@@ -30,9 +30,5 @@ jobs:
 
       - name: Run tests
         shell: cmd
-        run:
-          pwd
-          cd build\windows\dist\bin && apitests.exe
-
-
-
+        run: |
+          cd build\windows\dist\bin && ./apitests.exe
