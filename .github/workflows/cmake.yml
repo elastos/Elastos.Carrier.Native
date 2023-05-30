@@ -29,8 +29,9 @@ jobs:
           nmake install
 
       - name: Run tests
+        shell: cmd
         run:
-          dir
+          pwd
           cd build\windows\dist\bin && apitests.exe
 
 
