@@ -22,6 +22,13 @@ if(WIN32)
         CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_INT_DIST_DIR}
                 ${CMAKE_ARGS_INIT}
     )
+
+    ExternalProject_Add_Step(
+        editline post-install
+        DEPENDEES install
+        WORKING_DIRECTORY "${PROJECT_INT_DIST_DIR}/lib"
+        COMMAND copy edit_a.lib edit.lib
+    )
 else()
     set(CONFIGURE_CMD "./configure")
     set(CONFIGURE_ARGS

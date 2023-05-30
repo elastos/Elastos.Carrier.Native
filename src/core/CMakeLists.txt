@@ -113,6 +113,7 @@ if(WIN32)
         libsodium.lib
         Ws2_32
         crypt32
+        Rpcrt4
         iphlpapi
         Shlwapi)
 else()

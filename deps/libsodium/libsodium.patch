@@ -1,118 +1,368 @@
-diff --git a/libsodium.vcxproj b/libsodium.vcxproj
-index e3b20729..ddff7d4a 100644
---- a/libsodium.vcxproj
-+++ b/libsodium.vcxproj
-@@ -1,4 +1,4 @@
--﻿<?xml version="1.0" encoding="utf-8"?>
-+<?xml version="1.0" encoding="utf-8"?>
- <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-   <ItemGroup Label="ProjectConfigurations">
-     <ProjectConfiguration Include="DebugDLL|Win32">
-@@ -45,56 +45,56 @@
-     <UseDebugLibraries>true</UseDebugLibraries>
-     <CharacterSet>MultiByte</CharacterSet>
-     <WholeProgramOptimization>false</WholeProgramOptimization>
--    <PlatformToolset>v140</PlatformToolset>
-+    <PlatformToolset>v141</PlatformToolset>
-   </PropertyGroup>
-   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugDLL|Win32'" Label="Configuration">
-     <ConfigurationType>DynamicLibrary</ConfigurationType>
-     <UseDebugLibraries>true</UseDebugLibraries>
-     <CharacterSet>MultiByte</CharacterSet>
-     <WholeProgramOptimization>false</WholeProgramOptimization>
--    <PlatformToolset>v140</PlatformToolset>
-+    <PlatformToolset>v141</PlatformToolset>
-   </PropertyGroup>
-   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-     <ConfigurationType>StaticLibrary</ConfigurationType>
-     <UseDebugLibraries>true</UseDebugLibraries>
-     <CharacterSet>MultiByte</CharacterSet>
-     <WholeProgramOptimization>false</WholeProgramOptimization>
--    <PlatformToolset>v140</PlatformToolset>
-+    <PlatformToolset>v141</PlatformToolset>
-   </PropertyGroup>
-   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugDLL|x64'" Label="Configuration">
-     <ConfigurationType>DynamicLibrary</ConfigurationType>
-     <UseDebugLibraries>true</UseDebugLibraries>
-     <CharacterSet>MultiByte</CharacterSet>
-     <WholeProgramOptimization>false</WholeProgramOptimization>
--    <PlatformToolset>v140</PlatformToolset>
-+    <PlatformToolset>v141</PlatformToolset>
-   </PropertyGroup>
-   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-     <ConfigurationType>StaticLibrary</ConfigurationType>
-     <UseDebugLibraries>false</UseDebugLibraries>
-     <WholeProgramOptimization>true</WholeProgramOptimization>
-     <CharacterSet>MultiByte</CharacterSet>
--    <PlatformToolset>v140</PlatformToolset>
-+    <PlatformToolset>v141</PlatformToolset>
-   </PropertyGroup>
-   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDLL|Win32'" Label="Configuration">
-     <ConfigurationType>DynamicLibrary</ConfigurationType>
-     <UseDebugLibraries>false</UseDebugLibraries>
-     <WholeProgramOptimization>true</WholeProgramOptimization>
-     <CharacterSet>MultiByte</CharacterSet>
--    <PlatformToolset>v140</PlatformToolset>
-+    <PlatformToolset>v141</PlatformToolset>
-   </PropertyGroup>
-   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-     <ConfigurationType>StaticLibrary</ConfigurationType>
-     <UseDebugLibraries>false</UseDebugLibraries>
-     <WholeProgramOptimization>true</WholeProgramOptimization>
-     <CharacterSet>MultiByte</CharacterSet>
--    <PlatformToolset>v140</PlatformToolset>
-+    <PlatformToolset>v141</PlatformToolset>
-   </PropertyGroup>
-   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDLL|x64'" Label="Configuration">
-     <ConfigurationType>DynamicLibrary</ConfigurationType>
-     <UseDebugLibraries>false</UseDebugLibraries>
-     <WholeProgramOptimization>true</WholeProgramOptimization>
-     <CharacterSet>MultiByte</CharacterSet>
--    <PlatformToolset>v140</PlatformToolset>
-+    <PlatformToolset>v141</PlatformToolset>
-   </PropertyGroup>
-   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
-   <ImportGroup Label="ExtensionSettings">
-diff --git a/msvc-scripts/sodium.props b/msvc-scripts/sodium.props
-index 41e1e471..6c611681 100644
---- a/msvc-scripts/sodium.props
-+++ b/msvc-scripts/sodium.props
-@@ -1,8 +1,15 @@
--﻿<?xml version="1.0" encoding="utf-8"?>
-+<?xml version="1.0" encoding="utf-8"?>
- <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-   <ImportGroup Label="PropertySheets" />
--  <PropertyGroup Label="UserMacros" />
-+  <PropertyGroup Label="UserMacros">
-+    <InstallDir>dist</InstallDir>
-+  </PropertyGroup>
-   <PropertyGroup />
-+  <ItemGroup>
-+    <BuildMacro Include="InstallDir">
-+      <Value>$(InstallDir)</Value>
-+    </BuildMacro>
-+  </ItemGroup>
-   <ItemDefinitionGroup>
-     <ClCompile>
-       <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)src\libsodium\include\sodium;$(SolutionDir)src\libsodium\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-@@ -23,6 +30,20 @@
-     <PostBuildEvent>
-       <Message>Run the test suite</Message>
-     </PostBuildEvent>
-+    <CustomBuildStep>
-+      <Command>if not exist $(InstallDir)\include\sodium mkdir $(InstallDir)\include\sodium
-+if not exist $(InstallDir)\lib mkdir $(InstallDir)\lib
+diff -ruN libsodium-1.0.18/CMakeLists.txt libsodium-1.0.18-mod/CMakeLists.txt
+--- libsodium-1.0.18/CMakeLists.txt	1970-01-01 08:00:00
++++ libsodium-1.0.18-mod/CMakeLists.txt	2023-05-30 20:20:27
+@@ -0,0 +1,363 @@
++cmake_minimum_required(VERSION 3.18)
++project("sodium" VERSION 1.0.18 HOMEPAGE_URL "https://libsodium.org/" LANGUAGES C)
 +
-+copy src\libsodium\include\sodium.h "$(InstallDir)\include" /y
-+copy src\libsodium\include\sodium\*.h "$(InstallDir)\include\sodium" /y
-+copy "$(OutDir)$(TargetName)$(TargetExt)" $(InstallDir)\lib</Command>
-+    </CustomBuildStep>
-+    <CustomBuildStep>
-+      <Message>Performing Install Step</Message>
-+    </CustomBuildStep>
-+    <CustomBuildStep>
-+      <Outputs>$(InstallDir)</Outputs>
-+    </CustomBuildStep>
-   </ItemDefinitionGroup>
-   <ItemGroup />
- </Project>
++include(CheckIncludeFile)
++include(CheckSymbolExists)
++include(CheckFunctionExists)
++
++option(ENABLE_SHARED "Build shared library" ON)
++option(ENABLE_STATIC "Build static library" ON)
++option(ENABLE_TESTS "Disable tests" OFF)
++option(ENABLE_MINIMAL "Only compile the minimum set of functions required for the high-level API" OFF)
++option(ENABLE_BLOCKING_RANDOM "Enable this switch only if /dev/urandom is totally broken on the target platform" OFF)
++
++set(SODIUM_SRC
++    src/libsodium/crypto_aead/chacha20poly1305/sodium/aead_chacha20poly1305.c
++    src/libsodium/crypto_aead/xchacha20poly1305/sodium/aead_xchacha20poly1305.c
++    src/libsodium/crypto_auth/crypto_auth.c
++    src/libsodium/crypto_auth/hmacsha256/auth_hmacsha256.c
++    src/libsodium/crypto_auth/hmacsha512/auth_hmacsha512.c
++    src/libsodium/crypto_auth/hmacsha512256/auth_hmacsha512256.c
++    src/libsodium/crypto_box/crypto_box.c
++    src/libsodium/crypto_box/crypto_box_easy.c
++    src/libsodium/crypto_box/crypto_box_seal.c
++    src/libsodium/crypto_box/curve25519xsalsa20poly1305/box_curve25519xsalsa20poly1305.c
++    src/libsodium/crypto_core/ed25519/ref10/ed25519_ref10.c
++    src/libsodium/crypto_core/hchacha20/core_hchacha20.c
++    src/libsodium/crypto_core/hsalsa20/ref2/core_hsalsa20_ref2.c
++    src/libsodium/crypto_core/hsalsa20/core_hsalsa20.c
++    src/libsodium/crypto_core/salsa/ref/core_salsa_ref.c
++    src/libsodium/crypto_generichash/crypto_generichash.c
++    src/libsodium/crypto_generichash/blake2b/generichash_blake2.c
++    src/libsodium/crypto_generichash/blake2b/ref/blake2.h
++    src/libsodium/crypto_generichash/blake2b/ref/blake2b-compress-ref.c
++    src/libsodium/crypto_generichash/blake2b/ref/blake2b-load-sse2.h
++    src/libsodium/crypto_generichash/blake2b/ref/blake2b-load-sse41.h
++    src/libsodium/crypto_generichash/blake2b/ref/blake2b-load-avx2.h
++    src/libsodium/crypto_generichash/blake2b/ref/blake2b-ref.c
++    src/libsodium/crypto_generichash/blake2b/ref/generichash_blake2b.c
++    src/libsodium/crypto_hash/crypto_hash.c
++    src/libsodium/crypto_hash/sha256/hash_sha256.c
++    src/libsodium/crypto_hash/sha256/cp/hash_sha256_cp.c
++    src/libsodium/crypto_hash/sha512/hash_sha512.c
++    src/libsodium/crypto_hash/sha512/cp/hash_sha512_cp.c
++    src/libsodium/crypto_kdf/blake2b/kdf_blake2b.c
++    src/libsodium/crypto_kdf/crypto_kdf.c
++    src/libsodium/crypto_kx/crypto_kx.c
++    src/libsodium/crypto_onetimeauth/crypto_onetimeauth.c
++    src/libsodium/crypto_onetimeauth/poly1305/onetimeauth_poly1305.c
++    src/libsodium/crypto_onetimeauth/poly1305/onetimeauth_poly1305.h
++    src/libsodium/crypto_onetimeauth/poly1305/donna/poly1305_donna.h
++    src/libsodium/crypto_onetimeauth/poly1305/donna/poly1305_donna32.h
++    src/libsodium/crypto_onetimeauth/poly1305/donna/poly1305_donna64.h
++    src/libsodium/crypto_onetimeauth/poly1305/donna/poly1305_donna.c
++    src/libsodium/crypto_pwhash/argon2/argon2-core.c
++    src/libsodium/crypto_pwhash/argon2/argon2-core.h
++    src/libsodium/crypto_pwhash/argon2/argon2-encoding.c
++    src/libsodium/crypto_pwhash/argon2/argon2-encoding.h
++    src/libsodium/crypto_pwhash/argon2/argon2-fill-block-ref.c
++    src/libsodium/crypto_pwhash/argon2/argon2.c
++    src/libsodium/crypto_pwhash/argon2/argon2.h
++    src/libsodium/crypto_pwhash/argon2/blake2b-long.c
++    src/libsodium/crypto_pwhash/argon2/blake2b-long.h
++    src/libsodium/crypto_pwhash/argon2/blamka-round-ref.h
++    src/libsodium/crypto_pwhash/argon2/pwhash_argon2i.c
++    src/libsodium/crypto_pwhash/argon2/pwhash_argon2id.c
++    src/libsodium/crypto_pwhash/crypto_pwhash.c
++    src/libsodium/crypto_scalarmult/crypto_scalarmult.c
++    src/libsodium/crypto_scalarmult/curve25519/ref10/x25519_ref10.c
++    src/libsodium/crypto_scalarmult/curve25519/ref10/x25519_ref10.h
++    src/libsodium/crypto_scalarmult/curve25519/scalarmult_curve25519.c
++    src/libsodium/crypto_scalarmult/curve25519/scalarmult_curve25519.h
++    src/libsodium/crypto_secretbox/crypto_secretbox.c
++    src/libsodium/crypto_secretbox/crypto_secretbox_easy.c
++    src/libsodium/crypto_secretbox/xsalsa20poly1305/secretbox_xsalsa20poly1305.c
++    src/libsodium/crypto_secretstream/xchacha20poly1305/secretstream_xchacha20poly1305.c
++    src/libsodium/crypto_shorthash/crypto_shorthash.c
++    src/libsodium/crypto_shorthash/siphash24/shorthash_siphash24.c
++    src/libsodium/crypto_shorthash/siphash24/ref/shorthash_siphash24_ref.c
++    src/libsodium/crypto_shorthash/siphash24/ref/shorthash_siphash_ref.h
++    src/libsodium/crypto_sign/crypto_sign.c
++    src/libsodium/crypto_sign/ed25519/sign_ed25519.c
++    src/libsodium/crypto_sign/ed25519/ref10/keypair.c
++    src/libsodium/crypto_sign/ed25519/ref10/open.c
++    src/libsodium/crypto_sign/ed25519/ref10/sign.c
++    src/libsodium/crypto_sign/ed25519/ref10/sign_ed25519_ref10.h
++    src/libsodium/crypto_stream/chacha20/stream_chacha20.c
++    src/libsodium/crypto_stream/chacha20/stream_chacha20.h
++    src/libsodium/crypto_stream/chacha20/ref/chacha20_ref.h
++    src/libsodium/crypto_stream/chacha20/ref/chacha20_ref.c
++    src/libsodium/crypto_stream/crypto_stream.c
++    src/libsodium/crypto_stream/salsa20/stream_salsa20.c
++    src/libsodium/crypto_stream/salsa20/stream_salsa20.h
++    src/libsodium/crypto_stream/xsalsa20/stream_xsalsa20.c
++    src/libsodium/crypto_verify/sodium/verify.c
++    src/libsodium/include/sodium/private/chacha20_ietf_ext.h
++    src/libsodium/include/sodium/private/common.h
++    src/libsodium/include/sodium/private/ed25519_ref10.h
++    src/libsodium/include/sodium/private/implementations.h
++    src/libsodium/include/sodium/private/mutex.h
++    src/libsodium/include/sodium/private/sse2_64_32.h
++    src/libsodium/randombytes/randombytes.c
++    src/libsodium/sodium/codecs.c
++    src/libsodium/sodium/core.c
++    src/libsodium/sodium/runtime.c
++    src/libsodium/sodium/utils.c
++    src/libsodium/sodium/version.c
++)
++
++if(HAVE_TI_MODE)
++    set(SODIUM_SRC ${SODIUM_SRC}
++        src/libsodium/crypto_core/ed25519/ref10/fe_51/base.h
++        src/libsodium/crypto_core/ed25519/ref10/fe_51/base2.h
++        src/libsodium/crypto_core/ed25519/ref10/fe_51/constants.h
++        src/libsodium/crypto_core/ed25519/ref10/fe_51/fe.h
++        src/libsodium/include/sodium/private/ed25519_ref10_fe_51.h
++    )
++else()
++    set(SODIUM_SRC ${SODIUM_SRC}
++        src/libsodium/crypto_core/ed25519/ref10/fe_25_5/base.h
++        src/libsodium/crypto_core/ed25519/ref10/fe_25_5/base2.h
++        src/libsodium/crypto_core/ed25519/ref10/fe_25_5/constants.h
++        src/libsodium/crypto_core/ed25519/ref10/fe_25_5/fe.h
++        src/libsodium/include/sodium/private/ed25519_ref10_fe_25_5.h
++    )
++endif()
++
++if(HAVE_AMD64_ASM)
++    set(SODIUM_SRC ${SODIUM_SRC}
++	    src/libsodium/crypto_stream/salsa20/xmm6/salsa20_xmm6-asm.S
++	    src/libsodium/crypto_stream/salsa20/xmm6/salsa20_xmm6.c
++	    src/libsodium/crypto_stream/salsa20/xmm6/salsa20_xmm6.h
++    )
++else()
++    set(SODIUM_SRC ${SODIUM_SRC}
++        src/libsodium/crypto_stream/salsa20/ref/salsa20_ref.c
++        src/libsodium/crypto_stream/salsa20/ref/salsa20_ref.h
++    )
++endif()
++
++#[[
++noinst_HEADERS = \
++	crypto_scalarmult/curve25519/sandy2x/consts.S \
++	crypto_scalarmult/curve25519/sandy2x/fe51_mul.S \
++	crypto_scalarmult/curve25519/sandy2x/fe51_nsquare.S \
++	crypto_scalarmult/curve25519/sandy2x/fe51_pack.S \
++	crypto_scalarmult/curve25519/sandy2x/ladder.S \
++	crypto_scalarmult/curve25519/sandy2x/ladder_base.S
++]]
++
++if(HAVE_AVX_ASM)
++    set(SODIUM_SRC ${SODIUM_SRC}
++        src/libsodium/crypto_scalarmult/curve25519/sandy2x/consts_namespace.h
++        src/libsodium/crypto_scalarmult/curve25519/sandy2x/curve25519_sandy2x.c
++        src/libsodium/crypto_scalarmult/curve25519/sandy2x/curve25519_sandy2x.h
++        src/libsodium/crypto_scalarmult/curve25519/sandy2x/fe.h
++        src/libsodium/crypto_scalarmult/curve25519/sandy2x/fe51.h
++        src/libsodium/crypto_scalarmult/curve25519/sandy2x/fe51_invert.c
++        src/libsodium/crypto_scalarmult/curve25519/sandy2x/fe51_namespace.h
++        src/libsodium/crypto_scalarmult/curve25519/sandy2x/fe_frombytes_sandy2x.c
++        src/libsodium/crypto_scalarmult/curve25519/sandy2x/ladder.h
++        src/libsodium/crypto_scalarmult/curve25519/sandy2x/ladder_base.h
++        src/libsodium/crypto_scalarmult/curve25519/sandy2x/ladder_base_namespace.h
++        src/libsodium/crypto_scalarmult/curve25519/sandy2x/ladder_namespace.h
++        src/libsodium/crypto_scalarmult/curve25519/sandy2x/sandy2x.S
++    )
++endif()
++
++if(NOT ENABLE_MINIMAL)
++    set(SODIUM_SRC ${SODIUM_SRC}
++        src/libsodium/crypto_box/curve25519xchacha20poly1305/box_curve25519xchacha20poly1305.c
++        src/libsodium/crypto_box/curve25519xchacha20poly1305/box_seal_curve25519xchacha20poly1305.c
++        src/libsodium/crypto_core/ed25519/core_ed25519.c
++        src/libsodium/crypto_core/ed25519/core_ristretto255.c
++        src/libsodium/crypto_pwhash/scryptsalsa208sha256/crypto_scrypt-common.c
++        src/libsodium/crypto_pwhash/scryptsalsa208sha256/crypto_scrypt.h
++        src/libsodium/crypto_pwhash/scryptsalsa208sha256/scrypt_platform.c
++        src/libsodium/crypto_pwhash/scryptsalsa208sha256/pbkdf2-sha256.c
++        src/libsodium/crypto_pwhash/scryptsalsa208sha256/pbkdf2-sha256.h
++        src/libsodium/crypto_pwhash/scryptsalsa208sha256/pwhash_scryptsalsa208sha256.c
++        src/libsodium/crypto_pwhash/scryptsalsa208sha256/nosse/pwhash_scryptsalsa208sha256_nosse.c
++        src/libsodium/crypto_scalarmult/ed25519/ref10/scalarmult_ed25519_ref10.c
++        src/libsodium/crypto_scalarmult/ristretto255/ref10/scalarmult_ristretto255_ref10.c
++        src/libsodium/crypto_secretbox/xchacha20poly1305/secretbox_xchacha20poly1305.c
++        src/libsodium/crypto_shorthash/siphash24/shorthash_siphashx24.c
++        src/libsodium/crypto_shorthash/siphash24/ref/shorthash_siphashx24_ref.c
++        src/libsodium/crypto_sign/ed25519/ref10/obsolete.c
++        src/libsodium/crypto_stream/salsa2012/ref/stream_salsa2012_ref.c
++        src/libsodium/crypto_stream/salsa2012/stream_salsa2012.c
++        src/libsodium/crypto_stream/salsa208/ref/stream_salsa208_ref.c
++        src/libsodium/crypto_stream/salsa208/stream_salsa208.c
++        src/libsodium/crypto_stream/xchacha20/stream_xchacha20.c
++    )
++endif()
++
++# random
++set(SODIUM_SRC ${SODIUM_SRC}
++    src/libsodium/randombytes/internal/randombytes_internal_random.c
++    src/libsodium/randombytes/sysrandom/randombytes_sysrandom.c
++)
++
++# aesni
++set(SODIUM_SRC ${SODIUM_SRC}
++    src/libsodium/crypto_aead/aes256gcm/aesni/aead_aes256gcm_aesni.c
++)
++
++# sse2
++set(SODIUM_SRC ${SODIUM_SRC}
++    src/libsodium/crypto_onetimeauth/poly1305/sse2/poly1305_sse2.c
++	src/libsodium/crypto_onetimeauth/poly1305/sse2/poly1305_sse2.h
++)
++if(NOT ENABLE_MINIMAL)
++    set(SODIUM_SRC ${SODIUM_SRC}
++        src/libsodium/crypto_pwhash/scryptsalsa208sha256/sse/pwhash_scryptsalsa208sha256_sse.c
++    )
++endif()
++if(HAVE_AMD64_ASM)
++    set(SODIUM_SRC ${SODIUM_SRC}
++        src/libsodium/crypto_stream/salsa20/xmm6int/salsa20_xmm6int-sse2.c
++        src/libsodium/crypto_stream/salsa20/xmm6int/salsa20_xmm6int-sse2.h
++        src/libsodium/crypto_stream/salsa20/xmm6int/u0.h
++        src/libsodium/crypto_stream/salsa20/xmm6int/u1.h
++        src/libsodium/crypto_stream/salsa20/xmm6int/u4.h
++    )
++endif()
++
++# sse3
++set(SODIUM_SRC ${SODIUM_SRC}
++    src/libsodium/crypto_generichash/blake2b/ref/blake2b-compress-ssse3.c
++	src/libsodium/crypto_generichash/blake2b/ref/blake2b-compress-ssse3.h
++	src/libsodium/crypto_pwhash/argon2/argon2-fill-block-ssse3.c
++	src/libsodium/crypto_pwhash/argon2/blamka-round-ssse3.h
++	src/libsodium/crypto_stream/chacha20/dolbeau/chacha20_dolbeau-ssse3.c
++	src/libsodium/crypto_stream/chacha20/dolbeau/chacha20_dolbeau-ssse3.h
++	src/libsodium/crypto_stream/chacha20/dolbeau/u0.h
++	src/libsodium/crypto_stream/chacha20/dolbeau/u1.h
++	src/libsodium/crypto_stream/chacha20/dolbeau/u4.h
++)
++
++# sse41
++set(SODIUM_SRC ${SODIUM_SRC}
++    src/libsodium/crypto_generichash/blake2b/ref/blake2b-compress-sse41.c
++	src/libsodium/crypto_generichash/blake2b/ref/blake2b-compress-sse41.h
++)
++
++# avx2
++set(SODIUM_SRC ${SODIUM_SRC}
++    src/libsodium/crypto_generichash/blake2b/ref/blake2b-compress-avx2.c
++	src/libsodium/crypto_generichash/blake2b/ref/blake2b-compress-avx2.h
++	src/libsodium/crypto_pwhash/argon2/argon2-fill-block-avx2.c
++	src/libsodium/crypto_pwhash/argon2/blamka-round-avx2.h
++	src/libsodium/crypto_stream/chacha20/dolbeau/chacha20_dolbeau-avx2.c
++	src/libsodium/crypto_stream/chacha20/dolbeau/chacha20_dolbeau-avx2.h
++	src/libsodium/crypto_stream/chacha20/dolbeau/u8.h
++	src/libsodium/crypto_stream/salsa20/xmm6int/salsa20_xmm6int-avx2.c
++	src/libsodium/crypto_stream/salsa20/xmm6int/salsa20_xmm6int-avx2.h
++	src/libsodium/crypto_stream/salsa20/xmm6int/u0.h
++	src/libsodium/crypto_stream/salsa20/xmm6int/u1.h
++	src/libsodium/crypto_stream/salsa20/xmm6int/u4.h
++	src/libsodium/crypto_stream/salsa20/xmm6int/u8.h
++)
++
++# avx512f
++set(SODIUM_SRC ${SODIUM_SRC}
++    src/libsodium/crypto_pwhash/argon2/argon2-fill-block-avx512f.c
++	src/libsodium/crypto_pwhash/argon2/blamka-round-avx512f.h
++)
++
++# Variables for configure_file, all in
++set(VERSION 1.0.18)
++set(SODIUM_LIBRARY_VERSION_MAJOR 10)
++set(SODIUM_LIBRARY_VERSION_MINOR 3)
++if(ENABLE_MINIMAL)
++    set(SODIUM_LIBRARY_MINIMAL_DEF "#define SODIUM_LIBRARY_MINIMAL 1")
++endif()
++
++set(SHAREDLIB_SOVERSION 23)
++
++configure_file(
++    src/libsodium/include/sodium/version.h.in
++    ${CMAKE_CURRENT_SOURCE_DIR}/src/libsodium/include/sodium/version.h
++)
++
++if(ENABLE_SHARED)
++    add_library(libsodium-shared SHARED ${SODIUM_SRC})
++    target_compile_definitions(libsodium-shared
++        PUBLIC
++            $<$<BOOL:${ENABLE_MINIMAL}>:SODIUM_LIBRARY_MINIMAL>
++        PRIVATE
++            CONFIGURED
++            SODIUM_DLL_EXPORT
++            $<$<BOOL:${ENABLE_MINIMAL}>:MINIMAL>
++            $<$<BOOL:${ENABLE_BLOCKING_RANDOM}>:USE_BLOCKING_RANDOM>
++            $<$<C_COMPILER_ID:MSVC>:_CRT_SECURE_NO_WARNINGS>
++    )
++
++    target_include_directories(libsodium-shared
++        PUBLIC
++            src/libsodium/include
++        PRIVATE
++            src/libsodium/include/sodium
++    )
++
++    set_target_properties(libsodium-shared PROPERTIES
++        C_STANDARD 99
++        OUTPUT_NAME $<$<BOOL:${WIN32}>:lib>sodium
++        SOVERSION ${SHAREDLIB_SOVERSION}
++    )
++
++    install(TARGETS libsodium-shared
++        RUNTIME DESTINATION "bin"
++        ARCHIVE DESTINATION "lib"
++        LIBRARY DESTINATION "lib"
++    )
++endif()
++
++if(ENABLE_STATIC)
++    add_library(libsodium-static STATIC ${SODIUM_SRC})
++    target_compile_definitions(libsodium-static
++        PUBLIC
++            SODIUM_STATIC
++            $<$<BOOL:${ENABLE_MINIMAL}>:SODIUM_LIBRARY_MINIMAL>
++        PRIVATE
++            CONFIGURED
++            $<$<BOOL:${ENABLE_MINIMAL}>:MINIMAL>
++            $<$<BOOL:${ENABLE_BLOCKING_RANDOM}>:USE_BLOCKING_RANDOM>
++            $<$<C_COMPILER_ID:MSVC>:_CRT_SECURE_NO_WARNINGS>
++    )
++
++    target_include_directories(libsodium-static
++        PUBLIC
++            src/libsodium/include
++        PRIVATE
++            src/libsodium/include/sodium
++    )
++
++    set_target_properties(libsodium-static PROPERTIES
++        C_STANDARD 99
++        OUTPUT_NAME $<$<BOOL:${WIN32}>:lib>sodium$<$<BOOL:${WIN32}>:_s>
++    )
++
++    install(TARGETS libsodium-static
++        RUNTIME DESTINATION "bin"
++        ARCHIVE DESTINATION "lib"
++        LIBRARY DESTINATION "lib"
++    )
++endif()
++
++install(DIRECTORY src/libsodium/include/sodium
++    DESTINATION "include"
++    PATTERN "Makefile" EXCLUDE
++    PATTERN "Makefile.*" EXCLUDE
++    PATTERN "*.in" EXCLUDE
++    PATTERN "sodium/private" EXCLUDE
++)
++
++install(FILES src/libsodium/include/sodium.h
++    DESTINATION "include"
++)
++
++#if(NOT SODIUM_DISABLE_TESTS)
++#    enable_testing()
++#    add_subdirectory(test)
++#endif()
+\ No newline at end of file

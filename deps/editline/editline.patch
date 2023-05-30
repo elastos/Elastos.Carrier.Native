@@ -1,7 +1,7 @@
-diff -ruN wineditline/src/CMakeLists.txt wineditline-mode/src/CMakeLists.txt
---- wineditline/src/CMakeLists.txt	2023-04-12 11:41:49.000000000 +0800
-+++ wineditline-mode/src/CMakeLists.txt	2023-04-24 14:33:50.000000000 +0800
-@@ -13,16 +13,10 @@
+diff -ruN wineditline-WinEditLine-2.206/src/CMakeLists.txt wineditline-WinEditLine-2.206-mod/src/CMakeLists.txt
+--- wineditline-WinEditLine-2.206/src/CMakeLists.txt	2022-05-04 00:08:43
++++ wineditline-WinEditLine-2.206-mod/src/CMakeLists.txt	2023-05-30 21:54:40
+@@ -13,16 +13,15 @@
  add_executable(edit_test libedit_test.c)
  target_link_libraries(edit_test edit)
  add_executable(edit_test_dll libedit_test_dll.c)
@@ -20,6 +20,11 @@ diff -ruN wineditline/src/CMakeLists.txt wineditline-mode/src/CMakeLists.txt
 -endif()
 +
 +install(TARGETS edit
++    RUNTIME DESTINATION "bin"
++    ARCHIVE DESTINATION "lib"
++    LIBRARY DESTINATION "lib")
++
++install(TARGETS edit_a
 +    RUNTIME DESTINATION "bin"
 +    ARCHIVE DESTINATION "lib"
 +    LIBRARY DESTINATION "lib")
