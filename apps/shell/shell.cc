@@ -88,12 +88,13 @@ void Shell::handleCommands()
     }
 
     auto builder = DefaultConfiguration::Builder {};
-    if (!configFile.empty()) {
-        try {
-            builder.load(configFile);
-        } catch (const std::exception& e) {
-            std::cout << "Can not load the config file: " << configFile << ", error: " << e.what();
-        }
+    if (configFile.empty())
+        configFile = "./shell.conf";
+
+    try {
+        builder.load(configFile);
+    } catch (const std::exception& e) {
+        std::cout << "Can not load the config file: " << configFile << ", error: " << e.what();
     }
 
     if (!addr4.empty())

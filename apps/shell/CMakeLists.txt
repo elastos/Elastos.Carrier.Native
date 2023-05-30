@@ -86,5 +86,4 @@ install(TARGETS carrier-shell
     ARCHIVE DESTINATION "lib"
     LIBRARY DESTINATION "lib")
 
-install(FILES shell.conf
-    DESTINATION "etc/carrier-shell")
+install(FILES shell.conf DESTINATION "bin")
