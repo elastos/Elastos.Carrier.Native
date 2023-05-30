@@ -54,6 +54,7 @@ if(WIN32)
         ${LIBS}
         libsodium.lib
         Ws2_32
+        Rpcrt4
         crypt32
         iphlpapi)
 else()

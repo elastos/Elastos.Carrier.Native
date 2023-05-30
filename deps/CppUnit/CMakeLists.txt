@@ -2,28 +2,10 @@ project(CppUnit)
 
 include(ProjectDefaults)
 include(ExternalProject)
-include(ExternalConfigureArgs)
 
-if(WIN32)
-    set_win_build_options(WIN_BUILD_OPTIONS "")
+if(NOT WIN32)
+    include(ExternalConfigureArgs)
 
-    if("${CMAKE_BUILD_TYPE}" MATCHES "(Debug|RelWithDebInfo)")
-        set(BUILD_SUFFIX "d")
-    endif()
-
-    set(AUTOCONF_CMD "echo")
-    set(AUTOCONF_ARGS "Done")
-
-    set(CONFIGURE_CMD "echo")
-    set(CONFIGURE_ARGS "Done")
-
-    set(BUILD_CMD "msbuild")
-    set(BUILD_ARGS ${WIN_BUILD_OPTIONS} "src/cppunit/cppunit.vcxproj")
-
-    set(INSTALL_CMD
-        xcopy "include\\cppunit" "${PROJECT_INT_DIST_DIR}\\include\\cppunit" /e /i /h /y &&
-        copy "lib\\cppunit${BUILD_SUFFIX}.lib" "${PROJECT_INT_DIST_DIR}\\lib\\cppunit.lib" /y)
-else()
     set(AUTOCONF_CMD "autoreconf")
     set(AUTOCONF_ARGS "-if")
 
@@ -38,23 +20,54 @@ else()
 
     set(INSTALL_CMD "make")
     set(INSTALL_ARGS "install")
+
+    ExternalProject_Add(
+        CppUnit
+
+        PREFIX ${PROJECT_DEPS_BUILD_PREFIX}
+        URL "http://dev-www.libreoffice.org/src/cppunit-1.15.1.tar.gz"
+        URL_HASH SHA256=89c5c6665337f56fd2db36bc3805a5619709d51fb136e51937072f63fcc717a7
+        DOWNLOAD_NAME "cppunit-1.15.1.tar.gz"
+        DOWNLOAD_DIR ${PROJECT_DEPS_TARBALL_DIR}
+        DOWNLOAD_NO_PROGRESS 1
+        LOG_DOWNLOAD FALSE
+
+        BUILD_IN_SOURCE 1
+
+        CONFIGURE_COMMAND ${AUTOCONF_CMD} ${AUTOCONF_ARGS}
+            COMMAND ${CONFIGURE_CMD} ${CONFIGURE_ARGS}
+        BUILD_COMMAND ${BUILD_CMD} ${BUILD_ARGS}
+        INSTALL_COMMAND ${INSTALL_CMD} ${INSTALL_ARGS}
+    )
+else()
+    include(ExternalCMakeArgs)
+
+    ExternalProject_Add(
+        CppUnit
+
+        PREFIX ${PROJECT_DEPS_BUILD_PREFIX}
+        URL "http://dev-www.libreoffice.org/src/cppunit-1.15.1.tar.gz"
+        URL_HASH SHA256=89c5c6665337f56fd2db36bc3805a5619709d51fb136e51937072f63fcc717a7
+        DOWNLOAD_NAME "cppunit-1.15.1.tar.gz"
+        DOWNLOAD_DIR ${PROJECT_DEPS_TARBALL_DIR}
+        DOWNLOAD_NO_PROGRESS 1
+
+        PATCH_COMMAND ${PATCH_EXE} -s -p1 < ${CMAKE_CURRENT_LIST_DIR}/cppunit.patch
+
+        CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_INT_DIST_DIR}
+            -DENABLE_SHARED=OFF
+            -DENABLE_STATIC=ON
+            ${CMAKE_ARGS_INIT}
+    )
+
+    ExternalProject_Add_Step(
+        CppUnit post-install
+        DEPENDEES install
+        WORKING_DIRECTORY "${PROJECT_INT_DIST_DIR}/lib"
+        COMMAND copy cppunit_s.lib cppunit.lib
+    )
 endif()
 
-ExternalProject_Add(
-    CppUnit
-
-    PREFIX ${PROJECT_DEPS_BUILD_PREFIX}
-    URL "http://dev-www.libreoffice.org/src/cppunit-1.15.1.tar.gz"
-    URL_HASH SHA256=89c5c6665337f56fd2db36bc3805a5619709d51fb136e51937072f63fcc717a7
-    DOWNLOAD_NAME "cppunit-1.15.1.tar.gz"
-    DOWNLOAD_DIR ${PROJECT_DEPS_TARBALL_DIR}
-    DOWNLOAD_NO_PROGRESS 1
-    LOG_DOWNLOAD FALSE
-
-    BUILD_IN_SOURCE 1
-
-    CONFIGURE_COMMAND ${AUTOCONF_CMD} ${AUTOCONF_ARGS}
-        COMMAND ${CONFIGURE_CMD} ${CONFIGURE_ARGS}
-    BUILD_COMMAND ${BUILD_CMD} ${BUILD_ARGS}
-    INSTALL_COMMAND ${INSTALL_CMD} ${INSTALL_ARGS}
-)
+if(ENABLE_STATIC)
+    export_static_library(cppunit)
+endif()

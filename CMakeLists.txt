@@ -26,7 +26,7 @@ else()
     set(ENABLE_LAUNCHER_DEFAULT TRUE)
 endif()
 
-set(ENABLE_SHARED FALSE CACHE BOOL "Build shared library")
+set(ENABLE_SHARED TRUE CACHE BOOL "Build shared library")
 set(ENABLE_STATIC TRUE CACHE BOOL "Build static library")
 set(ENABLE_ADDONS TRUE CACHE BOOL "Build addons")
 set(ENABLE_TESTS ${ENABLE_TESTS_DEFAULT} CACHE BOOL "Build test cases")

@@ -1,0 +1,126 @@
+diff -ruN cppunit-1.15.1/CMakeLists.txt cppunit-1.15.1-mod/CMakeLists.txt
+--- cppunit-1.15.1/CMakeLists.txt	1970-01-01 08:00:00
++++ cppunit-1.15.1-mod/CMakeLists.txt	2023-05-30 21:10:10
+@@ -0,0 +1,121 @@
++cmake_minimum_required(VERSION 3.18)
++project("cppunit" VERSION 1.15.1 LANGUAGES CXX)
++
++set(CMAKE_CXX_STANDARD 17)
++set(CMAKE_CXX_STANDARD_REQUIRED on)
++
++option(ENABLE_SHARED "Build shared library" ON)
++option(ENABLE_STATIC "Build static library" ON)
++
++set(CPPUNIT_SRC
++    src/cppunit/AdditionalMessage.cpp
++    src/cppunit/Asserter.cpp
++    src/cppunit/BriefTestProgressListener.cpp
++    src/cppunit/CompilerOutputter.cpp
++    src/cppunit/DefaultProtector.h
++    src/cppunit/DefaultProtector.cpp
++    src/cppunit/DynamicLibraryManager.cpp
++    src/cppunit/DynamicLibraryManagerException.cpp
++    src/cppunit/Exception.cpp
++    src/cppunit/Message.cpp
++    src/cppunit/RepeatedTest.cpp
++    src/cppunit/PlugInManager.cpp
++    src/cppunit/PlugInParameters.cpp
++    src/cppunit/Protector.cpp
++    src/cppunit/ProtectorChain.h
++    src/cppunit/ProtectorContext.h
++    src/cppunit/ProtectorChain.cpp
++    src/cppunit/SourceLine.cpp
++    src/cppunit/StringTools.cpp
++    src/cppunit/SynchronizedObject.cpp
++    src/cppunit/Test.cpp
++    src/cppunit/TestAssert.cpp
++    src/cppunit/TestCase.cpp
++    src/cppunit/TestCaseDecorator.cpp
++    src/cppunit/TestComposite.cpp
++    src/cppunit/TestDecorator.cpp
++    src/cppunit/TestFactoryRegistry.cpp
++    src/cppunit/TestFailure.cpp
++    src/cppunit/TestLeaf.cpp
++    src/cppunit/TestNamer.cpp
++    src/cppunit/TestPath.cpp
++    src/cppunit/TestPlugInDefaultImpl.cpp
++    src/cppunit/TestResult.cpp
++    src/cppunit/TestResultCollector.cpp
++    src/cppunit/TestRunner.cpp
++    src/cppunit/TestSetUp.cpp
++    src/cppunit/TestSuccessListener.cpp
++    src/cppunit/TestSuite.cpp
++    src/cppunit/TestSuiteBuilderContext.cpp
++    src/cppunit/TextOutputter.cpp
++    src/cppunit/TextTestProgressListener.cpp
++    src/cppunit/TextTestResult.cpp
++    src/cppunit/TextTestRunner.cpp
++    src/cppunit/TypeInfoHelper.cpp
++    src/cppunit/UnixDynamicLibraryManager.cpp
++    src/cppunit/ShlDynamicLibraryManager.cpp
++    src/cppunit/XmlDocument.cpp
++    src/cppunit/XmlElement.cpp
++    src/cppunit/XmlOutputter.cpp
++    src/cppunit/XmlOutputterHook.cpp
++    src/cppunit/Win32DynamicLibraryManager.cpp
++)
++
++if(ENABLE_SHARED)
++    add_library(cppunit-shared SHARED ${CPPUNIT_SRC})
++    target_compile_definitions(cppunit-shared
++        PRIVATE
++            CPPUNIT_BUILD_DLL
++            $<$<C_COMPILER_ID:MSVC>:_CRT_SECURE_NO_WARNINGS>
++    )
++
++    target_include_directories(cppunit-shared
++        PUBLIC
++            include
++        PRIVATE
++            include/cppunit
++    )
++
++    set_target_properties(cppunit-shared PROPERTIES
++        OUTPUT_NAME cppunit
++        SOVERSION ${PROJECT_VERSION}
++    )
++
++    install(TARGETS cppunit-shared
++        RUNTIME DESTINATION "bin"
++        ARCHIVE DESTINATION "lib"
++        LIBRARY DESTINATION "lib"
++    )
++endif()
++
++if(ENABLE_STATIC)
++    add_library(cppunit-static STATIC ${CPPUNIT_SRC})
++    target_compile_definitions(cppunit-static
++        PRIVATE
++            $<$<C_COMPILER_ID:MSVC>:_CRT_SECURE_NO_WARNINGS>
++    )
++
++    target_include_directories(cppunit-static
++        PUBLIC
++            include
++        PRIVATE
++            include/cppunit
++    )
++
++    set_target_properties(cppunit-static PROPERTIES
++        OUTPUT_NAME cppunit$<$<BOOL:${WIN32}>:_s>
++    )
++
++    install(TARGETS cppunit-static
++        RUNTIME DESTINATION "bin"
++        ARCHIVE DESTINATION "lib"
++        LIBRARY DESTINATION "lib"
++    )
++endif()
++
++install(DIRECTORY include/cppunit
++    DESTINATION "include"
++    PATTERN "Makefile" EXCLUDE
++    PATTERN "Makefile.*" EXCLUDE
++    PATTERN "*.in" EXCLUDE
++)
+\ No newline at end of file

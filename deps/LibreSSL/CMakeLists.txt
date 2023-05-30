@@ -8,12 +8,12 @@ ExternalProject_Add(
     LibreSSL
 
     PREFIX ${PROJECT_DEPS_BUILD_PREFIX}
-    URL "https://ftp.openbsd.org/pub/OpenBSD/LibreSSL/libressl-3.3.3.tar.gz"
-        "https://cloudflare.cdn.openbsd.org/pub/OpenBSD/LibreSSL/libressl-3.3.3.tar.gz"
-        "https://mirrors.aliyun.com/pub/OpenBSD/LibreSSL/libressl-3.3.3.tar.gz"
-        "https://cdn.openbsd.org/pub/OpenBSD/LibreSSL/libressl-3.3.3.tar.gz"
-    URL_HASH SHA256=a471565b36ccd1a70d0bd7d37c6e95c43a26a62829b487d9d2cdebfe58be3066
-    DOWNLOAD_NAME "libressl-3.3.3.tar.gz"
+    URL "https://ftp.openbsd.org/pub/OpenBSD/LibreSSL/libressl-3.7.3.tar.gz"
+        "https://cloudflare.cdn.openbsd.org/pub/OpenBSD/LibreSSL/libressl-3.7.3.tar.gz"
+        "https://mirrors.aliyun.com/pub/OpenBSD/LibreSSL/libressl-3.7.3.tar.gz"
+        "https://cdn.openbsd.org/pub/OpenBSD/LibreSSL/libressl-3.7.3.tar.gz"
+    URL_HASH SHA256=7948c856a90c825bd7268b6f85674a8dcd254bae42e221781b24e3f8dc335db3
+    DOWNLOAD_NAME "libressl-3.7.3.tar.gz"
     DOWNLOAD_DIR ${PROJECT_DEPS_TARBALL_DIR}
     DOWNLOAD_NO_PROGRESS 1
 
@@ -29,9 +29,9 @@ ExternalProject_Add(
 )
 
 if(WIN32)
-    set(SSL_MAJOR_VERSION 48)
-    set(CRYPTO_MAJOR_VERSION 46)
-    set(TLS_MAJOR_VERSION 20)
+    set(SSL_MAJOR_VERSION 53)
+    set(CRYPTO_MAJOR_VERSION 50)
+    set(TLS_MAJOR_VERSION 26)
 
     ExternalProject_Add_Step(
         LibreSSL post-install
