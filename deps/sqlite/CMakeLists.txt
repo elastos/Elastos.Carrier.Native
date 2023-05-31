@@ -81,5 +81,5 @@ else()
 endif()
 
 if(ENABLE_STATIC)
-    export_static_library(sqlites)
+    export_static_library(sqlite3)
 endif()

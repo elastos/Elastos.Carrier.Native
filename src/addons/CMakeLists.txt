@@ -91,8 +91,8 @@ if(ENABLE_SHARED)
     target_compile_definitions(addons-shared PRIVATE CARRIER_DYNAMIC)
     set_target_properties(addons-shared PROPERTIES
         OUTPUT_NAME addons${SHARED_LIB_DECORATOR}
-        VERSION ${PROJECT_VERSION}
-        SOVERSION ${PROJECT_VERSION_MAJOR})
+        VERSION ${CMAKE_PROJECT_VERSION}
+        SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR})
 
     target_include_directories(addons-shared PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}../include>
