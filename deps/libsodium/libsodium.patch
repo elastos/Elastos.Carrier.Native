@@ -1,7 +1,7 @@
 diff -ruN libsodium-1.0.18/CMakeLists.txt libsodium-1.0.18-mod/CMakeLists.txt
 --- libsodium-1.0.18/CMakeLists.txt	1970-01-01 08:00:00
-+++ libsodium-1.0.18-mod/CMakeLists.txt	2023-05-30 20:20:27
-@@ -0,0 +1,363 @@
++++ libsodium-1.0.18-mod/CMakeLists.txt	2023-05-31 16:36:10
+@@ -0,0 +1,449 @@
 +cmake_minimum_required(VERSION 3.18)
 +project("sodium" VERSION 1.0.18 HOMEPAGE_URL "https://libsodium.org/" LANGUAGES C)
 +
@@ -14,6 +14,91 @@ diff -ruN libsodium-1.0.18/CMakeLists.txt libsodium-1.0.18-mod/CMakeLists.txt
 +option(ENABLE_TESTS "Disable tests" OFF)
 +option(ENABLE_MINIMAL "Only compile the minimum set of functions required for the high-level API" OFF)
 +option(ENABLE_BLOCKING_RANDOM "Enable this switch only if /dev/urandom is totally broken on the target platform" OFF)
++
++check_include_file(emmintrin.h HAVE_EMMINTRIN_H)
++if(HAVE_EMMINTRIN_H)
++    add_definitions(-DHAVE_EMMINTRIN_H=1)
++endif()
++
++check_include_file(pmmintrin.h HAVE_PMMINTRIN_H)
++if(HAVE_PMMINTRIN_H)
++    add_definitions(-DHAVE_PMMINTRIN_H=1)
++endif()
++
++check_include_file(smmintrin.h HAVE_SMMINTRIN_H)
++if(HAVE_SMMINTRIN_H)
++    add_definitions(-DHAVE_SMMINTRIN_H=1)
++endif()
++
++check_include_file(tmmintrin.h HAVE_TMMINTRIN_H)
++if(HAVE_TMMINTRIN_H)
++    add_definitions(-DHAVE_TMMINTRIN_H=1)
++endif()
++
++check_include_file(wmmintrin.h HAVE_WMMINTRIN_H)
++if(HAVE_WMMINTRIN_H)
++    add_definitions(-DHAVE_WMMINTRIN_H=1)
++endif()
++
++check_include_file(immintrin.h HAVE_AVX2INTRIN_H)
++if(HAVE_AVX2INTRIN_H)
++    add_definitions(-DHAVE_AVX2INTRIN_H=1)
++endif()
++
++check_include_file(intrin.h HAVE_INTRIN_H)
++if(HAVE_INTRIN_H)
++    add_definitions(-DHAVE_INTRIN_H=1)
++endif()
++
++check_include_file(alloca.h HAVE_ALLOCA_H)
++if(HAVE_ALLOCA_H)
++    add_definitions(-DHAVE_ALLOCA_H=1)
++endif()
++
++check_include_file(sys/random.h HAVE_SYS_RANDOM_H)
++if(HAVE_SYS_RANDOM_H)
++    add_definitions(-DHAVE_SYS_RANDOM_H=1)
++endif()
++
++check_include_file(sys/mman.h HAVE_SYS_MMAN_H)
++if(HAVE_SYS_MMAN_H)
++    add_definitions(-DHAVE_SYS_MMAN_H=1)
++endif()
++
++check_function_exists(arc4random HAVE_ARC4RANDOM)
++if(HAVE_ARC4RANDOM)
++    add_definitions(-DHAVE_ARC4RANDOM=1)
++endif()
++
++check_function_exists(mprotect HAVE_MPROTECT)
++if(HAVE_MPROTECT)
++    add_definitions(-DHAVE_MPROTECT=1)
++endif()
++
++check_function_exists(mlock HAVE_MLOCK)
++if(HAVE_MLOCK)
++    add_definitions(-DHAVE_MLOCK=1)
++endif()
++
++check_function_exists(madvise HAVE_MADVISE)
++if(HAVE_MADVISE)
++    add_definitions(-DHAVE_MADVISE=1)
++endif()
++
++check_function_exists(posix_memalign HAVE_POSIX_MEMALIGN)
++if(HAVE_POSIX_MEMALIGN)
++    add_definitions(-DHAVE_POSIX_MEMALIGN=1)
++endif()
++
++if(NOT MSVC)
++    set(HAVE_C_VARARRAYS ON)
++    add_definitions(-DHAVE_C_VARARRAYS=1)
++endif()
++
++if(LINUX OR APPLE)
++    set(HAVE_WEAK_SYMBOLS ON)
++    add_definitions(-DHAVE_WEAK_SYMBOLS=1)
++endif()
 +
 +set(SODIUM_SRC
 +    src/libsodium/crypto_aead/chacha20poly1305/sodium/aead_chacha20poly1305.c
@@ -217,7 +302,8 @@ diff -ruN libsodium-1.0.18/CMakeLists.txt libsodium-1.0.18-mod/CMakeLists.txt
 +        src/libsodium/crypto_pwhash/scryptsalsa208sha256/sse/pwhash_scryptsalsa208sha256_sse.c
 +    )
 +endif()
-+if(HAVE_AMD64_ASM)
++
++#if(HAVE_AMD64_ASM)
 +    set(SODIUM_SRC ${SODIUM_SRC}
 +        src/libsodium/crypto_stream/salsa20/xmm6int/salsa20_xmm6int-sse2.c
 +        src/libsodium/crypto_stream/salsa20/xmm6int/salsa20_xmm6int-sse2.h
@@ -225,7 +311,7 @@ diff -ruN libsodium-1.0.18/CMakeLists.txt libsodium-1.0.18-mod/CMakeLists.txt
 +        src/libsodium/crypto_stream/salsa20/xmm6int/u1.h
 +        src/libsodium/crypto_stream/salsa20/xmm6int/u4.h
 +    )
-+endif()
++#endif()
 +
 +# sse3
 +set(SODIUM_SRC ${SODIUM_SRC}

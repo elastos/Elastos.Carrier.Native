@@ -156,8 +156,8 @@ if(ENABLE_SHARED)
     target_compile_definitions(carrier-shared PRIVATE CARRIER_BUILD CARRIER_DYNAMIC)
     set_target_properties(carrier-shared PROPERTIES
         OUTPUT_NAME carrier${SHARED_LIB_DECORATOR}
-        VERSION ${PROJECT_VERSION}
-        SOVERSION ${PROJECT_VERSION_MAJOR})
+        VERSION ${CMAKE_PROJECT_VERSION}
+        SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR})
 
     target_include_directories(carrier-shared PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}../include>
@@ -182,8 +182,3 @@ endif()
 
 install(FILES ${CARRIER_HEADERS} DESTINATION "include/carrier")
 install(FILES "${INCLUDE_DIR}/carrier.h" DESTINATION "include")
-if(WIN32)
-    file(TO_CMAKE_PATH
-        "${PROJECT_INT_DIST_DIR}\\bin\\sqlite3.dll" SHARED_SQLITE3_NAME)
-    install(FILES ${SHARED_SQLITE3_NAME} DESTINATION "bin")
-endif()

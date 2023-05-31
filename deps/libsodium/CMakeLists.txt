@@ -67,5 +67,11 @@ else()
 endif()
 
 if(ENABLE_STATIC)
-    export_static_library(libsodium)
+    if(WIN32)
+        set(_LIBNAME libsodium)
+    else()
+        set(_LIBNAME sodium)
+    endif()
+
+    export_static_library(${_LIBNAME})
 endif()

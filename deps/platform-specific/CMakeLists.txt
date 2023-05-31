@@ -260,7 +260,7 @@ elseif(WIN32)
         PREFIX ${PROJECT_DEPS_BUILD_PREFIX}
         URL "${URL_PREFIX}/mpfr/libmpfr6/libmpfr6-4.2.0-1.tar.zst"
         URL_HASH MD5=${CYGWIN_MPFR6_HASH}
-        DOWNLOAD_NAME "libmpfr6-4.2.0-1.tar"
+        DOWNLOAD_NAME "libmpfr6-4.2.0-1.tar.zst"
         DOWNLOAD_DIR ${PROJECT_DEPS_TARBALL_DIR}
         DOWNLOAD_NO_PROGRESS 1
 
