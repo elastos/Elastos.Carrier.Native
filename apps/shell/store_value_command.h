@@ -66,9 +66,9 @@ protected:
         auto result = future.get();
         std::cout << "----------------------------------------------" << std::endl;
         if (result)
-            std::cout << "Value [" << value->getId() << "] stored." << std::endl;
+            std::cout << "Value [" << value->getId().toBase58String() << "] stored." << std::endl;
         else
-            std::cout << "Value [" << value->getId() << "] store failed." << std::endl;
+            std::cout << "Value [" << value->getId().toBase58String() << "] store failed." << std::endl;
 
         std::cout << "----------------------------------------------" << std::endl;
     };

@@ -69,7 +69,7 @@ public:
         return services;
     }
 
-    class Builder {
+    class CARRIER_PUBLIC Builder {
     public:
         Builder() {
         }

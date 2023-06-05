@@ -34,7 +34,7 @@ public:
     static const std::string toString(int version);
 };
 
-const char* version();
+CARRIER_PUBLIC const char* version();
 
 }
 }

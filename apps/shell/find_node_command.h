@@ -56,7 +56,7 @@ protected:
                 std::cout << " Not found node [" << static_cast<std::string>(id) << "]" << std::endl;
         } else {
             for (auto ni: nodeinfos)
-                std::cout << *ni << std::endl;
+                std::cout << static_cast<std::string>(*ni) << std::endl;
         }
         std::cout << "----------------------------------------------" << std::endl;
     };

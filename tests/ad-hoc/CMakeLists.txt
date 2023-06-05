@@ -44,8 +44,7 @@ list(APPEND TEST_SOURCES
 list(APPEND ADHOC_DEPENDS
     CppUnit
     cpp-httplib
-    carrier0
-    addons0)
+    carrier0)
 
 if(ENABLE_SHARED)
     set(CARRIER_LIB carrier-shared)

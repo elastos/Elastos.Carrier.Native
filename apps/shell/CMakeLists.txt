@@ -31,8 +31,7 @@ list(APPEND SHELL_DEPENDS
     CLI11
     libutf8proc
     editline
-    carrier0
-    addons0)
+    carrier0)
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
     set(SYSTEM_LIBS dl)
@@ -65,9 +64,9 @@ else()
 endif()
 
 if(ENABLE_SHARED)
-    set(LIBS carrier-shared addons-shared ${LIBS})
+    set(LIBS carrier-shared ${LIBS})
 else()
-    set(LIBS carrier-static addons-static ${LIBS})
+    set(LIBS carrier-static ${LIBS})
 endif()
 
 add_executable(carrier-shell ${SHELL_SOURCES})

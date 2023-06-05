@@ -144,7 +144,7 @@ static void run()
         node->start();
         node->bootstrap(remoteNode);
 
-        std::cout << "-------- create new node " << i++ << " /" << node->getId() << std::endl;
+        std::cout << "-------- create new node " << i++ << " /" << node->getId().toBase58String() << std::endl;
 
         for (int j = 0; j < Utils::getRandom(2, 5); j++) {
             auto future = node->findNode(remoteNode.getId());
@@ -154,7 +154,7 @@ static void run()
             } else {
                 std::cout << "       find node " << j << ": get node";
                 for (auto ni: nis)
-                    std::cout << " [" << *ni << "] ";
+                    std::cout << " [" << static_cast<std::string>(*ni) << "] ";
                 std::cout << "" << std::endl;
             }
             std::this_thread::sleep_for(std::chrono::milliseconds(options.interval * 1000));

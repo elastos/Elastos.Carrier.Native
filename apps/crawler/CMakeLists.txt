@@ -71,11 +71,11 @@ endif()
 set(LIBS
     IP2Location)
 
+
 if(ENABLE_SHARED)
-    set(LIBS carrier-shared addons-shared ${LIBS})
-    #set(SYSTEM_LIBS pthread dl)
+set(LIBS carrier-shared ${LIBS})
 else()
-    set(LIBS carrier-static addons-static ${LIBS})
+set(LIBS carrier-static ${LIBS})
 endif()
 
 add_executable(carrier-crawler ${CRAWLER_SOURCES})
