@@ -47,7 +47,7 @@ protected:
         if (value)
             std::cout << static_cast<std::string>(*value) << std::endl;
         else
-            std::cout << "Value " << valueid << " not exists.";
+            std::cout << "Value " << valueid.toBase58String() << " not exists.";
         std::cout << "----------------------------------------------" << std::endl;
     };
 

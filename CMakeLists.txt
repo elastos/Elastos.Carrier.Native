@@ -36,11 +36,7 @@ set(ENABLE_CARRIER_DEVELOPMENT FALSE CACHE BOOL "Eanble carrier development mode
 set(ENABLE_CARRIER_CRAWLER FALSE CACHE BOOL "Eanble carrier crawler")
 
 add_subdirectory(deps)
-add_subdirectory(src/core)
-
-if(ENABLE_ADDONS)
-    add_subdirectory(src/addons)
-endif()
+add_subdirectory(src)
 
 if(ENABLE_TESTS)
     add_subdirectory(tests/apitests)

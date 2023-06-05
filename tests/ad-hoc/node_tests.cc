@@ -70,13 +70,13 @@ void NodeTester::testNode() {
     node1->bootstrap(nij);
 
 #if 1
-    std::cout << "Trying to find Node " << javaId << std::endl;
+    std::cout << "Trying to find Node " << javaId.toBase58String() << std::endl;
     auto future = node1->findNode(javaId);
     auto ni2 = future.get();
     std::cout << "ni2 size: " << ni2.size() << std::endl;
     CPPUNIT_ASSERT_MESSAGE("Node not found!", ni2.size());
     for (auto ni: ni2) {
-        std::cout << "ni: " << *ni << std::endl;
+        std::cout << "ni: " << static_cast<std::string>(*ni) << std::endl;
     }
 #endif
 
@@ -93,7 +93,7 @@ void NodeTester::testNode() {
 
 #if 1
     std::cout << "----------" << std::endl;
-    std::cout << "Trying to find Value with Id: " << value->getId() << std::endl;
+    std::cout << "Trying to find Value with Id: " << value->getId().toBase58String() << std::endl;
     auto future2 = node1->findValue(value->getId());
     auto val = future2.get();
     CPPUNIT_ASSERT_MESSAGE("Value not found!", val != nullptr);
@@ -112,7 +112,7 @@ void NodeTester::testNode() {
 
 #if 1
     std::cout << "----------" << std::endl;
-    std::cout << "Trying to find peer with Id: " << peerId << std::endl;
+    std::cout << "Trying to find peer with Id: " << peerId.toBase58String() << std::endl;
 
     //The node2(announcePeer node) can't save the peer now (the same as Java), so new the node3 for test
     auto b3 = DefaultConfiguration::Builder {};
@@ -131,7 +131,7 @@ void NodeTester::testNode() {
     auto peers = future4.get();
     CPPUNIT_ASSERT_MESSAGE("Peer not found!", !peers.empty());
     for (auto& peer: peers) {
-        std::cout << "Peer: " << peer << std::endl;
+        std::cout << "Peer: " << static_cast<std::string>(*peer) << std::endl;
     }
 
     node3->stop();

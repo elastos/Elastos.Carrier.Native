@@ -20,54 +20,54 @@ if (ENABLE_CARRIER_CRAWLER)
     add_definitions(-DCARRIER_CRAWLER)
 endif()
 
-set(INCLUDE_DIR ../../include)
+set(INCLUDE_DIR ../include)
 
 list(APPEND CARRIER_SOURCES
-    utils/log.cc
-    utils/hex.cc
-    utils/socket_address.cc
-    utils/json_to_any.cc
-    crypto/crypto_core.cc
-    crypto/base58.cc
-    messages/message.cc
-    messages/announce_peer_request.cc
-    messages/error_message.cc
-    messages/find_peer_response.cc
-    messages/find_value_request.cc
-    messages/find_value_response.cc
-    messages/lookup_request.cc
-    messages/lookup_response.cc
-    messages/store_value_request.cc
-    task/task.cc
-    task/task_manager.cc
-    task/lookup_task.cc
-    task/value_lookup.cc
-    task/value_announce.cc
-    task/peer_announce.cc
-    task/peer_lookup.cc
-    task/node_lookup.cc
-    task/ping_refresh_task.cc
-    task/closest_candidates.cc
-    serializers.cc
-    id.cc
-    node_info.cc
-    peer_info.cc
-    value.cc
-    version.cc
-    prefix.cc
-    crypto_context.cc
-    kbucket_entry.cc
-    kclosest_nodes.cc
-    kbucket.cc
-    routing_table.cc
-    dht.cc
-    node.cc
-    token_manager.cc
-    rpccall.cc
-    rpcserver.cc
-    sqlite_storage.cc
-    default_configuration.cc
-    constants.cc
+    core/utils/log.cc
+    core/utils/hex.cc
+    core/utils/socket_address.cc
+    core/utils/json_to_any.cc
+    core/crypto/crypto_core.cc
+    core/crypto/base58.cc
+    core/messages/message.cc
+    core/messages/announce_peer_request.cc
+    core/messages/error_message.cc
+    core/messages/find_peer_response.cc
+    core/messages/find_value_request.cc
+    core/messages/find_value_response.cc
+    core/messages/lookup_request.cc
+    core/messages/lookup_response.cc
+    core/messages/store_value_request.cc
+    core/task/task.cc
+    core/task/task_manager.cc
+    core/task/lookup_task.cc
+    core/task/value_lookup.cc
+    core/task/value_announce.cc
+    core/task/peer_announce.cc
+    core/task/peer_lookup.cc
+    core/task/node_lookup.cc
+    core/task/ping_refresh_task.cc
+    core/task/closest_candidates.cc
+    core/serializers.cc
+    core/id.cc
+    core/node_info.cc
+    core/peer_info.cc
+    core/value.cc
+    core/version.cc
+    core/prefix.cc
+    core/crypto_context.cc
+    core/kbucket_entry.cc
+    core/kclosest_nodes.cc
+    core/kbucket.cc
+    core/routing_table.cc
+    core/dht.cc
+    core/node.cc
+    core/token_manager.cc
+    core/rpccall.cc
+    core/rpcserver.cc
+    core/sqlite_storage.cc
+    core/default_configuration.cc
+    core/constants.cc
 )
 
 list(APPEND CARRIER_HEADERS
@@ -93,8 +93,10 @@ list(APPEND CARRIER_HEADERS
 )
 
 include_directories(
-    .
-    ${INCLUDE_DIR})
+    ${INCLUDE_DIR}
+    ./core
+    ./addons/activeproxy
+    )
 
 list(APPEND CARRIER_DEPENDS
     sqlite
@@ -120,6 +122,29 @@ else()
     set(LIBS
         ${LIBS}
         sodium)
+endif()
+
+if(ENABLE_ADDONS)
+    list(APPEND CARRIER_SOURCES
+        addons/activeproxy/activeproxy.cc
+        addons/activeproxy/connection.cc
+        addons/addons.cc
+    )
+
+    list(APPEND CARRIER_DEPENDS
+        libuv)
+
+    set(LIBS
+        ${LIBS}
+        uv_a)
+
+if(WIN32)
+    set(LIBS
+        ${LIBS}
+        Userenv
+        )
+endif()
+
 endif()
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")

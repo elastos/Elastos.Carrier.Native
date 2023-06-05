@@ -65,9 +65,9 @@ protected:
         auto result = future.get();
         std::cout << "----------------------------------------------" << std::endl;
         if (result)
-            std::cout << "Peer [" << id << "] announced." << std::endl;
+            std::cout << "Peer [" << id.toBase58String() << "] announced." << std::endl;
         else
-            std::cout << "Peer [" << id << "] announce failed." << std::endl;
+            std::cout << "Peer [" << id.toBase58String() << "] announce failed." << std::endl;
         std::cout << "----------------------------------------------" << port << std::endl;
     };
 

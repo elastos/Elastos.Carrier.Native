@@ -90,17 +90,14 @@ list(APPEND APITESTS_DEPENDS
     sqlite
     CppUnit
     carrier0
-    addons0
     libsodium)
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
     set(SYSTEM_LIBS pthread dl)
 endif()
 
-if(ENABLE_SHARED)
-    set(LIBS carrier-shared addons-shared ${LIBS})
-else()
-    set(LIBS carrier-static addons-static ${LIBS})
+if(ENABLE_STATIC)
+    set(LIBS carrier-static ${LIBS})
 endif()
 
 add_executable(apitests ${APITESTS_SOURCES})

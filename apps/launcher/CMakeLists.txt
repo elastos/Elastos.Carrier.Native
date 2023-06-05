@@ -58,7 +58,6 @@ list(APPEND LAUNCHER_SOURCES
 list(APPEND LAUNCHER_DEPENDS
     libuv
     carrier0
-    addons0
     CLI11)
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
@@ -82,10 +81,10 @@ else()
 endif()
 
 if(ENABLE_SHARED)
-    set(LIBS carrier-shared addons-shared ${LIBS})
+    set(LIBS carrier-shared ${LIBS})
     #set(SYSTEM_LIBS pthread dl)
 else()
-    set(LIBS carrier-static addons-static ${LIBS})
+    set(LIBS carrier-static ${LIBS})
 endif()
 
 add_executable(carrier-launcher ${LAUNCHER_SOURCES})
