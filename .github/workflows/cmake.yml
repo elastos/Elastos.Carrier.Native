@@ -117,4 +117,4 @@ jobs:
       - name: Run tests
         shell: cmd
         run: |
-          cd build\windows\dist\bin && .\apitests.exe
+          cd build\windows\dist\bin && apitests.exe

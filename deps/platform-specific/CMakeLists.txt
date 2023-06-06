@@ -54,7 +54,7 @@ elseif(WIN32)
     set(CYGWIN_GMP10_HASH "1ad0e65cb6eeba404fb7da22c8d48ee6")
     set(CYGWIN_MPFR6_HASH "7ba134f28d1a7583f254cfddbaa2166b")
     set(CYGWIN_NCURESESW_HASH "c27315d1ea3f01910696a2b22f410e91")
-    set(CYGWIN_GCC_HASH "4465a5bcf03586c0734f4adeec9115f0")
+    set(CYGWIN_GCC_HASH "1d4e1691e361e4c43e42533ef335ed90")
     set(CYGWIN_READLINE7_HASH "6bced7ea9c1b5ad1e8fb17d62a431cc9")
     set(CYGWIN_PATCH_HASH "c254e28e0687685e74b8213af0b2c6c0")
     set(CYGWIN_DIFF_HASH "7a2adbf1d2c3fda1d7471e799c1eb47b")
@@ -220,9 +220,9 @@ elseif(WIN32)
         DEPENDS cygwin-runtime
 
         PREFIX ${PROJECT_DEPS_BUILD_PREFIX}
-        URL "${URL_PREFIX}/gcc/libgcc1/libgcc1-11.3.1+20230310-0.1.tar.zst"
+        URL "${URL_PREFIX}/gcc/libgcc1/libgcc1-11.4.0-1.tar.zst"
         URL_HASH MD5=${CYGWIN_GCC_HASH}
-        DOWNLOAD_NAME "libgcc1-11.3.1+20230310-0.1.tar"
+        DOWNLOAD_NAME "libgcc1-11.4.0-1.tar"
         DOWNLOAD_DIR ${PROJECT_DEPS_TARBALL_DIR}
         DOWNLOAD_NO_PROGRESS 1
 

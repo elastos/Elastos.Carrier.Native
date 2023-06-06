@@ -73,7 +73,7 @@ void RoutingTableTester::testRoutingTable() {
     for (int i = 0; i < TEST_COUNT; i++) {
         std::cout << "-- RoutingTableTester create node: " << i << std::endl;
         builder.setListeningPort(port++);
-        builder.setStoragePath(dataDir + "/node" + std::to_string(i));
+        builder.setStoragePath(dataDir + Utils::PATH_SEP + "node" + std::to_string(i));
 
         auto node = std::make_shared<Node>(builder.build());
         nodes.emplace_back(node);
