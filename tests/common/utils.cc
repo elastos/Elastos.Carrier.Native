@@ -118,7 +118,7 @@ bool Utils::addressEquals(std::string address1, std::string address2) {
 std::string Utils::getPwdStorage(const std::string dir) {
     char cwd[PATH_MAX];
     getcwd(cwd, PATH_MAX);
-    return std::string(cwd) + PATH_SEP + dir;
+    return dir.empty() ? std::string(cwd) : std::string(cwd) + PATH_SEP + dir;
 }
 
 void Utils::removeStorage(const std::string path) {

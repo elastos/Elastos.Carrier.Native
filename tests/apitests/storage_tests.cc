@@ -55,11 +55,11 @@ void increment(std::vector<uint8_t> value) {
 
 void DataStorageTests::setUp() {
     path = Utils::getPwdStorage("storagetests_out");
-    path1 = path + "/carrier.db";
-    path2 = path + "/carriernode.db";
+    Utils::removeStorage(path);
 
-    Utils::removeStorage(path1);
-    Utils::removeStorage(path2);
+    path1 = path + Utils::PATH_SEP + "carrier1";
+    path2 = path + Utils::PATH_SEP + "carrier2";
+    path3 = path + Utils::PATH_SEP + "carrier3";
 
     //create node1 and node2
     auto b1 = DefaultConfiguration::Builder {};
@@ -67,7 +67,7 @@ void DataStorageTests::setUp() {
     auto ipAddresses = Utils::getLocalIpAddresses();
     b1.setIPv4Address(ipAddresses);
     b1.setListeningPort(42222);
-    b1.setStoragePath(path);
+    b1.setStoragePath(path1);
 
     node1 = std::make_shared<Node>(b1.build());
     node1->start();
@@ -75,7 +75,7 @@ void DataStorageTests::setUp() {
     auto b2 = DefaultConfiguration::Builder {};
     b2.setIPv4Address(ipAddresses);
     b2.setListeningPort(42223);
-    b2.setStoragePath(path);
+    b2.setStoragePath(path2);
 
     node2 = std::make_shared<Node>(b2.build());
     node2->start();
@@ -91,7 +91,7 @@ void DataStorageTests::tearDown() {
 }
 
 void DataStorageTests::testPutAndGetValue() {
-    auto ds = SqliteStorage::open(path1, scheduler);
+    auto ds = SqliteStorage::open(path3, scheduler);
 
     std::list<Id> ids {};
 
@@ -131,7 +131,7 @@ void DataStorageTests::testPutAndGetValue() {
 }
 
 void DataStorageTests::testUpdateSignedValue() {
-    auto ds = SqliteStorage::open(path1, scheduler);
+    auto ds = SqliteStorage::open(path3, scheduler);
 
     // new value: success
     std::string str = "Hello, world";
@@ -181,7 +181,7 @@ void DataStorageTests::testUpdateSignedValue() {
 }
 
 void DataStorageTests::testUpdateEncryptedValue() {
-    auto ds = SqliteStorage::open(path1, scheduler);
+    auto ds = SqliteStorage::open(path3, scheduler);
 
     // new value: success
     auto to = node2->getId();
@@ -231,7 +231,7 @@ void DataStorageTests::testUpdateEncryptedValue() {
 }
 
 void DataStorageTests::testPutAndGetPeer() {
-    auto ds = SqliteStorage::open(path1, scheduler);
+    auto ds = SqliteStorage::open(path3, scheduler);
 
     std::list<Id> ids {};
 

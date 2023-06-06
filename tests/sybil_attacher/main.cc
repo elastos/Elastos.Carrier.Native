@@ -122,7 +122,7 @@ static void run()
     if (options.mode == 0)
         storagePath = dataDir + Utils::PATH_SEP + "node1";
     else
-        storagePath = dataDir + Utils::PATH_SEP + "/node2";
+        storagePath = dataDir + Utils::PATH_SEP + "node2";
 
     Utils::removeStorage(storagePath);
 

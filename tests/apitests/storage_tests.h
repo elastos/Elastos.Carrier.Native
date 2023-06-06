@@ -53,6 +53,7 @@ private:
     std::string path;
     std::string path1;
     std::string path2;
+    std::string path3;
 };
 
 }  // namespace test

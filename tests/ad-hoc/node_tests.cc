@@ -57,7 +57,7 @@ void NodeTester::setUp() {
 
     b1.setIPv4Address(ipAddresses);
     b1.setListeningPort(42222);
-    b1.setStoragePath(dataDir + "/temp1");
+    b1.setStoragePath(dataDir + Utils::PATH_SEP + "temp1");
 
     node1 = std::make_shared<Node>(b1.build());
     node1->start();
@@ -116,7 +116,7 @@ void NodeTester::testNode() {
 
     //The node2(announcePeer node) can't save the peer now (the same as Java), so new the node3 for test
     auto b3 = DefaultConfiguration::Builder {};
-    std::string _path = dataDir + "/temp3";
+    std::string _path = dataDir + Utils::PATH_SEP + "temp3";
     Utils::removeStorage(_path);
 
     b3.setStoragePath(_path);
