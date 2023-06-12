@@ -27,12 +27,34 @@
 namespace elastos {
 namespace carrier {
 
+/**
+ * @brief 记录节点状态
+ *
+ */
 enum class CARRIER_PUBLIC NodeStatus {
+    /**
+     * @brief 节点已停止
+     *
+     */
 	Stopped,
+    /**
+     * @brief 节点仅初始化，未运行
+     *
+     */
 	Initializing,
+    /**
+     * @brief 节点正在运行中
+     *
+     */
 	Running
 };
 
+/**
+ * @brief
+ *
+ * @param status
+ * @return std::string
+ */
 inline std::string statusToString(NodeStatus status) noexcept {
     switch (status) {
     case NodeStatus::Initializing:

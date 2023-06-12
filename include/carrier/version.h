@@ -28,9 +28,26 @@
 namespace elastos {
 namespace carrier {
 
+/**
+ * @brief 用于记录版本信息（版本名和版本号）
+ *
+ */
 class CARRIER_PUBLIC Version {
 public:
+    /**
+     * @brief 获取版本号
+     *
+     * @param name 版本名称
+     * @param version 版本号
+     * @return int 返回版本名称和版本号经过算法得到的版本内容号
+     */
     static int build(std::string& name, int version);
+    /**
+     * @brief 获取可读的版本信息
+     *
+     * @param version 版本内容号
+     * @return const std::string 返回版本内容字符串
+     */
     static const std::string toString(int version);
 };
 

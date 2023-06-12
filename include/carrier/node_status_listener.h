@@ -28,8 +28,18 @@
 namespace elastos {
 namespace carrier {
 
+/**
+ * @brief 用于接受节点状态变化
+ *
+ */
 class CARRIER_PUBLIC NodeStatusListener {
 public:
+    /**
+     * @brief 若节点状态为oldStatus，则更改节点状态为newStatus
+     *
+     * @param newStatus 节点新状态
+     * @param oldStatus 节点旧状态
+     */
     virtual void statusChanged(NodeStatus newStatus, NodeStatus oldStatus) {};
 };
 

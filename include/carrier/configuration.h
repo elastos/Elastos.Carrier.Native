@@ -34,21 +34,48 @@
 namespace elastos {
 namespace carrier {
 
+/**
+ * @brief 提供配置Node的方法
+ *
+ */
 class CARRIER_PUBLIC Configuration {
 public:
+    /**
+     * @brief 从配置中读取ipv4地址
+     *
+     * @return SocketAddress& 返回ipv4地址
+     */
     virtual SocketAddress& ipv4Address() = 0;
+    /**
+     * @brief 从配置中读取ipv6地址
+     *
+     * @return SocketAddress& 返回ipv6地址
+     */
     virtual SocketAddress& ipv6Address() = 0;
-
+    /**
+     * @brief 从配置中读取监听端口
+     *
+     * @return int 返回监听端口
+     */
     virtual int listeningPort() = 0;
 
     /**
-     * If a Path that points to an existing, writable directory is returned then the routing table
-     * will be persisted to that directory periodically and during shutdown
+     * @brief 从配置中获取Node存储路径
+     * @return const std::string& 返回Node存储路径
      */
     virtual const std::string& getStoragePath() = 0;
 
+    /**
+     * @brief 从配置中获取已bootstrap的节点
+     *
+     * @return std::vector<Sp<NodeInfo>>& 返回节点列表
+     */
     virtual std::vector<Sp<NodeInfo>>& getBootstrapNodes() = 0;
-
+    /**
+     * @brief 从配置中获取服务列表
+     *
+     * @return std::map<std::string, std::any>& 返回服务列表
+     */
     virtual std::map<std::string, std::any>& getServices() = 0;
 };
 

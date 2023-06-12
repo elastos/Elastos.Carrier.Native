@@ -34,66 +34,160 @@
 namespace elastos {
 namespace carrier {
 
+/**
+ * @brief 记录Value信息
+ *
+ */
 class CARRIER_PUBLIC Value {
 public:
+    /**
+     * @brief 创建一个新的空Value
+     *
+     */
     Value() = default;
+    /**
+     * @brief Value的复制拷贝函数
+     *
+     */
     Value(const Value&) = delete;
+    /**
+     * @brief Value的复制拷贝函数
+     *
+     */
     Value(Value&&) = delete;
+    /**
+     * @brief 重载Value的operator=
+     *
+     * @return Value& 被复制的Value对象
+     */
     Value& operator=(const Value&) = delete;
-
+    /**
+     * @brief 计算指定Value的Id
+     *
+     * @param value Value对象
+     * @return Id 返回Id对象
+     */
     static Id calculateId(const Value& value);
-
+    /**
+     * @brief 获取Value的Id
+     *
+     * @return Id 返回Id对象
+     */
     Id getId() const {
         return Value::calculateId(*this);
     }
-
+    /**
+     * @brief 获取生成Id的公钥
+     *
+     * @return const Id& 返回Id对象
+     */
     const Id& getPublicKey() const noexcept {
         return publicKey;
     }
-
+    /**
+     * @brief 获取Value的接受节点
+     *
+     * @return const Id& 返回接受节点Id
+     */
     const Id& getRecipient() const noexcept {
         return recipient;
     }
-
+    /**
+     * @brief 判断Value是否含有私钥
+     *
+     * @return true Value含有私钥
+     * @return false Value不含有私钥
+     */
     bool hasPrivateKey() const noexcept {
         return static_cast<bool>(privateKey);
     }
-
+    /**
+     * @brief 获取Value的序列号
+     *
+     * @return int 返回序列号
+     */
     int getSequenceNumber() const noexcept {
         return sequenceNumber;
     }
-
+    /**
+     * @brief 获取Value的Nonce对象
+     *
+     * @return const CryptoBox::Nonce& 返回Nonce对象
+     */
     const CryptoBox::Nonce& getNonce() const  noexcept{
         return nonce;
     }
-
+    /**
+     * @brief 获取Value的签名内容
+     *
+     * @return const std::vector<uint8_t>& 返回签名数据包
+     */
     const std::vector<uint8_t>& getSignature() const noexcept {
         return signature;
     }
-
+    /**
+     * @brief 获取Value的数据包
+     *
+     * @return const std::vector<uint8_t>& 返回二进制数据包
+     */
     const std::vector<uint8_t>& getData() const noexcept {
         return data;
     }
-
+    /**
+     * @brief 获取Value的大小（数据大小加上签名数据大小）
+     *
+     * @return size_t 返回Value大小
+     */
     size_t size() const noexcept {
         return data.size() + signature.size();
     }
-
+    /**
+     * @brief 判断Value是否经过加密
+     *
+     * @return true Value经过加密
+     * @return false Value未经过加密
+     */
     bool isEncrypted() const noexcept {
         return static_cast<bool>(recipient);
     }
-
+    /**
+     * @brief 判断Value是否经过签名
+     *
+     * @return true Value经过签名
+     * @return false Value未经过签名
+     */
     bool isSigned() const noexcept {
         return !signature.empty();
     }
-
+    /**
+     * @brief 判断Value是否可更改数据内容
+     *
+     * @return true Value可被更改数据
+     * @return false Value不可被更改数据
+     */
     bool isMutable() const noexcept {
         return static_cast<bool>(publicKey);
     }
-
+    /**
+     * @brief 判断Value是否是有效Value
+     *
+     * @return true Value有效
+     * @return false Value无效（如签名无效，加解密无效等）
+     */
     bool isValid() const;
-
+    /**
+     * @brief 重载Value的operator==
+     *
+     * @param other 被比较的Value对象
+     * @return true 当前Value和被比较的Value的相等
+     * @return false 当前Value和被比较的Value的不等
+     */
     bool operator== (const Value& other) const;
+    /**
+     * @brief 获取可读的Value的信息
+     *
+     * @return std::string 返回可读的信息字符串
+     */
     operator std::string() const;
 
 private: // internal methods used in friend class.

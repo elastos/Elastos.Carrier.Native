@@ -38,6 +38,10 @@ set(ENABLE_CARRIER_CRAWLER FALSE CACHE BOOL "Eanble carrier crawler")
 add_subdirectory(deps)
 add_subdirectory(src)
 
+if(ENABLE_DOCS)
+   add_subdirectory(docs)
+endif()
+
 if(ENABLE_TESTS)
     add_subdirectory(tests/apitests)
     add_subdirectory(tests/ad-hoc)
@@ -51,10 +55,6 @@ endif()
 
 if(ENABLE_CARRIER_CRAWLER)
     add_subdirectory(apps/crawler)
-endif()
-
-if(ENABLE_DOCS)
-   add_subdirectory(docs)
 endif()
 
 add_custom_target(dist

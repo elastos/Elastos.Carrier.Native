@@ -27,10 +27,31 @@
 namespace elastos {
 namespace carrier {
 
+/**
+ * @brief 查找节点的方式选项
+ *
+ */
 enum class CARRIER_PUBLIC LookupOption {
+    /**
+     * @brief 保留字段
+     *
+     */
     LOCAL, /* reserved */
+    /**
+     * @brief 简便模式：若节点本地有待查找节点信息，直接使用本地存储的信息，返回结果；若本地没有待查找节点，则进入optimistic模式
+     *
+     */
     ARBITRARY,
+    /**
+     * @brief 快速模式：无论节点本地是否有待查节点信息，发起DHT查找请求，第一次拿到lookup的结果即刻结束，并返回结果
+     *
+     */
     OPTIMISTIC,
+    /**
+     * @brief 全流程模式：OPTIMISTIC的进化，节点要求执行完整的DHT查找请求
+     *                  将过程中得到的结果进行相应处理，并返回结果
+     *
+     */
     CONSERVATIVE
 };
 

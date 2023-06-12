@@ -667,7 +667,7 @@ public:
     const Blob blob() const noexcept {
         return key;
     }
-    
+
     void clear() noexcept {
         key.fill(0);
     }
@@ -704,7 +704,7 @@ public:
     static void decrypt(Blob& plain, const Blob& cipher, const Nonce& nonce,
             const PublicKey& pk, const PrivateKey& sk);
 
-    static std::vector<uint8_t> decrypt(const Blob& cipher, const Nonce &nonce, 
+    static std::vector<uint8_t> decrypt(const Blob& cipher, const Nonce &nonce,
             const PublicKey& pk, const PrivateKey& sk) {
         std::vector<uint8_t> plain(cipher.size() - MAC_BYTES);
         Blob _plain{plain};
