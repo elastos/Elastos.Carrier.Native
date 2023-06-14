@@ -39,11 +39,9 @@ public:
 protected:
     void setupOptions() override {
         add_option("NAME", name, "The service name to be announce.");
-        add_option("PROXYID", proxyId, "The service proxy id to be announce.");
         add_option("PORT", port, "The service port to be announce.");
         add_option("ALT", alt, "The service alt to be announce.");
-        add_option("SIGNATURE", port, "The service signature to be announce.");
-        require_option(5, 5);
+        require_option(3, 3);
     };
 
     void execute() override {
@@ -63,19 +61,10 @@ protected:
         std::memcpy((void*)data.data(), nname, strlen(nname));
         auto d = SHA256::digest(data);
         auto id = Id(d);
-        auto pxid = Id();
-        std::vector<uint8_t> sig(64);
-        if (!proxyId.empty()) {
-            pxid = Id(proxyId);
-            if (signature.empty()) {
-                std::cout << "----------------------------------------------" << std::endl
-                        << "Invalid signature: " << signature << std::endl
-                        << "----------------------------------------------" << std::endl;
-                return;
-            }
-        }
 
-        auto future = node->announcePeer(id, pxid, port, alt, sig);
+        const char* alternative = (const char *)utf8proc_NFC((unsigned char *)(alt.c_str()));
+
+        auto future = node->announcePeer(id, port, alternative);
         auto result = future.get();
         std::cout << "----------------------------------------------" << std::endl;
         if (result)
@@ -87,8 +76,6 @@ protected:
 
 private:
     std::string name {};
-    std::string proxyId {};
     uint16_t port = 0;
     std::string alt;
-    std::string signature {};
 };
