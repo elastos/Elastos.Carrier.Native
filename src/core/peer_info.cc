@@ -23,16 +23,49 @@
 
 #include "carrier/peer_info.h"
 #include "carrier/socket_address.h"
+#include "utils/hex.h"
 
 namespace elastos {
 namespace carrier {
 
+PeerInfo::PeerInfo(const Blob& id, const Blob& pid, uint16_t _port, const std::string _alt, const Blob& sig, int _family)
+    : nodeId(id), proxyId(pid), port(_port), alt(_alt), family(_family) {
+    setSignature(sig);
+    if (proxyId != Id::zero()) {
+        usedProxy = true;
+    }
+}
+
+PeerInfo::PeerInfo(const Blob& id, uint16_t port, const std::string alt, const Blob& sig, int family) {
+    PeerInfo(id, {}, port, alt, sig, family);
+}
+
+PeerInfo::PeerInfo(const Id& id, const Id& pid, uint16_t _port, const std::string _alt,  const std::vector<std::uint8_t>& sig, int _family)
+    : nodeId(id), proxyId(pid), port(_port), alt(_alt), signature(sig), family(_family) {
+    if (proxyId != Id::zero()) {
+        usedProxy = true;
+    }
+}
+
+PeerInfo::PeerInfo(const PeerInfo& pi)
+    : nodeId(pi.nodeId), proxyId(pi.proxyId), port(pi.port), alt(pi.alt), signature(pi.signature), family(pi.family) {}
+
+
+bool PeerInfo::operator==(const PeerInfo& other) const {
+    return nodeId == other.nodeId && proxyId == other.proxyId && port == other.port
+                && alt == other.alt && signature == other.signature && family == other.family;
+}
+
 PeerInfo::operator std::string() const {
     std::stringstream ss;
     ss.str().reserve(80);
-    ss << "<" << nodeId.toBase58String()
-        << "," << sockaddr.host()
-        << "," << std::to_string(sockaddr.port())
+    ss << "<" << nodeId.toBase58String();
+    if (usedProxy)
+        ss << "," << proxyId.toBase58String();
+    ss << "," << std::to_string(port);
+    if (!alt.empty())
+        ss << "," << alt;
+    ss << ",sig:" << Hex::encode(signature)
         << ">";
 
     return ss.str();
@@ -42,6 +75,47 @@ std::ostream& operator<< (std::ostream& os, const PeerInfo& pi) {
     os << static_cast<std::string>(pi);
     return os;
 }
+
+std::vector<uint8_t> PeerInfo::createSignature(const Signature::PrivateKey& privateKey, const Id& nodeId,
+        uint16_t port, const std::string& alt) {
+
+    auto size = nodeId.size() + sizeof(port) + alt.size();
+    std::vector<uint8_t> toSign(size);
+
+    toSign.insert(toSign.begin(), nodeId.cbegin(), nodeId.cend());
+    toSign.insert(toSign.end(), (uint8_t*)(&port), (uint8_t*)(&port) + sizeof(port));
+    toSign.insert(toSign.end(), alt.cbegin(), alt.cend());
+
+    return privateKey.sign(toSign);
+}
+
+bool PeerInfo::verifySignature() const {
+    auto size = nodeId.size() + sizeof(port) + alt.size();
+    if (usedProxy)
+        size += proxyId.size();
+
+    std::vector<uint8_t> toVerify(size);
+    toVerify.insert(toVerify.begin(), nodeId.cbegin(), nodeId.cend());
+    if (usedProxy)
+        toVerify.insert(toVerify.end(), proxyId.cbegin(), proxyId.cend());
+
+    toVerify.insert(toVerify.end(), (uint8_t*)(&port), (uint8_t*)(&port) + sizeof(port));
+    toVerify.insert(toVerify.end(), alt.cbegin(), alt.cend());
+
+    Signature::PublicKey sender {};
+    if (usedProxy)
+        sender = Signature::PublicKey(proxyId.blob());
+    else
+        sender = Signature::PublicKey(nodeId.blob());
+    return sender.verify(signature, toVerify);
+}
+
+
+bool PeerInfo::isValid() const {
+    // assert(!signature.empty());
+    return verifySignature();
+}
+
 
 }
 }

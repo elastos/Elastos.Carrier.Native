@@ -483,7 +483,16 @@ std::future<std::list<Sp<PeerInfo>>> Node::findPeer(const Id& id, int expected, 
     return promise->get_future();
 }
 
-std::future<bool> Node::announcePeer(const Id& id, int port) const {
+std::future<bool> Node::announcePeer(const Id& peerId, uint16_t port, const std::string& alt) const {
+    return announcePeer(peerId, {}, port, alt, {});
+}
+
+std::future<bool> Node::announcePeer(const Id& peerId, const Id& proxyId, uint16_t port,
+        const std::string& alt, std::vector<std::uint8_t> signature) const {
+
+    if (proxyId == Id::zero())
+        signature = PeerInfo::createSignature(keyPair.privateKey(), id, port, alt);
+
     if (!isRunning())
         throw std::runtime_error("Node is not running");
 
@@ -520,9 +529,9 @@ std::future<bool> Node::announcePeer(const Id& id, int port) const {
     };
 
     if (dht4 != nullptr)
-        dht4->announcePeer(id, port, completeHandler);
+        dht4->announcePeer(peerId, proxyId, port, alt, signature, completeHandler);
     if (dht6 != nullptr)
-        dht6->announcePeer(id, port, completeHandler);
+        dht6->announcePeer(peerId, proxyId, port, alt, signature, completeHandler);
 
 	return promise->get_future();
 }

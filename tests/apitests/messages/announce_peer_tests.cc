@@ -34,7 +34,8 @@ void AnnouncePeerTests::setUp() {
 }
 
 void AnnouncePeerTests::testAnnouncePeerRequestSize() {
-    auto msg = AnnouncePeerRequest(Id::random(), 65535, 0x88888888);
+    std::vector<uint8_t> sig(64, 1);
+    auto msg = AnnouncePeerRequest(Id::random(), Id::random(), 65535, "test size", sig, 0x88888888);
     msg.setId(Id::random());
     msg.setTxid(0x87654321);
     msg.setVersion(VERSION);
@@ -46,11 +47,14 @@ void AnnouncePeerTests::testAnnouncePeerRequestSize() {
 void AnnouncePeerTests::testAnnouncePeerRequest() {
     auto nodeId = Id::random();
     auto peerId = Id::random();
+    auto proxyId = Id::random();
+    std::string alt = "test announce peer";
+    std::vector<uint8_t> sig(64, 2);
     int txid  = Utils::getRandomValue();
-    int port  = Utils::getRandom(1, 65535);
+    uint16_t port  = Utils::getRandom(1, 65535);
     int token = Utils::getRandomValue();
 
-    auto msg = AnnouncePeerRequest(peerId, port, token);
+    auto msg = AnnouncePeerRequest(peerId, proxyId, port, alt, sig, token);
     msg.setId(nodeId);
     msg.setTxid(txid);
     msg.setVersion(VERSION);
@@ -68,6 +72,9 @@ void AnnouncePeerTests::testAnnouncePeerRequest() {
     CPPUNIT_ASSERT_EQUAL(peerId, _msg->getTarget());
     CPPUNIT_ASSERT_EQUAL(txid,   _msg->getTxid());
     CPPUNIT_ASSERT_EQUAL(port,   _msg->getPort());
+    CPPUNIT_ASSERT_EQUAL(proxyId,   _msg->getProxyId());
+    CPPUNIT_ASSERT_EQUAL(alt,  _msg->getAlt());
+    CPPUNIT_ASSERT(sig ==  _msg->getSignature());
     CPPUNIT_ASSERT_EQUAL(token,  _msg->getToken());
     CPPUNIT_ASSERT_EQUAL(VERSION_STR, _msg->getReadableVersion());
 }

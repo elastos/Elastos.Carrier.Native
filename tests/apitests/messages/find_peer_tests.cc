@@ -151,13 +151,14 @@ void FindPeerTests::testFindPeerResponseSize() {
     nodes6.push_back(std::make_shared<NodeInfo>(Id::random(), "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff", 65529));
     nodes6.push_back(std::make_shared<NodeInfo>(Id::random(), "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff", 65528));
 
+    std::vector<uint8_t> sig(64, 'S');
     std::list<std::shared_ptr<PeerInfo>> peers4 {};
     for (int i = 0; i < 32; i++)
-        peers4.push_back(std::make_shared<PeerInfo>(Id::random(), "251.251.251.251", 65535 - i));
+        peers4.push_back(std::make_shared<PeerInfo>(Id::random(), Id::random(), 65535 - i, "test response, size", sig));
 
     std::list<std::shared_ptr<PeerInfo>> peers6 {};
     for (int i = 0; i < 16; i++)
-        peers6.push_back(std::make_shared<PeerInfo>(Id::random(), "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff", 65535 - i));
+        peers6.push_back(std::make_shared<PeerInfo>(Id::random(), Id(), 65535 - i, "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff", sig, AF_INET6));
 
     auto msg = FindPeerResponse(0xF7654321);
     msg.setId(Id::random());
@@ -194,9 +195,10 @@ void FindPeerTests::testFindPeerResponse4() {
     nodes4.push_back(std::make_shared<NodeInfo>(Id::random(), "192.168.1.4", 1234));
     nodes4.push_back(std::make_shared<NodeInfo>(Id::random(), "192.168.1.5", 1235));
 
+    std::vector<uint8_t> sig(64, 4);
     std::list<std::shared_ptr<PeerInfo>> peers4 {};
     for (int i = 0; i < Utils::getRandom(8, 48); i++)
-        peers4.push_back(std::make_shared<PeerInfo>(Id::random(), "251.251.251.251", 65535 - i));
+        peers4.push_back(std::make_shared<PeerInfo>(Id::random(), Id::random(), 65535 - i, "test peer4", sig));
 
     auto msg = FindPeerResponse(txid);
     msg.setId(id);
@@ -209,24 +211,24 @@ void FindPeerTests::testFindPeerResponse4() {
     CPPUNIT_ASSERT(serialized.size() <= msg.estimateSize());
 
     auto parsed = Message::parse(serialized.data(), serialized.size());
-    parsed->setId(id);
-    auto _msg = std::static_pointer_cast<FindPeerResponse>(parsed);
+   parsed->setId(id);
+   auto _msg = std::static_pointer_cast<FindPeerResponse>(parsed);
 
-    CPPUNIT_ASSERT_EQUAL(Message::Type::RESPONSE, _msg->getType());
-    CPPUNIT_ASSERT_EQUAL(Message::Method::FIND_PEER, _msg->getMethod());
-    CPPUNIT_ASSERT_EQUAL(id, _msg->getId());
-    CPPUNIT_ASSERT_EQUAL(txid, _msg->getTxid());
-    CPPUNIT_ASSERT_EQUAL(VERSION_STR, _msg->getReadableVersion());
-    CPPUNIT_ASSERT_EQUAL(token, _msg->getToken());
-    CPPUNIT_ASSERT(_msg->getNodes6().empty());
-    CPPUNIT_ASSERT(!_msg->getNodes4().empty());
-    CPPUNIT_ASSERT(!_msg->getPeers4().empty());
+   CPPUNIT_ASSERT_EQUAL(Message::Type::RESPONSE, _msg->getType());
+   CPPUNIT_ASSERT_EQUAL(Message::Method::FIND_PEER, _msg->getMethod());
+   CPPUNIT_ASSERT_EQUAL(id, _msg->getId());
+   CPPUNIT_ASSERT_EQUAL(txid, _msg->getTxid());
+   CPPUNIT_ASSERT_EQUAL(VERSION_STR, _msg->getReadableVersion());
+   CPPUNIT_ASSERT_EQUAL(token, _msg->getToken());
+   CPPUNIT_ASSERT(_msg->getNodes6().empty());
+   CPPUNIT_ASSERT(!_msg->getNodes4().empty());
+   CPPUNIT_ASSERT(!_msg->getPeers4().empty());
 
-    auto nodes = _msg->getNodes4();
-    CPPUNIT_ASSERT(Utils::arrayEquals(nodes4, nodes));
+   auto nodes = _msg->getNodes4();
+   CPPUNIT_ASSERT(Utils::arrayEquals(nodes4, nodes));
 
-    auto peers = _msg->getPeers4();
-    CPPUNIT_ASSERT(Utils::arrayEquals(peers4, peers));
+   auto peers = _msg->getPeers4();
+   CPPUNIT_ASSERT(Utils::arrayEquals(peers4, peers));
 }
 
 void FindPeerTests::testFindPeerResponse6() {
@@ -241,9 +243,10 @@ void FindPeerTests::testFindPeerResponse6() {
     nodes6.push_back(std::make_shared<NodeInfo>(Id::random(), "2001:0db8:85a3:0000:0000:8a2e:0370:7334", 1234));
     nodes6.push_back(std::make_shared<NodeInfo>(Id::random(), "2001:0db8:85a3:0000:0000:8a2e:0370:7335", 1235));
 
+    std::vector<uint8_t> sig(64, 6);
     std::list<std::shared_ptr<PeerInfo>> peers6 {};
     for (int i = 0; i < Utils::getRandom(8, 48); i++)
-        peers6.push_back(std::make_shared<PeerInfo>(Id::random(), "2001:0db8:85a3:0000:0000:8a2e:0370:7335", 65535 - i));
+        peers6.push_back(std::make_shared<PeerInfo>(Id::random(), Id::random(), 65535 - i, "test peer6", sig, AF_INET6));
 
     auto msg = FindPeerResponse(txid);
     msg.setId(id);
@@ -295,14 +298,15 @@ void FindPeerTests::testFindPeerResponse46() {
     nodes6.push_back(std::make_shared<NodeInfo>(Id::random(), "2001:0db8:85a3:0000:0000:8a2e:0370:7334", 1234));
     nodes6.push_back(std::make_shared<NodeInfo>(Id::random(), "2001:0db8:85a3:0000:0000:8a2e:0370:7335", 1235));
 
+    std::vector<uint8_t> sig(64, 46);
     std::list<std::shared_ptr<PeerInfo>> peers4 = {};
     for (int i = 0; i < Utils::getRandom(8, 48); i++) {
-        peers4.push_back(std::make_shared<PeerInfo>(Id::random(), "192.168.1.2", 65535 - i));
+        peers4.push_back(std::make_shared<PeerInfo>(Id::random(), Id::random(), 65535 - i, "192.168.1.2", sig));
     }
 
     std::list<std::shared_ptr<PeerInfo>> peers6 = {};
     for (int i = 0; i < Utils::getRandom(8, 48); i++) {
-        peers6.push_back(std::make_shared<PeerInfo>(Id::random(), "2001:0db8:85a3:0000:0000:8a2e:0370:7335", 65535 - i));
+        peers6.push_back(std::make_shared<PeerInfo>(Id::random(), Id::random(), 65535 - i, "2001:0db8:85a3:0000:0000:8a2e:0370:7335", sig, AF_INET6));
     }
 
     auto msg = FindPeerResponse(txid);

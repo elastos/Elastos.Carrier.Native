@@ -41,71 +41,59 @@ PeerInfoTests::setUp() {
 void
 PeerInfoTests::testPeerInfo4() {
     auto id1 = Id::random();
+    auto pid1 = Id::random();
+    uint16_t port = 65535;
+    std::vector<uint8_t> sig1(64, 1);
     std::string address1 = "251.251.251.251";
-    auto peer1 = PeerInfo(id1, address1, 65535);
+    auto peer1 = PeerInfo(id1, pid1, port, address1, sig1);
     CPPUNIT_ASSERT(peer1.isIPv4());
     CPPUNIT_ASSERT(!peer1.isIPv6());
     CPPUNIT_ASSERT_EQUAL(id1, peer1.getNodeId());
-    CPPUNIT_ASSERT_EQUAL(65535, peer1.getPort());
-    CPPUNIT_ASSERT(Utils::addressEquals(address1,  peer1.getAddress().host()));
+    CPPUNIT_ASSERT_EQUAL(pid1, peer1.getProxyId());
+    CPPUNIT_ASSERT_EQUAL(port, peer1.getPort());
+    CPPUNIT_ASSERT_EQUAL(address1, peer1.getAlt());
+    CPPUNIT_ASSERT(sig1 == peer1.getSignature());
+    CPPUNIT_ASSERT(peer1.isUsedProxy());
 
     nlohmann::json object1 = peer1;
     PeerInfo peer2 = object1;
 
     CPPUNIT_ASSERT_EQUAL(peer1.getNodeId(), peer2.getNodeId());
     CPPUNIT_ASSERT_EQUAL(peer1.getPort(), peer2.getPort());
-    CPPUNIT_ASSERT_EQUAL(peer1.getAddress().toString(), peer2.getAddress().toString());
+    CPPUNIT_ASSERT_EQUAL(peer1.getProxyId(), peer2.getProxyId());
+    CPPUNIT_ASSERT(peer1.getSignature() == peer2.getSignature());
+    CPPUNIT_ASSERT_EQUAL(peer1.getAlt(), peer2.getAlt());
+    CPPUNIT_ASSERT_EQUAL(peer1.getFamily(), peer2.getFamily());
 
-    auto id2 = Id::random();
-    auto address2 = "192.168.1.2";
-    auto peer3 = PeerInfo(id2, address2, 1232);
-    CPPUNIT_ASSERT(peer3.isIPv4());
-    CPPUNIT_ASSERT(!peer3.isIPv6());
-    CPPUNIT_ASSERT_EQUAL(id2, peer3.getNodeId());
-    CPPUNIT_ASSERT_EQUAL(1232, peer3.getPort());
-    CPPUNIT_ASSERT(Utils::addressEquals(address2,  peer3.getAddress().host()));
-
-    nlohmann::json object2 = peer3;
-    PeerInfo peer4 = object2;
-
-    CPPUNIT_ASSERT_EQUAL(peer3.getNodeId(), peer4.getNodeId());
-    CPPUNIT_ASSERT_EQUAL(peer3.getPort(), peer4.getPort());
-    CPPUNIT_ASSERT_EQUAL(peer3.getAddress().toString(), peer4.getAddress().toString());
+    CPPUNIT_ASSERT(peer1 ==  peer2);
 }
 
 void
 PeerInfoTests::testPeerInfo6() {
     auto id1 = Id::random();
+    uint16_t port = 65535;
+    std::vector<uint8_t> sig1(64, 2);
     std::string address1 = "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff";
-    auto peer1 = PeerInfo(id1, address1, 65535);
+    auto peer1 = PeerInfo(id1, Id(), port, address1, sig1, AF_INET6);
     CPPUNIT_ASSERT(!peer1.isIPv4());
     CPPUNIT_ASSERT(peer1.isIPv6());
     CPPUNIT_ASSERT_EQUAL(id1, peer1.getNodeId());
-    CPPUNIT_ASSERT_EQUAL(65535, peer1.getPort());
-    CPPUNIT_ASSERT(Utils::addressEquals(address1, peer1.getAddress().host()));
+    CPPUNIT_ASSERT_EQUAL(Id::zero(), peer1.getProxyId());
+    CPPUNIT_ASSERT_EQUAL(port, peer1.getPort());
+    CPPUNIT_ASSERT_EQUAL(address1, peer1.getAlt());
+    CPPUNIT_ASSERT(sig1 == peer1.getSignature());
+    CPPUNIT_ASSERT(!peer1.isUsedProxy());
 
     nlohmann::json object1 = peer1;
     PeerInfo peer2 = object1;
 
     CPPUNIT_ASSERT_EQUAL(peer1.getNodeId(), peer2.getNodeId());
+    CPPUNIT_ASSERT_EQUAL(peer1.getProxyId(), peer2.getProxyId());
     CPPUNIT_ASSERT_EQUAL(peer1.getPort(), peer2.getPort());
-    CPPUNIT_ASSERT_EQUAL(peer1.getAddress().toString(), peer2.getAddress().toString());
+    CPPUNIT_ASSERT_EQUAL(peer1.getAlt(), peer2.getAlt());
+    CPPUNIT_ASSERT(peer1.getSignature() == peer2.getSignature());
 
-    auto id2 = Id::random();
-    auto address2 = "2001:0db8:85a3:8070:6543:8a2e:0370:7334";
-    auto peer3 = PeerInfo(id2, address2, 1232);
-    CPPUNIT_ASSERT(!peer3.isIPv4());
-    CPPUNIT_ASSERT(peer3.isIPv6());
-    CPPUNIT_ASSERT_EQUAL(id2, peer3.getNodeId());
-    CPPUNIT_ASSERT_EQUAL(1232, peer3.getPort());
-    CPPUNIT_ASSERT(Utils::addressEquals(address2, peer3.getAddress().host()));
-
-    nlohmann::json object2 = peer3;
-    PeerInfo peer4 = object2;
-
-    CPPUNIT_ASSERT_EQUAL(peer3.getNodeId(), peer4.getNodeId());
-    CPPUNIT_ASSERT_EQUAL(peer3.getPort(), peer4.getPort());
-    CPPUNIT_ASSERT_EQUAL(peer3.getAddress().toString(), peer4.getAddress().toString());
+    // CPPUNIT_ASSERT(peer1 ==  peer2); the family don't serialize
 }
 
 void

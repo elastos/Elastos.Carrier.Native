@@ -540,8 +540,8 @@ void DHT::onAnnouncePeer(const Sp<Message>& msg) {
         return;
     }
 
-    Blob ip = {request->getOrigin().inaddr(), request->getOrigin().inaddrLength()};
-    auto peer = std::make_shared<PeerInfo>(request->getId(), ip, request->getPort());
+    auto peer = std::make_shared<PeerInfo>(request->getId(), request->getProxyId(), request->getPort(),
+            request->getAlt(), request->getSignature(), request->getOrigin().family());
     node.getStorage()->putPeer(request->getTarget(), peer);
 
     auto response = std::make_shared<AnnouncePeerResponse>(request->getTxid());
@@ -706,7 +706,9 @@ Sp<Task> DHT::findPeer(const Id& id, int expected, LookupOption option, std::fun
     return task;
 }
 
-Sp<Task> DHT::announcePeer(const Id& peerId, int port, std::function<void(std::list<Sp<NodeInfo>>)> completeHandler) {
+Sp<Task> DHT::announcePeer(const Id& peerId, const Id& proxyId, uint16_t port,
+        const std::string alt, const std::vector<std::uint8_t>& signature,
+        const std::function<void(std::list<Sp<NodeInfo>>)> completeHandler) {
     auto task = std::make_shared<NodeLookup>(this, peerId);
     task->setWantToken(true);
     task->addListener([=](Task* t) {
@@ -721,7 +723,7 @@ Sp<Task> DHT::announcePeer(const Id& peerId, int port, std::function<void(std::l
             return;
         }
 
-        auto announce = std::make_shared<PeerAnnounce>(this, closestSet, peerId, port);
+        auto announce = std::make_shared<PeerAnnounce>(this, closestSet, peerId, proxyId, port, alt, signature);
         announce->addListener([=](Task* t) {
             std::list<Sp<NodeInfo>> result{};
             for(const auto& item: closestSet.getEntries()) {

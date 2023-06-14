@@ -32,37 +32,43 @@ namespace carrier {
 struct CARRIER_PUBLIC PeerInfo {
     PeerInfo() = default;
 
-    explicit PeerInfo(const Blob& id, const Blob& ip, int port)
-        : nodeId(id), sockaddr(ip, port) {}
+    PeerInfo(const Blob& id, const Blob& pid, uint16_t port, const std::string alt, const Blob& sig, int family = AF_INET);
+    PeerInfo(const Blob& id, const uint16_t port, const std::string alt, const Blob& sig, int family = AF_INET);
 
-    explicit PeerInfo(const Id& id, const std::string& ip, int port)
-        : nodeId(id), sockaddr(ip, port) {}
+    PeerInfo(const Id& id, const Id& pid, uint16_t port, const std::string alt, const std::vector<std::uint8_t>& sig, int family = AF_INET);
 
-    explicit PeerInfo(const Id& id, const Blob& ip, int port)
-        : nodeId(id), sockaddr(ip, port) {}
-
-    PeerInfo(const Id& id, const SocketAddress& _addr) noexcept
-        : nodeId(id), sockaddr(_addr)  {}
-
-    PeerInfo(const PeerInfo& ni)
-        : nodeId(ni.nodeId), sockaddr(ni.sockaddr) {}
+    PeerInfo(const PeerInfo& pi);
 
     const Id& getNodeId() const noexcept {
         return nodeId;
     }
-    const SocketAddress& getAddress() const noexcept {
-        return sockaddr;
+
+    const Id& getProxyId() const noexcept {
+        return proxyId;
     }
-    int getPort() const noexcept {
-        return sockaddr.port();
+
+    uint16_t getPort() const noexcept {
+        return port;
     };
 
-    bool isIPv4() const noexcept { return sockaddr.family() == AF_INET;  }
-    bool isIPv6() const noexcept { return sockaddr.family() == AF_INET6; }
-
-    bool operator==(const PeerInfo& other) const {
-        return nodeId == other.nodeId && sockaddr == other.sockaddr;
+    const std::string& getAlt() const noexcept {
+        return alt;
     }
+
+    const std::vector<uint8_t>& getSignature() const noexcept {
+        return signature;
+    }
+
+    bool isUsedProxy() const noexcept { return usedProxy;  }
+    bool isIPv4() const noexcept { return family == AF_INET;  }
+    bool isIPv6() const noexcept { return family == AF_INET6; }
+
+    bool isValid() const;
+
+    int getFamily() const noexcept { return family; }
+
+    bool operator==(const PeerInfo& other) const;
+
     bool operator<(const PeerInfo& other) const {
         return nodeId.compareTo(other.nodeId) < 0;
     }
@@ -70,19 +76,70 @@ struct CARRIER_PUBLIC PeerInfo {
     operator std::string() const;
     friend std::ostream& operator<< (std::ostream& s, const PeerInfo& pi);
 
+    int size() const {
+        auto size = nodeId.size() + 16 + alt.size() + signature.size();
+        if (usedProxy) {
+            size += proxyId.size();
+        }
+        return size;
+    }
+
+    int estimateSize() const {
+        return nodeId.size() + 16 + proxyId.size() + alt.size() + signature.size() + sizeof(int) + sizeof(bool);
+    }
+
 private:
+    friend class FindPeerResponse;
     friend class SqliteStorage;
+    friend class Node;
+
     void setNodeId(const Blob& id) {
         this->nodeId = Id(id);
     }
 
-    void setSocketAddress(const Blob& ip, in_port_t port) {
-        this->sockaddr = SocketAddress(ip, port);
+    void setProxyId(const Blob& id) {
+        this->proxyId = Id(id);
     }
+
+    void setPort(const int port) {
+        this->port = port;
+    }
+
+    void setAlt(const std::string alt) {
+        this->alt = alt;
+    }
+
+    void setSignature(const Blob& val) {
+        signature.resize(val.size());
+        std::memcpy(signature.data(), val.ptr(), val.size());
+    }
+
+    void setIpV4() {
+        this->family = AF_INET;
+    }
+
+    void setIpV6() {
+        this->family = AF_INET6;
+    }
+
+    void setFamily(int family) {
+        this->family = family;
+    }
+
+    static std::vector<uint8_t> createSignature(const Signature::PrivateKey& privateKey, const Id& nodeId,
+        uint16_t port, const std::string& alt);
+    bool verifySignature() const;
 
 private:
     Id nodeId {};
-    SocketAddress sockaddr {};
+
+    Id proxyId {};
+    uint16_t port {0};
+    std::string alt {};
+    std::vector<std::uint8_t> signature {};
+
+    bool usedProxy {false};
+    int family { AF_INET };
 };
 
 }

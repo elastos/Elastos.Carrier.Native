@@ -87,6 +87,7 @@ else()
 endif()
 
 list(APPEND APITESTS_DEPENDS
+    CLI11
     sqlite
     CppUnit
     carrier0

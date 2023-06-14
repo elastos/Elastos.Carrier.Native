@@ -29,14 +29,15 @@ namespace elastos {
 namespace carrier {
 
 int FindPeerResponse::estimateSize() const {
-    const int peer4Size = 44;
-    const int peer6Size = 56;
     int size = LookupResponse::estimateSize();
 
-    if (!peers4.empty())
-        size += (5 + peer4Size * peers4.size());
-    if (!peers6.empty())
-        size += (5 + peer6Size * peers6.size());
+    for (const auto&  peer : peers4) {
+        size += peer->estimateSize();
+    }
+
+    for (const auto& peer : peers6) {
+        size += peer->estimateSize();
+    }
 
     return size;
 }
@@ -58,20 +59,22 @@ void FindPeerResponse::serializePeers(nlohmann::json& object, const std::string&
 
 void FindPeerResponse::_parse(const std::string& fieldName, nlohmann::json& object) {
     if (fieldName == KEY_RES_PEERS4) {
-        parsePeers(object, peers4);
+        parsePeers(object, peers4, AF_INET);
     } else if (fieldName == Message::KEY_RES_PEERS6) {
-        parsePeers(object, peers6);
+        parsePeers(object, peers6, AF_INET6);
     } else {
         throw std::invalid_argument("invalid find peer response message");
     }
 }
 
-void FindPeerResponse::parsePeers(const nlohmann::json& object, std::list<Sp<PeerInfo>>& peers) {
+void FindPeerResponse::parsePeers(const nlohmann::json& object, std::list<Sp<PeerInfo>>& peers, int family) {
     if (!object.is_array())
         throw std::invalid_argument("Invalid response peers message");
 
     for (const auto& elem : object) {
-        peers.emplace_back(std::make_shared<PeerInfo>(elem.get<PeerInfo>()));
+        auto peer = std::make_shared<PeerInfo>(elem.get<PeerInfo>());
+        peer->setFamily(family);
+        peers.emplace_back(peer);
     }
 }
 
