@@ -85,6 +85,7 @@ void
 AnnounceFindPeerTests::testPeer() {
     auto peerId1 = Id::random();
     auto peerId2 = Id::random();
+    auto proxyId = Id::random();
 
     std::vector<int> ports1;
     for (int i = 0; i < 12; i++ )
@@ -100,27 +101,33 @@ AnnounceFindPeerTests::testPeer() {
     nodes.push_back(node3->getId());
 
     for (int i = 0; i < 4; i++) {
-        auto future1 = node1->announcePeer(peerId1, ports1[3*i]);
+        int val = 3 * i;
+        auto future1 = node1->announcePeer(peerId1, {}, ports1[val], std::to_string(val), std::vector<uint8_t>(64, val));
         auto result1 = future1.get();
         CPPUNIT_ASSERT(result1);
 
-        auto future2 = node2->announcePeer(peerId1, ports1[3*i+1]);
+        val++;
+        auto future2 = node2->announcePeer(peerId1, {}, ports1[val], std::to_string(val), std::vector<uint8_t>(64, val));
         auto result2 = future2.get();
         CPPUNIT_ASSERT(result2);
 
-        auto future3 = node3->announcePeer(peerId1, ports1[3*i+2]);
+        val++;
+        auto future3 = node3->announcePeer(peerId1, {}, ports1[val], std::to_string(val), std::vector<uint8_t>(64, val));
         auto result3 = future3.get();
         CPPUNIT_ASSERT(result3);
 
-        auto future4 = node1->announcePeer(peerId2, ports2[3*i]);
+        val = 3 * i;
+        auto future4 = node1->announcePeer(peerId2, proxyId, ports2[val], std::to_string(val), std::vector<uint8_t>(64, val));
         auto result4 = future4.get();
         CPPUNIT_ASSERT(result4);
 
-        auto future5 = node2->announcePeer(peerId2, ports2[3*i+1]);
+        val++;
+        auto future5 = node2->announcePeer(peerId2, proxyId, ports2[val], std::to_string(val), std::vector<uint8_t>(64, val));
         auto result5 = future5.get();
         CPPUNIT_ASSERT(result5);
 
-        auto future6 = node3->announcePeer(peerId2, ports2[3*i+2]);
+        val++;
+        auto future6 = node3->announcePeer(peerId2, proxyId, ports2[val], std::to_string(val), std::vector<uint8_t>(64, val));
         auto result6 = future6.get();
         CPPUNIT_ASSERT(result6);
     }

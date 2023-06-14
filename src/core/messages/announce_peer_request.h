@@ -30,26 +30,31 @@ namespace carrier {
 
 class AnnouncePeerRequest : public Message {
 public:
-    AnnouncePeerRequest(const Id& _target, int _port, int _token)
+    AnnouncePeerRequest(const Id& _target, const Id& _proxyId, int _port,
+        const std::string _alt,  const std::vector<std::uint8_t>& sig, int _token)
         : Message(Message::Type::REQUEST, Message::Method::ANNOUNCE_PEER),
-        target(_target), port(_port), token(_token) {}
+        peerId(_target), proxyId(_proxyId), port(_port), alt(_alt), signature(sig), token(_token) {
+            if (proxyId != Id::zero()) {
+                usedProxy = true;
+            }
+        }
 
     AnnouncePeerRequest()
         : Message(Message::Type::REQUEST, Message::Method::ANNOUNCE_PEER) {}
 
     const Id& getTarget() const {
-        return target;
+        return peerId;
     }
 
     void setTarget(const Id& target) {
-        this->target = target;
+        this->peerId = target;
     }
 
-    int getPort() const {
+    uint16_t getPort() const {
         return port;
     }
 
-    void setPort(int port) {
+    void setPort(uint16_t port) {
         this->port = port;
     }
 
@@ -61,8 +66,24 @@ public:
         this->token = token;
     }
 
+    const Id& getProxyId() const {
+        return proxyId;
+    }
+
+    const std::string getAlt() const {
+        return alt;
+    }
+
+    const std::vector<std::uint8_t>& getSignature() const {
+        return signature;
+    }
+
     int estimateSize() const override {
-        return Message::estimateSize() + 54; // + (name != null ? name.length() + 5 : 0);
+        auto size = Message::estimateSize() + peerId.size() + 16 + sizeof(token) + alt.size() + signature.size();
+        if (usedProxy) {
+            size += proxyId.size();
+        }
+        return size;
     }
 
 protected:
@@ -71,9 +92,14 @@ protected:
     void toString(std::stringstream& ss) const override;
 
 private:
-    Id target;
-    int port;
+    Id peerId;
+    Id proxyId;
+    uint16_t port;
     int token;
+    std::string alt {};
+    std::vector<std::uint8_t> signature {};
+
+    bool usedProxy {false};
 };
 
 }

@@ -65,6 +65,8 @@ public:
     static const std::string KEY_REQ_VALUE;
     static const std::string KEY_REQ_CAS;
     static const std::string KEY_REQ_SEQ;
+    static const std::string KEY_REQ_PROXY_ID;
+    static const std::string KEY_REQ_ALT;
 
     static const std::string KEY_RESPONSE;
     static const std::string KEY_RES_NODES4;

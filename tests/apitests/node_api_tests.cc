@@ -111,7 +111,7 @@ void NodeApiTester::testSelfNodes() {
     std::cout << "----------" << std::endl;
     std::cout << "Trying to announce peer " << std::endl;
     auto peerId = Id::random();
-    auto future3 = node2->announcePeer(peerId, 42244);
+    auto future3 = node1->announcePeer(peerId, 42244, "testNode");
     auto result2 = future3.get();
     CPPUNIT_ASSERT_MESSAGE("Announce peer failed!", result2);
     std::cout << "Announce peer succeeeed." << std::endl;
@@ -139,6 +139,7 @@ void NodeApiTester::testSelfNodes() {
     CPPUNIT_ASSERT_MESSAGE("Peer not found!", !peers.empty());
     for (auto& peer: peers) {
         std::cout << "Peer: " << peer << std::endl;
+        peer->isValid();
     }
 
     node3->stop();

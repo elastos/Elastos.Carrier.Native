@@ -27,8 +27,9 @@
 namespace elastos {
 namespace carrier {
 
-PeerAnnounce::PeerAnnounce(DHT* dht, const ClosestSet& closestSet, const Id& _peerId, int _port)
-    : Task(dht, "PeerAnnounce"), peerId(_peerId), port(_port) {
+PeerAnnounce::PeerAnnounce(DHT* dht, const ClosestSet& closestSet, const Id& _peerId, const Id& _proxyId, int _port,
+        const std::string _alt, const std::vector<std::uint8_t>& sig)
+        : Task(dht, "PeerAnnounce"), peerId(_peerId), proxyId(_proxyId), port(_port), alt(_alt), signature(sig) {
 
     for (const auto& entry: closestSet.getEntries()) {
         todo.emplace_back(entry);
@@ -38,7 +39,7 @@ PeerAnnounce::PeerAnnounce(DHT* dht, const ClosestSet& closestSet, const Id& _pe
 void PeerAnnounce::update() {
     while (!todo.empty() && canDoRequest()) {
         auto candidateNode = todo.front();
-        auto request = std::make_shared<AnnouncePeerRequest>(peerId, port, candidateNode->getToken());
+        auto request = std::make_shared<AnnouncePeerRequest>(peerId, proxyId, port, alt, signature, candidateNode->getToken());
 
         try {
             sendCall(candidateNode, request, [=](Sp<RPCCall>&) {

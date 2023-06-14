@@ -61,6 +61,8 @@ const std::string Message::KEY_REQ_SIGNATURE  = "sig";
 const std::string Message::KEY_REQ_VALUE      = "v";
 const std::string Message::KEY_REQ_CAS        = "cas";
 const std::string Message::KEY_REQ_SEQ        = "seq";
+const std::string Message::KEY_REQ_PROXY_ID   = "x";
+const std::string Message::KEY_REQ_ALT        = "alt";
 
 const std::string Message::KEY_RESPONSE       = "r";
 const std::string Message::KEY_RES_NODES4     = "n4";

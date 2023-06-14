@@ -22,6 +22,7 @@
 
 #include <list>
 #include <iostream>
+#include <string>
 #include <filesystem>
 #include <chrono>
 #include <mutex>
@@ -235,24 +236,20 @@ void DataStorageTests::testPutAndGetPeer() {
 
     std::list<Id> ids {};
 
-    std::vector<uint8_t> ipv4Addr = { 0x0a, 0x00, 0x00, 0x00 };
-    std::vector<uint8_t> ipv6Addr = { (uint8_t)0xfc, 0x00,  0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
     int basePort = 8000;
 
     std::cout << "Writing peers...";
+    std::vector<uint8_t> sig(64, 5);
     for (int i = 1; i <= 64; i++) {
         auto id = Id::random();
         ids.push_back(id);
 
         std::list<Sp<PeerInfo>> peers = {};
         for (int j = 0; j < i; j++) {
-            increment(ipv4Addr);
-            auto pi = std::make_shared<PeerInfo>(Id::random(), ipv4Addr, basePort + i);
+            auto pi = std::make_shared<PeerInfo>(Id::random(), Id::random(), basePort + i, "ipv4-" + std::to_string(i), sig);
             peers.push_back(pi);
 
-            increment(ipv6Addr);
-            pi = std::make_shared<PeerInfo>(Id::random(), ipv6Addr, basePort + i);
+            pi = std::make_shared<PeerInfo>(Id::random(), Id::random(), basePort + i, "ipv6:" + std::to_string(i), sig, AF_INET6);
             peers.push_back(pi);
         }
         ds->putPeer(id, peers);

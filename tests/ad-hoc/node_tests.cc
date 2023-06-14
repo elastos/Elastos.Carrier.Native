@@ -104,7 +104,7 @@ void NodeTester::testNode() {
     std::cout << "----------" << std::endl;
     std::cout << "Trying to announce peer " << std::endl;
     auto peerId = Id::random();
-    auto future3 = node1->announcePeer(peerId, 42244);
+    auto future3 = node1->announcePeer(peerId, 42244, "testNode");
     auto result2 = future3.get();
     CPPUNIT_ASSERT_MESSAGE("Announce peer failed!", result2);
     std::cout << "Announce peer succeeeed." << std::endl;
@@ -131,6 +131,7 @@ void NodeTester::testNode() {
     auto peers = future4.get();
     CPPUNIT_ASSERT_MESSAGE("Peer not found!", !peers.empty());
     for (auto& peer: peers) {
+        peer->isValid();
         std::cout << "Peer: " << static_cast<std::string>(*peer) << std::endl;
     }
 

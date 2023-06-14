@@ -112,7 +112,9 @@ public:
     std::future<Sp<Value>> findValue(const Id& id, LookupOption option) const;
     std::future<bool> storeValue(const Sp<Value> value) const;
     std::future<std::list<Sp<PeerInfo>>> findPeer(const Id &id, int expectedNum, LookupOption option) const;
-    std::future<bool> announcePeer(const Id& id, int port) const;
+    std::future<bool> announcePeer(const Id& peerId, const Id& proxyId, uint16_t port,
+            const std::string& alt, std::vector<std::uint8_t> signature) const;
+    std::future<bool> announcePeer(const Id& peerId, uint16_t port, const std::string& alt) const;
 
     Sp<DataStorage> getStorage() const {
 		return storage;

@@ -59,7 +59,7 @@ protected:
 
 private:
     void serializePeers(nlohmann::json& object, const std::string& fieldName, const std::list<Sp<PeerInfo>>& peers) const;
-    void parsePeers(const nlohmann::json& object, std::list<Sp<PeerInfo>>& to);
+    void parsePeers(const nlohmann::json& object, std::list<Sp<PeerInfo>>& to, int family);
 
     std::list<Sp<PeerInfo>> peers4 = {};
     std::list<Sp<PeerInfo>> peers6 = {};
