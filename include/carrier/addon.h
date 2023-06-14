@@ -32,15 +32,53 @@
 namespace elastos {
 namespace carrier {
 
+/**
+ * @brief 插件类
+ *
+ */
 class CARRIER_PUBLIC Addon {
 public:
+    /**
+     * @brief 初始化插件
+     *
+     * @param node 插件对应的节点
+     * @param config 插件配置
+     * @return std::future<void> 无返回
+     */
     virtual std::future<void> initialize(Sp<Node> node, const std::map<std::string, std::any>& config) = 0;
+    /**
+     * @brief 销毁插件
+     *
+     * @return std::future<void> 撤销插件
+     */
     virtual std::future<void> deinitialize() = 0;
+    /**
+     * @brief 判断插件是否已被初始化
+     *
+     * @return true 插件已初始化
+     * @return false 插件未初始化
+     */
     virtual bool isInitialized() = 0;
 };
 
+/**
+ * @brief 安装指定节点的多个插件
+ *
+ * @param node 指定节点
+ * @param addons 多个插件的配置列表
+ * @return true 安装成功
+ * @return false 安装失败
+ */
 CARRIER_PUBLIC bool loadAddons(Sp<Node> node, std::map<std::string, std::any>& addons);
+/**
+ * @brief 卸载所有插件
+ */
 CARRIER_PUBLIC void unloadAddons();
+/**
+ * @brief 获取插件列表
+ *
+ * @return std::map<std::string, std::shared_ptr<Addon>>& 返回插件列表
+ */
 CARRIER_PUBLIC std::map<std::string, std::shared_ptr<Addon>>& getAddons();
 
 } // namespace carrier

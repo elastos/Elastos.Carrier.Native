@@ -29,98 +29,97 @@ namespace elastos {
 namespace carrier {
 
 /**
- * @brief
+ * @brief Id空间的前缀类，根据depth来确定前缀的长度。该类主要用来计算路由表中bucket的地址空间。
  *
  */
 class CARRIER_PUBLIC Prefix : public Id {
 public:
     /**
-     * @brief 创建空Prefix对象
+     * @brief 创建一个空Prefix对象
      *
      */
     Prefix() noexcept : Id() {}
     /**
-     * @brief 创建新的Prefix对象
+     * @brief 创建一个新Prefix对象
      *
-     * @param id Prefix基于的Node Id
-     * @param _depth  identifies the first bit of a key that has to be equal to be considered as
-	 *                covered by this prefix -1 = prefix matches whole keyspace 0 = 0th bit must
-	 *                match 1 = ...
+     * @param id Prefix所处的Id
+     * @param _depth Id中的前_depth位，也是前缀长度
      */
     Prefix(const Id& id, int _depth) noexcept : depth(_depth) {
         bitsCopy(id, *this, _depth);
     }
     /**
-     * @brief Prefix的复制拷贝
+     * @brief 复制拷贝一个新Prefix
      *
-     * @param _prefix 被拷贝的PeerInfo对象
+     * @param _prefix 另一个Prefix
      */
     Prefix(const Prefix& _prefix) noexcept
         : Prefix(_prefix, _prefix.getDepth()) {}
     /**
-     * @brief 获取Prefix的depth
+     * @brief 获取Prefix的bits大小
      *
-     * @return int 返回depth
+     * @return int 返回depth大小
      */
     int getDepth() const noexcept {
         return depth;
     }
     /**
-     * @brief 判断当前Prefix是否关联指定节点
+     * @brief 判断当前Prefix是否代表指定的Id
      *
-     * @param id 被判断的Node Id
-     * @return true 当前Prefix关联指定节点
-     * @return false 当前Prefix不关联指定节点
+     * @param id 被判断的Id
+     * @return true 当前Prefix代表指定节点
+     * @return false 当前Prefix不能代表指定节点
      */
     bool isPrefixOf(const Id& id) const noexcept {
         return bitsEqual(*this, id, depth);
     }
     /**
-     * @brief
+     * @brief 判断Prefix所代表的Id是否可分裂
      *
-     * @return true
-     * @return false
+     * @return true Prefix所代表的Id可分裂
+     * @return false Prefix所代表的Id不可分裂
      */
     bool isSplittable() const noexcept {
         return depth < (int)ID_BITS - 1;
     }
     /**
-     * @brief
+     * @brief 获取Prefix可代表的第一个Id
      *
-     * @return Id
+     * @return Id 返回Id对象
      */
     Id first() const noexcept {
         return Id(*this);
     }
     /**
-     * @brief
+     * @brief 获取Prefix可所代表的最后一个Id
      *
-     * @return Id
+     * @return Id 返回Id对象
      */
     Id last() const;
     /**
-     * @brief Get the Parent object
+     * @brief 获取Prefix的父Prefix
      *
-     * @return Prefix
+     * @return Prefix 返回Prefix对象
      */
     Prefix getParent() const;
     /**
-     * @brief
+     * @brief 分裂Prefix
      *
-     * @param highBranch
-     * @return Prefix
+     * @param highBranch true 分裂Prefix后获取高位空间
+     *                   false 分裂Prefix后获取地位空间
+     * @return Prefix 返回相应的Prefix
      */
     Prefix splitBranch(bool highBranch) const;
     /**
-     * @brief
+     * @brief 判断当前Prefix和指定Prefix是否为兄弟Prefix，即当前Prefix和指定Prefix是否有同样的depth-1数据
      *
-     * @param other
-     * @return true
-     * @return false
+     * @param other 另一个Prefix
+     * @return true 两者是兄弟Prefix
+     * @return false 两者不是兄弟Prefix
      */
     bool isSiblingOf(const Prefix& other) const;
     /**
-     * @brief 从当前Perfix产生随机的Id
+     * @brief 从当前Perfix产生可代表的随机Id
      *
      * @return Id 返回Id对象
      */
@@ -138,11 +137,11 @@ public:
      */
     std::string toString() const;
     /**
-     * @brief 判断当前PeerInfo和指定的PeerInfo是否相同
+     * @brief 判断当前PeerInfo和指定的PeerInfo是否相等
      *
      * @param prefix 指定的PeerInfo对象
-     * @return true 两者相同
-     * @return false 两者不同
+     * @return true 两个PeerInfo相等
+     * @return false 两个PeerInfo不相等
      */
     bool operator==(const Prefix& prefix) const {
         return equals(prefix);
@@ -162,11 +161,6 @@ private:
         getData()[pos] = getData()[pos] & ~(0xff >> j);
     }
 
-    /**
-     * identifies the first bit of a key that has to be equal to be considered as
-     * covered by this prefix -1 = prefix matches whole keyspace 0 = 0th bit must
-     * match 1 = ...
-     */
     int depth {-1};
 };
 
