@@ -28,7 +28,7 @@ namespace elastos {
 namespace carrier {
 
 PeerAnnounce::PeerAnnounce(DHT* dht, const ClosestSet& closestSet, const Id& _peerId, const Id& _proxyId, int _port,
-        const std::string _alt, const std::vector<std::uint8_t>& sig)
+        const std::string& _alt, const std::vector<uint8_t>& sig)
         : Task(dht, "PeerAnnounce"), peerId(_peerId), proxyId(_proxyId), port(_port), alt(_alt), signature(sig) {
 
     for (const auto& entry: closestSet.getEntries()) {

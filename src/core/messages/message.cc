@@ -261,7 +261,7 @@ void Message::serializeInternal(nlohmann::json& root) const {
     root[KEY_VERSION] = version;
 }
 
-std::vector<std::uint8_t> Message::serialize() const {
+std::vector<uint8_t> Message::serialize() const {
     nlohmann::json root = nlohmann::json::object();
     serializeInternal(root);
     return nlohmann::json::to_cbor(root);

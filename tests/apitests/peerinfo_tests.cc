@@ -53,7 +53,7 @@ PeerInfoTests::testPeerInfo4() {
     CPPUNIT_ASSERT_EQUAL(port, peer1.getPort());
     CPPUNIT_ASSERT_EQUAL(address1, peer1.getAlt());
     CPPUNIT_ASSERT(sig1 == peer1.getSignature());
-    CPPUNIT_ASSERT(peer1.isUsedProxy());
+    CPPUNIT_ASSERT(peer1.usingProxy());
 
     nlohmann::json object1 = peer1;
     PeerInfo peer2 = object1;
@@ -82,7 +82,7 @@ PeerInfoTests::testPeerInfo6() {
     CPPUNIT_ASSERT_EQUAL(port, peer1.getPort());
     CPPUNIT_ASSERT_EQUAL(address1, peer1.getAlt());
     CPPUNIT_ASSERT(sig1 == peer1.getSignature());
-    CPPUNIT_ASSERT(!peer1.isUsedProxy());
+    CPPUNIT_ASSERT(!peer1.usingProxy());
 
     nlohmann::json object1 = peer1;
     PeerInfo peer2 = object1;

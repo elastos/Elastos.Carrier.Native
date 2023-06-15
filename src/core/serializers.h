@@ -41,7 +41,7 @@ namespace carrier {
     void from_json(const nlohmann::json& json, NodeInfo& ni);
 
     inline void to_json(nlohmann::json& json, const Id& id) {
-        json = nlohmann::json::binary_t {std::vector<std::uint8_t>(id.data(), id.data() + id.size())};
+        json = nlohmann::json::binary_t {std::vector<uint8_t>(id.data(), id.data() + id.size())};
     }
 
     inline void from_json(const nlohmann::json& json, Id& id) {

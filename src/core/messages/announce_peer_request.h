@@ -31,11 +31,11 @@ namespace carrier {
 class AnnouncePeerRequest : public Message {
 public:
     AnnouncePeerRequest(const Id& _target, const Id& _proxyId, int _port,
-        const std::string _alt,  const std::vector<std::uint8_t>& sig, int _token)
+        const std::string _alt,  const std::vector<uint8_t>& sig, int _token)
         : Message(Message::Type::REQUEST, Message::Method::ANNOUNCE_PEER),
         peerId(_target), proxyId(_proxyId), port(_port), alt(_alt), signature(sig), token(_token) {
             if (proxyId != Id::zero()) {
-                usedProxy = true;
+                proxied = true;
             }
         }
 
@@ -70,17 +70,17 @@ public:
         return proxyId;
     }
 
-    const std::string getAlt() const {
+    const std::string& getAlt() const {
         return alt;
     }
 
-    const std::vector<std::uint8_t>& getSignature() const {
+    const std::vector<uint8_t>& getSignature() const {
         return signature;
     }
 
     int estimateSize() const override {
-        auto size = Message::estimateSize() + peerId.size() + 16 + sizeof(token) + alt.size() + signature.size();
-        if (usedProxy) {
+        auto size = Message::estimateSize() + peerId.size() + sizeof(port) + alt.size() + signature.size() + sizeof(token);
+        if (proxied) {
             size += proxyId.size();
         }
         return size;
@@ -97,9 +97,9 @@ private:
     uint16_t port;
     int token;
     std::string alt {};
-    std::vector<std::uint8_t> signature {};
+    std::vector<uint8_t> signature {};
 
-    bool usedProxy {false};
+    bool proxied {false};
 };
 
 }

@@ -63,11 +63,11 @@ public:
         value->setNonce(Blob(nonce.bytes(), nonce.size()));
     }
 
-    const std::vector<std::uint8_t>& getSignature() const {
+    const std::vector<uint8_t>& getSignature() const {
         return value->getSignature();
     }
 
-    void setSignature(const std::vector<std::uint8_t>& signature) {
+    void setSignature(const std::vector<uint8_t>& signature) {
         value->setSignature(Blob(signature.data(), signature.size()));
     }
 
@@ -79,11 +79,11 @@ public:
         value->setSequenceNumber(sequenceNumber);
     }
 
-    const std::vector<std::uint8_t>& getData() const {
+    const std::vector<uint8_t>& getData() const {
         return value->getData();
     }
 
-    void setData(const std::vector<std::uint8_t>& data) {
+    void setData(const std::vector<uint8_t>& data) {
         value->setData(Blob(data.data(), data.size()));
     }
 

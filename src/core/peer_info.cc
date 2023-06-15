@@ -28,22 +28,22 @@
 namespace elastos {
 namespace carrier {
 
-PeerInfo::PeerInfo(const Blob& id, const Blob& pid, uint16_t _port, const std::string _alt, const Blob& sig, int _family)
+PeerInfo::PeerInfo(const Blob& id, const Blob& pid, uint16_t _port, const std::string& _alt, const Blob& sig, int _family)
     : nodeId(id), proxyId(pid), port(_port), alt(_alt), family(_family) {
     setSignature(sig);
     if (proxyId != Id::zero()) {
-        usedProxy = true;
+        proxied = true;
     }
 }
 
-PeerInfo::PeerInfo(const Blob& id, uint16_t port, const std::string alt, const Blob& sig, int family) {
+PeerInfo::PeerInfo(const Blob& id, uint16_t port, const std::string& alt, const Blob& sig, int family) {
     PeerInfo(id, {}, port, alt, sig, family);
 }
 
-PeerInfo::PeerInfo(const Id& id, const Id& pid, uint16_t _port, const std::string _alt,  const std::vector<std::uint8_t>& sig, int _family)
+PeerInfo::PeerInfo(const Id& id, const Id& pid, uint16_t _port, const std::string& _alt,  const std::vector<uint8_t>& sig, int _family)
     : nodeId(id), proxyId(pid), port(_port), alt(_alt), signature(sig), family(_family) {
     if (proxyId != Id::zero()) {
-        usedProxy = true;
+        proxied = true;
     }
 }
 
@@ -60,7 +60,7 @@ PeerInfo::operator std::string() const {
     std::stringstream ss;
     ss.str().reserve(80);
     ss << "<" << nodeId.toBase58String();
-    if (usedProxy)
+    if (proxied)
         ss << "," << proxyId.toBase58String();
     ss << "," << std::to_string(port);
     if (!alt.empty())
@@ -91,19 +91,19 @@ std::vector<uint8_t> PeerInfo::createSignature(const Signature::PrivateKey& priv
 
 bool PeerInfo::verifySignature() const {
     auto size = nodeId.size() + sizeof(port) + alt.size();
-    if (usedProxy)
+    if (proxied)
         size += proxyId.size();
 
     std::vector<uint8_t> toVerify(size);
     toVerify.insert(toVerify.begin(), nodeId.cbegin(), nodeId.cend());
-    if (usedProxy)
+    if (proxied)
         toVerify.insert(toVerify.end(), proxyId.cbegin(), proxyId.cend());
 
     toVerify.insert(toVerify.end(), (uint8_t*)(&port), (uint8_t*)(&port) + sizeof(port));
     toVerify.insert(toVerify.end(), alt.cbegin(), alt.cend());
 
     Signature::PublicKey sender {};
-    if (usedProxy)
+    if (proxied)
         sender = Signature::PublicKey(proxyId.blob());
     else
         sender = Signature::PublicKey(nodeId.blob());
