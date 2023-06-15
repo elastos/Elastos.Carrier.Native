@@ -707,7 +707,7 @@ Sp<Task> DHT::findPeer(const Id& id, int expected, LookupOption option, std::fun
 }
 
 Sp<Task> DHT::announcePeer(const Id& peerId, const Id& proxyId, uint16_t port,
-        const std::string alt, const std::vector<std::uint8_t>& signature,
+        const std::string& alt, const std::vector<uint8_t>& signature,
         const std::function<void(std::list<Sp<NodeInfo>>)> completeHandler) {
     auto task = std::make_shared<NodeLookup>(this, peerId);
     task->setWantToken(true);

@@ -57,9 +57,9 @@ static std::string CREATE_PEERS_TABLE = "CREATE TABLE IF NOT EXISTS " + PEER_TAB
     id BLOB NOT NULL, \
     family INTEGER NOT NULL, \
     nodeId BLOB NOT NULL ,\
-    proxyId BLOB ,\
+    proxyId BLOB, \
     port INTEGER NOT NULL, \
-    alt TEXT,\
+    alt TEXT, \
     signature BLOB NOT NULL ,\
     timestamp BIGINT NOT NULL, \
     PRIMARY KEY(id, family, nodeId)\

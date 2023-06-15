@@ -148,8 +148,8 @@ private: // internal methods used in friend class.
     Id recipient {};
     Signature::PrivateKey privateKey {};
     CryptoBox::Nonce nonce {};
-    std::vector<std::uint8_t> signature {};
-    std::vector<std::uint8_t> data {};
+    std::vector<uint8_t> signature {};
+    std::vector<uint8_t> data {};
     int32_t sequenceNumber {0};
 };
 }

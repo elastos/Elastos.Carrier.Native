@@ -488,7 +488,7 @@ std::future<bool> Node::announcePeer(const Id& peerId, uint16_t port, const std:
 }
 
 std::future<bool> Node::announcePeer(const Id& peerId, const Id& proxyId, uint16_t port,
-        const std::string& alt, std::vector<std::uint8_t> signature) const {
+        const std::string& alt, std::vector<uint8_t> signature) const {
 
     if (proxyId == Id::zero())
         signature = PeerInfo::createSignature(keyPair.privateKey(), id, port, alt);

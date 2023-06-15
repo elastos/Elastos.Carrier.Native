@@ -32,10 +32,10 @@ namespace carrier {
 struct CARRIER_PUBLIC PeerInfo {
     PeerInfo() = default;
 
-    PeerInfo(const Blob& id, const Blob& pid, uint16_t port, const std::string alt, const Blob& sig, int family = AF_INET);
-    PeerInfo(const Blob& id, const uint16_t port, const std::string alt, const Blob& sig, int family = AF_INET);
+    PeerInfo(const Blob& id, const Blob& pid, uint16_t port, const std::string& alt, const Blob& sig, int family = AF_INET);
+    PeerInfo(const Blob& id, const uint16_t port, const std::string& alt, const Blob& sig, int family = AF_INET);
 
-    PeerInfo(const Id& id, const Id& pid, uint16_t port, const std::string alt, const std::vector<std::uint8_t>& sig, int family = AF_INET);
+    PeerInfo(const Id& id, const Id& pid, uint16_t port, const std::string& alt, const std::vector<uint8_t>& sig, int family = AF_INET);
 
     PeerInfo(const PeerInfo& pi);
 
@@ -59,7 +59,7 @@ struct CARRIER_PUBLIC PeerInfo {
         return signature;
     }
 
-    bool isUsedProxy() const noexcept { return usedProxy;  }
+    bool usingProxy() const noexcept { return proxied;  }
     bool isIPv4() const noexcept { return family == AF_INET;  }
     bool isIPv6() const noexcept { return family == AF_INET6; }
 
@@ -77,8 +77,8 @@ struct CARRIER_PUBLIC PeerInfo {
     friend std::ostream& operator<< (std::ostream& s, const PeerInfo& pi);
 
     int size() const {
-        auto size = nodeId.size() + 16 + alt.size() + signature.size();
-        if (usedProxy) {
+        auto size = nodeId.size() + sizeof(port) + alt.size() + signature.size();
+        if (proxied) {
             size += proxyId.size();
         }
         return size;
@@ -105,21 +105,13 @@ private:
         this->port = port;
     }
 
-    void setAlt(const std::string alt) {
+    void setAlt(const std::string& alt) {
         this->alt = alt;
     }
 
     void setSignature(const Blob& val) {
         signature.resize(val.size());
         std::memcpy(signature.data(), val.ptr(), val.size());
-    }
-
-    void setIpV4() {
-        this->family = AF_INET;
-    }
-
-    void setIpV6() {
-        this->family = AF_INET6;
     }
 
     void setFamily(int family) {
@@ -136,10 +128,10 @@ private:
     Id proxyId {};
     uint16_t port {0};
     std::string alt {};
-    std::vector<std::uint8_t> signature {};
+    std::vector<uint8_t> signature {};
 
-    bool usedProxy {false};
-    int family { AF_INET };
+    bool proxied {false};
+    int family {AF_INET};
 };
 
 }

@@ -42,7 +42,7 @@ namespace carrier {
 
     void to_json(nlohmann::json& json, const NodeInfo& ni) {
         auto addr = nlohmann::json::binary_t {
-            std::vector<std::uint8_t>(ni.getAddress().inaddr(), ni.getAddress().inaddr() + ni.getAddress().inaddrLength())
+            std::vector<uint8_t>(ni.getAddress().inaddr(), ni.getAddress().inaddr() + ni.getAddress().inaddrLength())
         };
 
         json = nlohmann::json::array();

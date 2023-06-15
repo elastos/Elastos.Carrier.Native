@@ -179,7 +179,7 @@ public:
     static Sp<Message> parse(const uint8_t* buf, size_t buflen);
 
     operator std::string() const;
-    std::vector<std::uint8_t> serialize() const;
+    std::vector<uint8_t> serialize() const;
 
     virtual int estimateSize() const {
         return BASE_SIZE;

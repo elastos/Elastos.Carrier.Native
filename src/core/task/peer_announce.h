@@ -37,7 +37,7 @@ class CandidateNode;
 class PeerAnnounce: public Task {
 public:
     PeerAnnounce(DHT* dht, const ClosestSet& closest, const Id& _peerId, const Id& proxyId, int _port,
-        const std::string alt, const std::vector<std::uint8_t>& signature);
+        const std::string& alt, const std::vector<uint8_t>& signature);
 
 protected:
     void update() override;
@@ -50,7 +50,7 @@ private:
     Id peerId {};
     Id proxyId {};
     uint16_t port {0};
-    std::vector<std::uint8_t> signature {};
+    std::vector<uint8_t> signature {};
     std::string alt {};
 };
 

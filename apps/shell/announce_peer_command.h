@@ -38,9 +38,9 @@ public:
 
 protected:
     void setupOptions() override {
-        add_option("NAME", name, "The service name to be announce.");
-        add_option("PORT", port, "The service port to be announce.");
-        add_option("ALT", alt, "The service alt to be announce.");
+        add_option("NAME", name, "The peer name to be announce.");
+        add_option("PORT", port, "The peer port to be announce.");
+        add_option("ALT", alt, "The peer alt to be announce.");
         require_option(3, 3);
     };
 
@@ -76,6 +76,6 @@ protected:
 
 private:
     std::string name {};
-    uint16_t port = 0;
-    std::string alt;
+    uint16_t port {0};
+    std::string alt {};
 };

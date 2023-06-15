@@ -68,7 +68,7 @@ void AnnouncePeerRequest::parse(const std::string& fieldName, nlohmann::json& ob
 void AnnouncePeerRequest::toString(std::stringstream& ss) const {
     ss << ",q:{"
         << "t:" << peerId;
-        if (usedProxy)
+        if (proxied)
             ss << ",x:" << proxyId;
         ss << ",p:" << std::to_string(port);
         if (!alt.empty())
