@@ -118,8 +118,6 @@ private:
         this->family = family;
     }
 
-    static std::vector<uint8_t> createSignature(const Signature::PrivateKey& privateKey, const Id& nodeId,
-        uint16_t port, const std::string& alt);
     bool verifySignature() const;
 
 private:

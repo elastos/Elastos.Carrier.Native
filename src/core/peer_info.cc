@@ -76,19 +76,6 @@ std::ostream& operator<< (std::ostream& os, const PeerInfo& pi) {
     return os;
 }
 
-std::vector<uint8_t> PeerInfo::createSignature(const Signature::PrivateKey& privateKey, const Id& nodeId,
-        uint16_t port, const std::string& alt) {
-
-    auto size = nodeId.size() + sizeof(port) + alt.size();
-    std::vector<uint8_t> toSign(size);
-
-    toSign.insert(toSign.begin(), nodeId.cbegin(), nodeId.cend());
-    toSign.insert(toSign.end(), (uint8_t*)(&port), (uint8_t*)(&port) + sizeof(port));
-    toSign.insert(toSign.end(), alt.cbegin(), alt.cend());
-
-    return privateKey.sign(toSign);
-}
-
 bool PeerInfo::verifySignature() const {
     auto size = nodeId.size() + sizeof(port) + alt.size();
     if (proxied)
