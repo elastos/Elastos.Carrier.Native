@@ -147,6 +147,8 @@ public:
     void encrypt(const Id& recipient, Blob& cipher, const Blob& plain) const;
     void decrypt(const Id& sender, Blob& plain, const Blob& cipher) const;
 
+    std::vector<uint8_t> createPeerSignature(uint16_t port, const std::string& alt) const;
+
     std::string toString() const;
 private:
     bool checkPersistence(const std::string&);

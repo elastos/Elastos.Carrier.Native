@@ -32,12 +32,6 @@ namespace carrier {
 
 static std::string SET_USER_VERSION = "PRAGMA user_version = 2";
 
-static std::string PEERS = "peers";
-static int PEER_TABLE_VERSION = 2;
-static std::string PEER_TABLE_NAME = PEERS + std::to_string(PEER_TABLE_VERSION);
-
-static std::string DROP = "DROP TABLE IF EXIST ";
-
 static std::string CREATE_VALUES_TABLE = "CREATE TABLE IF NOT EXISTS valores(\
     id BLOB NOT NULL PRIMARY KEY, \
     publicKey BLOB, \
@@ -53,20 +47,20 @@ static std::string CREATE_VALUES_TABLE = "CREATE TABLE IF NOT EXISTS valores(\
 static std::string CREATE_VALUES_INDEX =
     "CREATE INDEX IF NOT EXISTS idx_valores_timpstamp ON valores(timestamp)";
 
-static std::string CREATE_PEERS_TABLE = "CREATE TABLE IF NOT EXISTS " + PEER_TABLE_NAME + "(\
+static std::string CREATE_PEERS_TABLE = "CREATE TABLE IF NOT EXISTS peers (\
     id BLOB NOT NULL, \
     family INTEGER NOT NULL, \
     nodeId BLOB NOT NULL ,\
     proxyId BLOB, \
     port INTEGER NOT NULL, \
-    alt TEXT, \
+    alternative VARCHAR(512), \
     signature BLOB NOT NULL ,\
-    timestamp BIGINT NOT NULL, \
+    timestamp INTEGER NOT NULL, \
     PRIMARY KEY(id, family, nodeId)\
 ) WITHOUT ROWID";
 
 static std::string CREATE_PEERS_INDEX =
-    "CREATE INDEX IF NOT EXISTS idx_peers_timpstamp ON " + PEER_TABLE_NAME + "(timestamp)";
+    "CREATE INDEX IF NOT EXISTS idx_peers_timpstamp ON peers (timestamp)";
 
 static std::string SELECT_VALUE = "SELECT * from valores \
     WHERE id = ? and timestamp >= ?";
@@ -81,19 +75,19 @@ static std::string UPSERT_VALUE = "INSERT INTO valores(\
     signature=excluded.signature, sequenceNumber=excluded.sequenceNumber, \
     data=excluded.data, timestamp=excluded.timestamp";
 
-static std::string SELECT_PEER = "SELECT * from " + PEER_TABLE_NAME + " \
+static std::string SELECT_PEER = "SELECT * from peers \
     WHERE id = ? and family = ? and timestamp >= ?\
     ORDER BY RANDOM() LIMIT ?";
 
-static std::string SELECT_PEER_WITH_NODEID = "SELECT * from " + PEER_TABLE_NAME + " \
+static std::string SELECT_PEER_WITH_NODEID = "SELECT * from peers \
     WHERE id = ? and family = ? and nodeId = ? and timestamp >= ?";
 
-static std::string UPSERT_PEER = "INSERT INTO " + PEER_TABLE_NAME + "(\
-    id, family, nodeId, proxyId, port, alt, signature, timestamp) \
+static std::string UPSERT_PEER = "INSERT INTO peers (\
+    id, family, nodeId, proxyId, port, alternative, signature, timestamp) \
     VALUES(?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id, family, nodeId) DO UPDATE SET \
-    proxyId=excluded.proxyId, port=excluded.port, alt=excluded.alt, signature=excluded.signature, timestamp=excluded.timestamp";
+    proxyId=excluded.proxyId, port=excluded.port, alternative=excluded.alternative, signature=excluded.signature, timestamp=excluded.timestamp";
 
-static std::string LIST_PEER_ID = "SELECT DISTINCT id from " + PEER_TABLE_NAME + " ORDER BY id";
+static std::string LIST_PEER_ID = "SELECT DISTINCT id from peers ORDER BY id";
 
 SqliteStorage::~SqliteStorage() {
     if (sqlite_store) {
@@ -103,7 +97,7 @@ SqliteStorage::~SqliteStorage() {
 }
 
 void SqliteStorage::expire() {
-    std::string delPeers = "DELETE FROM " + PEER_TABLE_NAME + " WHERE timestamp < ?";
+    std::string delPeers = "DELETE FROM peers WHERE timestamp < ?";
     const char *sqls[2] = { "DELETE FROM valores WHERE timestamp < ?",  delPeers.c_str()};
     uint64_t ts[2];
     ts[0] = currentTimeMillis() - Constants::MAX_VALUE_AGE;
@@ -122,24 +116,10 @@ void SqliteStorage::expire() {
     }
 }
 
-void SqliteStorage::dropOld(const std::string& name, int version) {
-    if (version >= 2) {
-        for (int i = 1; i < version; i++) {
-            auto drop = DROP + name;
-            if (i > 1)
-                drop += std::to_string(i);
-
-            sqlite3_exec(sqlite_store, drop.c_str(), 0, 0, 0);
-        }
-    }
-}
-
 void SqliteStorage::init(const std::string& path, Scheduler& scheduler) {
     int rc = sqlite3_open(path.c_str(), &sqlite_store);
     if (rc)
         throw std::runtime_error("Failed to open the SQLite storage.");
-
-    dropOld(PEERS, PEER_TABLE_VERSION);
 
     if (sqlite3_exec(sqlite_store, SET_USER_VERSION.c_str(), 0, 0, 0) != 0 ||
         sqlite3_exec(sqlite_store, CREATE_VALUES_TABLE.c_str(), 0, 0, 0) != 0 ||
@@ -358,7 +338,7 @@ std::list<Sp<PeerInfo>> SqliteStorage::getPeer(const Id& peerId, int family, int
                     peer->setProxyId(Blob(ptr, len));
                 } else if (std::strcmp(name, "port") == 0) {
                     peer->setPort(sqlite3_column_int(pStmt, i));
-                } else if (std::strcmp(name, "alt") == 0) {
+                } else if (std::strcmp(name, "alternative") == 0) {
                     peer->setAlt((char *)sqlite3_column_text(pStmt, i));
                 } else if (std::strcmp(name, "signature") == 0) {
                     peer->setSignature(Blob(ptr, len));
@@ -407,7 +387,7 @@ Sp<PeerInfo> SqliteStorage::getPeer(const Id& peerId, int family, const Id& node
                 peer->setProxyId(Blob(ptr, len));
             } else if (std::strcmp(name, "port") == 0) {
                 peer->setPort(sqlite3_column_int(pStmt, i));
-            } else if (std::strcmp(name, "alt") == 0) {
+            } else if (std::strcmp(name, "alternative") == 0) {
                 peer->setAlt((char *)sqlite3_column_text(pStmt, i));
             } else if (std::strcmp(name, "signature") == 0) {
                 peer->setSignature(Blob(ptr, len));
