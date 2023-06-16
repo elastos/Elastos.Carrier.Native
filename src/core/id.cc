@@ -75,14 +75,14 @@ Id Id::distance(const Id& id1, const Id& id2) {
 }
 
 int Id::threeWayCompare(const Id &id1, const Id &id2) const {
-    int mmi = 0;
+    int mmi = -1;
     for (int i = 0; i < ID_BYTES; i++) {
         if (id1.bytes[i] != id2.bytes[i]) {
             mmi = i;
             break;
         }
     }
-    if (!mmi) return 0;
+    if (mmi == -1) return 0;
 
     uint8_t a = id1.bytes[mmi] ^ bytes[mmi];
     uint8_t b = id2.bytes[mmi] ^ bytes[mmi];
