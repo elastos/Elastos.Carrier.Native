@@ -109,6 +109,10 @@ void ClosestCandidates::add(const std::list<Sp<NodeInfo>>& candidates) {
         filtered.emplace_back(std::make_shared<CandidateNode>(*item));
     }
 
+    filtered.sort([&](const std::shared_ptr<CandidateNode> &node1, const std::shared_ptr<CandidateNode>& node2) {
+        return target.threeWayCompare(node1->getId(), node2->getId()) < 0;
+    });
+
     closest.merge(filtered, [&](const Sp<CandidateNode>& a, const Sp<CandidateNode>& b) {
         return target.threeWayCompare(a->getId(), b->getId()) < 0;
     });
