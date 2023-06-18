@@ -56,7 +56,7 @@ public:
 private:
     void init(const std::string& path, Scheduler& scheduler);
     void expire();
-    void dropOld(const std::string& name, int version);
+    int getUserVersion();
 
     sqlite3* sqlite_store {nullptr};
 };

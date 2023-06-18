@@ -31,6 +31,7 @@ namespace elastos {
 namespace carrier {
 
 static std::string SET_USER_VERSION = "PRAGMA user_version = 2";
+static std::string GET_USER_VERSION = "PRAGMA user_version";
 
 static std::string CREATE_VALUES_TABLE = "CREATE TABLE IF NOT EXISTS valores(\
     id BLOB NOT NULL PRIMARY KEY, \
@@ -121,6 +122,16 @@ void SqliteStorage::init(const std::string& path, Scheduler& scheduler) {
     if (rc)
         throw std::runtime_error("Failed to open the SQLite storage.");
 
+    // if we change the schema,
+    // we should check the user version, do the schema update,
+    // then increase the user_version;
+    int userVersion = getUserVersion();
+    if (userVersion == 1) {
+        if (int ret = sqlite3_exec(sqlite_store, "DROP TABLE IF EXISTS peers", 0, 0, 0) != 0) {
+            throw std::runtime_error("Failed to drop peers table.");
+        }
+    }
+
     if (sqlite3_exec(sqlite_store, SET_USER_VERSION.c_str(), 0, 0, 0) != 0 ||
         sqlite3_exec(sqlite_store, CREATE_VALUES_TABLE.c_str(), 0, 0, 0) != 0 ||
         sqlite3_exec(sqlite_store, CREATE_VALUES_INDEX.c_str(), 0, 0, 0) != 0 ||
@@ -145,6 +156,20 @@ void SqliteStorage::close() {
         sqlite3_close(sqlite_store);
         sqlite_store = NULL;
     }
+}
+
+int SqliteStorage::getUserVersion() {
+    int userVersion = 0;
+    sqlite3_stmt* pStmt {nullptr};
+    if (sqlite3_prepare_v2(sqlite_store, GET_USER_VERSION.c_str(), strlen(GET_USER_VERSION.c_str()), &pStmt, 0) != SQLITE_OK) {
+        sqlite3_finalize(pStmt);
+        throw std::runtime_error("Prepare sqlite failed.");;
+    }
+
+    if (sqlite3_step(pStmt) == SQLITE_ROW) {
+        userVersion = sqlite3_column_int(pStmt, 0);
+    }
+    return userVersion;
 }
 
 Sp<Value> SqliteStorage::getValue(const Id& valueId) {
