@@ -166,9 +166,10 @@ int SqliteStorage::getUserVersion() {
         throw std::runtime_error("Prepare sqlite failed.");;
     }
 
-    if (sqlite3_step(pStmt) == SQLITE_ROW) {
+    if (sqlite3_step(pStmt) == SQLITE_ROW)
         userVersion = sqlite3_column_int(pStmt, 0);
-    }
+
+    sqlite3_finalize(pStmt);
     return userVersion;
 }
 
