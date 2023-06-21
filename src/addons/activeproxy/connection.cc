@@ -743,6 +743,9 @@ void ProxyConnection::processRelayPacket(const uint8_t* packet, size_t size) noe
         } else if (!ack && type == PacketFlag::CONNECT) {
             onConnectRequest(packet, size);
             return;
+        } else if (!ack && type == PacketFlag::SIGNATURE) {
+            onSignature(packet, size);
+            return;
         } else {
             log->error("Connection {} got a wrong packet({}), PING acknowledge or CONNECT expected.", flag, id);
             close();
@@ -890,6 +893,38 @@ void ProxyConnection::onDataRequest(const uint8_t* packet, size_t size) noexcept
         closeUpstream();
         delete request;
     }
+}
+
+void ProxyConnection::onSignature(const uint8_t* packet, size_t size) noexcept {
+    if (size < 66) {
+        log->error("Connection {} got an invalid signature from server {}", id, proxy.serverEndpoint());
+        close();
+        return;
+    }
+
+    log->debug("Connection {} got AUTH ACK from server {}", id, proxy.serverEndpoint());
+
+    std::vector<uint8_t> plain(size - PACKET_HEADER_BYTES - CryptoBox::MAC_BYTES);
+
+    Blob _plain{plain};
+    const Blob _cipher{packet + PACKET_HEADER_BYTES, size - PACKET_HEADER_BYTES};
+    auto h = _cipher.toHexString();
+    proxy.decrypt(_plain, _cipher);
+
+    const uint8_t* ptr = plain.data();
+    uint16_t port = ntohs(*(uint16_t*)ptr);
+    ptr += sizeof(port);
+    int len = plain.size() - sizeof(port) - Signature::BYTES;
+    char alt[len + 1];
+    memcpy(alt, ptr, len);
+    alt[len] = '\0';
+    ptr += len;
+    std::vector<uint8_t> sig(Signature::BYTES);
+    memcpy(sig.data(), ptr, Signature::BYTES);
+
+    proxy.getNode()->announcePeer(proxy.getPeerId(), proxy.getServerId(), port, alt, sig);
+
+    log->info("announcePeer.");
 }
 
 void ProxyConnection::openUpstream() noexcept

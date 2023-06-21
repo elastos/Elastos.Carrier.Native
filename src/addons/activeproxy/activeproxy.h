@@ -79,6 +79,10 @@ public:
         return &loop;
     }
 
+    const Sp<Node>& getNode() {
+        return node;
+    }
+
     const Id& getNodeId() const noexcept {
         return node->getId();
     }
@@ -99,8 +103,16 @@ public:
         return true;
     }
 
+    const Id& getServerId() const noexcept {
+        return serverId;
+    }
+
     uint16_t getRelayPort() const noexcept {
         return relayPort;
+    }
+
+    const Id& getPeerId() const noexcept {
+        return peerId;
     }
 
     // encrypt/decrypt with the session context
@@ -156,12 +168,13 @@ private:
 
     uint16_t relayPort;
 
-    Id serverId;
-    std::string serverHost;
-    int serverPort;
-    std::string serverName;
-    SocketAddress serverAddr;
-    uint32_t serverFails  { 0 };
+    Id serverId {};
+    std::string serverHost {};
+    int serverPort {0};
+    std::string serverName {};
+    SocketAddress serverAddr {};
+    uint32_t serverFails  {0};
+    Id peerId {};
 
     std::string upstreamHost;
     int upstreamPort;

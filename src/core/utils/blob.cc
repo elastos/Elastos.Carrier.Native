@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 - 2023 trinity-tech.io
+ * Copyright (c) 2023 trinity-tech.io
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,15 +20,19 @@
  * SOFTWARE.
  */
 
-#pragma once
 
-#include <cstring>
-#include <carrier/def.h>
+#include <string>
+
+#include "carrier/blob.h"
+#include "utils/hex.h"
 
 namespace elastos {
 namespace carrier {
 
-std::string getLocalIpAddresses(bool ipv4 = true);
 
-} // namespace carrier
-} // namespace elastos
+const std::string Blob::toHexString() const {
+    return "0x" + Hex::encode(_ptr, _size);
+}
+
+}
+}

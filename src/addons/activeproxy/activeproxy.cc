@@ -33,6 +33,8 @@
 #include "exceptions.h"
 #include "../core/utils/log.h"
 
+#include "utils/addr.h"
+
 namespace elastos {
 namespace carrier {
 namespace activeproxy {
@@ -66,7 +68,18 @@ std::future<void> ActiveProxy::initialize(Sp<Node> node, const std::map<std::str
     serverHost = std::any_cast<std::string>(configure.at("serverHost"));
     serverPort = (uint16_t)std::any_cast<int64_t>(configure.at("serverPort"));
     upstreamHost = std::any_cast<std::string>(configure.at("upstreamHost"));
+    if (upstreamHost == "LOCAL-IP4-ADDRESS")
+        upstreamHost = getLocalIpAddresses();
+    else if (upstreamHost == "LOCAL-IP6-ADDRESS")
+        upstreamHost = getLocalIpAddresses(false);
     upstreamPort = (uint16_t)std::any_cast<int64_t>(configure.at("upstreamPort"));
+    if (configure.count("peerId")) {
+        std::string strId = std::any_cast<std::string>(configure.at("peerId"));
+        peerId = Id(strId);
+    }
+    else {
+        peerId = Id::random();
+    }
 
     assert(!serverHost.empty() && serverPort != 0);
     assert(!upstreamHost.empty() && upstreamPort != 0);

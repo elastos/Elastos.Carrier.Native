@@ -85,7 +85,7 @@ struct CARRIER_PUBLIC PeerInfo {
     }
 
     int estimateSize() const {
-        return nodeId.size() + 16 + proxyId.size() + alt.size() + signature.size() + sizeof(int) + sizeof(bool);
+        return nodeId.size() + sizeof(port) + proxyId.size() + alt.size() + signature.size() + sizeof(int) + sizeof(bool);
     }
 
 private:
