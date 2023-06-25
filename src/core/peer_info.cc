@@ -48,7 +48,7 @@ PeerInfo::PeerInfo(const Id& id, const Id& pid, uint16_t _port, const std::strin
 }
 
 PeerInfo::PeerInfo(const PeerInfo& pi)
-    : nodeId(pi.nodeId), proxyId(pi.proxyId), port(pi.port), alt(pi.alt), signature(pi.signature), family(pi.family) {}
+    : nodeId(pi.nodeId), proxyId(pi.proxyId), port(pi.port), alt(pi.alt), signature(pi.signature), family(pi.family), proxied(pi.proxied) {}
 
 
 bool PeerInfo::operator==(const PeerInfo& other) const {
