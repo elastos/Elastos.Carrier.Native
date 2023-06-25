@@ -630,6 +630,60 @@ void ProxyConnection::sendDataRequest(const uint8_t* data, size_t _size) noexcep
     }
 }
 
+void ProxyConnection::sendSignatureRequest() noexcept
+{
+    if (state == ConnectionState::Closed)
+        return;
+
+    const char* alt = proxy.getAlt().c_str();
+    int len = strlen(alt);
+    size_t _size = 1 + len;
+    uint8_t data[_size];
+
+    if (len > 0) {
+        data[0] = 1;
+        memcpy(data + 1, alt, len);
+    }
+    else {
+        data[0] = 0;
+    }
+
+    size_t size = PACKET_HEADER_BYTES + CryptoBox::MAC_BYTES + _size;
+
+    WriteRequest* request = new WriteRequest{this, size};
+
+    uint8_t* ptr = (uint8_t*)request->buf.base;
+    // size
+    *(uint16_t*)ptr = htons(size);
+    ptr += sizeof(uint16_t);
+    // flag
+    *ptr++ = PacketFlag::signature();
+    // encrypted: data
+    Blob _cipher{ptr, _size + CryptoBox::MAC_BYTES};
+    const Blob _plain{data, _size};
+    proxy.encrypt(_cipher, _plain);
+
+    log->debug("Connection {} send SIGNATURE to server {}.", id, proxy.serverEndpoint());
+    auto rc = uv_write((uv_write_t*)request, (uv_stream_t*)(&relay), &request->buf, 1, [](uv_write_t* req, int status) {
+        WriteRequest* request = (WriteRequest*)req;
+        ProxyConnection* pc = request->connection();
+
+        if (status < 0) {
+            log->error("Connection {} send SIGNATURE to server {} failed({}): {}",
+                    pc->id, pc->proxy.serverEndpoint(), status, uv_strerror(status));
+            pc->close();
+        }
+
+        delete request;
+    });
+    if (rc < 0) {
+        log->error("Connection {} send SIGNATURE to server {} failed({}): {}",
+                id, proxy.serverEndpoint(), rc, uv_strerror(rc));
+        delete request;
+        close();
+    }
+}
+
 inline void vectorAppend(std::vector<uint8_t>& v, const uint8_t* data, size_t size)
 {
     size_t oldSize = v.size();
@@ -800,6 +854,9 @@ void ProxyConnection::onAuthenticateResponse(const uint8_t* packet, size_t size)
     onOpened();
 
     log->info("Connection {} opened.", id);
+
+    //send sig requeset to server
+    sendSignatureRequest();
 }
 
 const static size_t ATTACH_ACK_SIZE = PACKET_HEADER_BYTES;

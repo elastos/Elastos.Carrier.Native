@@ -115,6 +115,10 @@ public:
         return peerId;
     }
 
+    const std::string& getAlt() const noexcept {
+        return alt;
+    }
+
     // encrypt/decrypt with the session context
     void encrypt(Blob& cipher, const Blob& plain) const {
         box.encrypt(cipher, plain, nonce);
@@ -175,6 +179,7 @@ private:
     SocketAddress serverAddr {};
     uint32_t serverFails  {0};
     Id peerId {};
+    std::string alt {};
 
     std::string upstreamHost;
     int upstreamPort;

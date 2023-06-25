@@ -107,6 +107,7 @@ protected:
     void sendConnectResponse(bool success) noexcept;
     void sendDisconnectRequest() noexcept;
     void sendDataRequest(const uint8_t* data, size_t size) noexcept;
+    void sendSignatureRequest() noexcept;
 
     void onRelayRead(const uint8_t* data, size_t size) noexcept;
     void processRelayPacket(const uint8_t* packet, size_t size) noexcept;

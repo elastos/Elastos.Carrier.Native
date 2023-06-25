@@ -82,6 +82,10 @@ public:
         return random(DATA_MIN, DATA_MAX);
     }
 
+    static uint8_t signature() {
+        return random(SIGNATURE_MIN, SIGNATURE_MAX);
+    }
+
     static uint8_t error() {
         return random(ERROR_MIN, ERROR_MAX) | ACK_MASK;
     }

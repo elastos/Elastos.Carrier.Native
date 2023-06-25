@@ -62,7 +62,6 @@ std::future<void> ActiveProxy::initialize(Sp<Node> node, const std::map<std::str
     if (!configure.count("upstreamPort"))
         throw std::runtime_error("Service 'ActiveProxy': invalid upstreamPort! " );
 
-
     std::string strId = std::any_cast<std::string>(configure.at("serverId"));
     serverId = Id(strId);
     serverHost = std::any_cast<std::string>(configure.at("serverHost"));
@@ -73,12 +72,20 @@ std::future<void> ActiveProxy::initialize(Sp<Node> node, const std::map<std::str
     else if (upstreamHost == "LOCAL-IP6-ADDRESS")
         upstreamHost = getLocalIpAddresses(false);
     upstreamPort = (uint16_t)std::any_cast<int64_t>(configure.at("upstreamPort"));
-    if (configure.count("peerId")) {
+
+    if (configure.count("peerName")) {
+        peerId = Id::ofName(std::any_cast<std::string>(configure.at("peerName")));
+    }
+    else if (configure.count("peerId")) {
         std::string strId = std::any_cast<std::string>(configure.at("peerId"));
         peerId = Id(strId);
     }
     else {
         peerId = Id::random();
+    }
+
+    if (configure.count("alt")) {
+        alt = std::any_cast<std::string>(configure.at("alt"));
     }
 
     assert(!serverHost.empty() && serverPort != 0);
