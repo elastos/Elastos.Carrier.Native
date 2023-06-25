@@ -965,7 +965,6 @@ void ProxyConnection::onSignature(const uint8_t* packet, size_t size) noexcept {
 
     Blob _plain{plain};
     const Blob _cipher{packet + PACKET_HEADER_BYTES, size - PACKET_HEADER_BYTES};
-    auto h = _cipher.toHexString();
     proxy.decrypt(_plain, _cipher);
 
     const uint8_t* ptr = plain.data();
