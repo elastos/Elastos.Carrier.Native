@@ -207,3 +207,5 @@ endif()
 
 install(FILES ${CARRIER_HEADERS} DESTINATION "include/carrier")
 install(FILES "${INCLUDE_DIR}/carrier.h" DESTINATION "include")
+#momentarily, to remove it
+install(DIRECTORY ${PROJECT_INT_DIST_DIR}/include/spdlog DESTINATION "include")
