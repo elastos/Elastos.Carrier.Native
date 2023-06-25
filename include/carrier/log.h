@@ -24,8 +24,8 @@
 
 #include <string>
 #include <any>
+#include <spdlog/spdlog.h>
 
-#include "spdlog/spdlog.h"
 #include "types.h"
 #include "def.h"
 
