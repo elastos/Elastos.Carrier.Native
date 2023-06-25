@@ -26,6 +26,7 @@
 #include <queue>
 #include <random>
 #include <optional>
+#include <thread>
 
 #include "carrier/log.h"
 #include "messages/message.h"

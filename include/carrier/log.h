@@ -23,13 +23,14 @@
 #pragma once
 
 #include <string>
+#include <string_view>
 #include <any>
 
-#include "spdlog/spdlog.h"
+//#include "spdlog/spdlog.h"
 #include "types.h"
 #include "def.h"
 
-using namespace spdlog;
+//using namespace spdlog;
 namespace elastos {
 namespace carrier {
 
@@ -59,6 +60,9 @@ enum PatternTimeType {
     Local, // localtime
     UTC    // utc time.
 };
+
+template<typename... Args>
+using format_string_t = std::string_view;
 
 /*
  * If use Detail to print file lines and function name, need use such as: CARRIER_LOGGER_INFO,
@@ -114,7 +118,7 @@ enum PatternTimeType {
 class CARRIER_PUBLIC Logger {
 public:
     Logger() = default;
-    Logger(const Sp<spdlog::logger> spd_logger) : spd_logger(spd_logger) {}
+    Logger(const std::any logger): spd_logger(logger) {}
 
     //---- Init -----
     static void initialize(const std::string& config);
@@ -129,18 +133,31 @@ public:
 
     static void setLogPattern(std::string pattern);
 
+#if 0
     //---- Print -----
     template<typename... Args>
-    inline void log(Level level, format_string_t<Args...> fmt, Args &&... args) const {
-        spdlog::level::level_enum log_level =  spdlog::level::level_enum(level);
-        spd_logger->log(log_level, fmt, std::forward<Args>(args)...);
+    inline void log(Level level, spdlog::format_string_t<Args...> fmt, Args &&... args) const {
+       spdlog::level::level_enum log_level =  spdlog::level::level_enum(level);
+       spd_logger->log(log_level, fmt, std::forward<Args>(args)...);
+    }
+
+    template<typename... Args>
+    void source_log(const char *filename_in, int line_in, const char *funcname_in, Level level, spdlog::format_string_t<Args...> fmt, Args &&... args) const {
+       spdlog::level::level_enum log_level =  spdlog::level::level_enum(level);
+       spd_logger->log(spdlog::source_loc{filename_in, line_in, funcname_in}, log_level, fmt, std::forward<Args>(args)...);
+    }
+#else
+    template<typename... Args>
+    void log(Level level, format_string_t<Args...> fmt, Args &&... args) const {
+        // TODO:
     }
 
     template<typename... Args>
     void source_log(const char *filename_in, int line_in, const char *funcname_in, Level level, format_string_t<Args...> fmt, Args &&... args) const {
-        spdlog::level::level_enum log_level =  spdlog::level::level_enum(level);
-        spd_logger->log(spdlog::source_loc{filename_in, line_in, funcname_in}, log_level, fmt, std::forward<Args>(args)...);
+       // TODO:
     }
+
+#endif
 
     template<typename... Args>
     inline void trace(Args &&... args) const {
@@ -205,7 +222,8 @@ public:
     void setPattern(const std::string& pattern, PatternTimeType time_type = PatternTimeType::Local) const;
 
 private:
-    Sp<spdlog::logger> spd_logger;
+    //Sp<std::any> spd_logger;
+    std::any spd_logger;
 };
 
 } /* carrier  */

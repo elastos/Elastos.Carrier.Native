@@ -26,6 +26,9 @@
 
 #if defined(_WIN32) || defined(_WIN64)
 #include <winsock2.h>
+#else
+#include <fcntl.h>
+#include <unistd.h>
 #endif
 
 #include "utils/time.h"

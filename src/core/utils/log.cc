@@ -61,8 +61,7 @@ std::shared_ptr<Logger> Logger::get(const std::string& name) {
     if (!spd_logger) {
         if (userSettings.fileSink == nullptr) {
             spd_logger = spdlog::stdout_color_mt(name);
-        }
-        else {
+        } else {
             spd_logger = std::make_shared<spdlog::logger>(name, userSettings.fileSink);
             spdlog::register_logger(spd_logger);
         }
@@ -124,21 +123,24 @@ void Logger::setLogPattern(std::string pattern) {
 
 void Logger::setLevel(Level level) {
     auto log_level =  spdlog::level::level_enum(level);
-    spd_logger->set_level(log_level);
+    auto cast_logger = std::any_cast<Sp<spdlog::logger>>(spd_logger);
+    cast_logger->set_level(log_level);
 }
 
 bool Logger::isEnabled(Level level) {
     auto log_level =  spdlog::level::level_enum(level);
-    return log_level == spd_logger->level();
+    auto cast_logger = std::any_cast<Sp<spdlog::logger>>(spd_logger);
+    return log_level == cast_logger->level();
 }
 
 const std::string& Logger::getName() {
-    return spd_logger->name();
+    return std::any_cast<Sp<spdlog::logger>>(spd_logger)->name();
 }
 
 void Logger::setPattern(const std::string& pattern, PatternTimeType time_type) const {
     auto spd_time_type = spdlog::pattern_time_type(time_type);
-    spd_logger->set_pattern(pattern, spd_time_type);
+    auto cast_logger = std::any_cast<Sp<spdlog::logger>>(spd_logger);
+    cast_logger->set_pattern(pattern, spd_time_type);
 }
 
 }

@@ -25,6 +25,7 @@
 #include <memory>
 #include <list>
 #include <atomic>
+#include <mutex>
 
 #include "carrier/log.h"
 #include "constants.h"
