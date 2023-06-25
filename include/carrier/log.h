@@ -77,7 +77,7 @@ using format_string_t = std::string_view;
 #    define CARRIER_LOG_ACTIVE_LEVEL CARRIER_LOG_LEVEL_INFO
 #endif
 
-#define CARRIER_LOGGER_CALL(logger, level, ...) (logger)->source_log(__FILE__, __LINE__, CARRIER_FUNCTION, level, __VA_ARGS__);
+#define CARRIER_LOGGER_CALL(logger, level, ...) (logger)->log(level, __VA_ARGS__);
 
 #if CARRIER_LOG_ACTIVE_LEVEL <= CARRIER_LOG_LEVEL_TRACE
 #    define CARRIER_LOGGER_TRACE(logger, ...) CARRIER_LOGGER_CALL(logger, Level::Trace, __VA_ARGS__)
@@ -133,31 +133,11 @@ public:
 
     static void setLogPattern(std::string pattern);
 
-#if 0
-    //---- Print -----
     template<typename... Args>
-    inline void log(Level level, spdlog::format_string_t<Args...> fmt, Args &&... args) const {
-       spdlog::level::level_enum log_level =  spdlog::level::level_enum(level);
-       spd_logger->log(log_level, fmt, std::forward<Args>(args)...);
-    }
+    void log(Level level, format_string_t<Args...> fmt, Args &&... args) const;
 
     template<typename... Args>
-    void source_log(const char *filename_in, int line_in, const char *funcname_in, Level level, spdlog::format_string_t<Args...> fmt, Args &&... args) const {
-       spdlog::level::level_enum log_level =  spdlog::level::level_enum(level);
-       spd_logger->log(spdlog::source_loc{filename_in, line_in, funcname_in}, log_level, fmt, std::forward<Args>(args)...);
-    }
-#else
-    template<typename... Args>
-    void log(Level level, format_string_t<Args...> fmt, Args &&... args) const {
-        // TODO:
-    }
-
-    template<typename... Args>
-    void source_log(const char *filename_in, int line_in, const char *funcname_in, Level level, format_string_t<Args...> fmt, Args &&... args) const {
-       // TODO:
-    }
-
-#endif
+    void source_log(const char *filename_in, int line_in, const char *funcname_in, Level level, format_string_t<Args...> fmt, Args &&... args) const;
 
     template<typename... Args>
     inline void trace(Args &&... args) const {

@@ -143,5 +143,19 @@ void Logger::setPattern(const std::string& pattern, PatternTimeType time_type) c
     cast_logger->set_pattern(pattern, spd_time_type);
 }
 
+template<typename... Args>
+void Logger::log(Level level, format_string_t<Args...> fmt, Args &&... args) const {
+    spdlog::level::level_enum log_level =  spdlog::level::level_enum(level);
+    auto cast_logger = std::any_cast<Sp<spdlog::logger>>(spd_logger);
+    cast_logger->log(log_level, fmt, std::forward<Args>(args)...);
+}
+
+template<typename... Args>
+void Logger::source_log(const char *filename_in, int line_in, const char *funcname_in, Level level, format_string_t<Args...> fmt, Args &&... args) const {
+    spdlog::level::level_enum log_level =  spdlog::level::level_enum(level);
+    auto cast_logger = std::any_cast<Sp<spdlog::logger>>(spd_logger);
+    cast_logger->log(spdlog::source_loc{filename_in, line_in, funcname_in}, log_level, fmt, std::forward<Args>(args)...);
+}
+
 }
 }

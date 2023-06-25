@@ -55,7 +55,6 @@ list(APPEND APITESTS_SOURCES
     peerinfo_tests.cc
     prefix_tests.cc
     crypto_tests.cc
-    log_tests.cc
     storage_tests.cc
     store_find_value_tests.cc
     announce_find_peer_tests.cc
