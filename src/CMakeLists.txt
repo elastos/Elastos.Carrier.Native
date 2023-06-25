@@ -4,7 +4,6 @@ include(ProjectDefaults)
 include(CheckIncludeFile)
 
 add_definitions(-DSODIUM_STATIC)
-add_definitions(-DSPDLOG_COMPILED_LIB)
 
 if(WIN32)
     add_definitions(
