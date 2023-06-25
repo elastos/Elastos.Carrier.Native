@@ -635,14 +635,14 @@ void ProxyConnection::sendSignatureRequest() noexcept
     if (state == ConnectionState::Closed)
         return;
 
-    const char* alt = proxy.getAlt().c_str();
-    int len = strlen(alt);
+    const char* domainName = proxy.getDomainName().c_str();
+    int len = strlen(domainName);
     size_t _size = 1 + len;
     uint8_t data[_size];
 
     if (len > 0) {
         data[0] = 1;
-        memcpy(data + 1, alt, len);
+        memcpy(data + 1, domainName, len);
     }
     else {
         data[0] = 0;
@@ -971,14 +971,14 @@ void ProxyConnection::onSignature(const uint8_t* packet, size_t size) noexcept {
     uint16_t port = ntohs(*(uint16_t*)ptr);
     ptr += sizeof(port);
     int len = plain.size() - sizeof(port) - Signature::BYTES;
-    char alt[len + 1];
-    memcpy(alt, ptr, len);
-    alt[len] = '\0';
+    char domainName[len + 1];
+    memcpy(domainName, ptr, len);
+    domainName[len] = '\0';
     ptr += len;
     std::vector<uint8_t> sig(Signature::BYTES);
     memcpy(sig.data(), ptr, Signature::BYTES);
 
-    proxy.getNode()->announcePeer(proxy.getPeerId(), proxy.getServerId(), port, alt, sig);
+    proxy.getNode()->announcePeer(proxy.getPeerId(), proxy.getServerId(), port, domainName, sig);
 
     log->info("announcePeer.");
 }

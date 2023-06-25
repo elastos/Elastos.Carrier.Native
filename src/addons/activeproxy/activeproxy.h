@@ -115,8 +115,8 @@ public:
         return peerId;
     }
 
-    const std::string& getAlt() const noexcept {
-        return alt;
+    const std::string& getDomainName() const noexcept {
+        return domainName;
     }
 
     // encrypt/decrypt with the session context
@@ -179,7 +179,7 @@ private:
     SocketAddress serverAddr {};
     uint32_t serverFails  {0};
     Id peerId {};
-    std::string alt {};
+    std::string domainName {};
 
     std::string upstreamHost;
     int upstreamPort;

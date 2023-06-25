@@ -84,8 +84,8 @@ std::future<void> ActiveProxy::initialize(Sp<Node> node, const std::map<std::str
         peerId = Id::random();
     }
 
-    if (configure.count("alt")) {
-        alt = std::any_cast<std::string>(configure.at("alt"));
+    if (configure.count("domainName")) {
+        domainName = std::any_cast<std::string>(configure.at("domainName"));
     }
 
     assert(!serverHost.empty() && serverPort != 0);
