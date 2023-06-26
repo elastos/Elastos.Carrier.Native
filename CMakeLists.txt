@@ -41,6 +41,7 @@ add_subdirectory(src)
 if(ENABLE_TESTS)
     add_subdirectory(tests/apitests)
     add_subdirectory(tests/ad-hoc)
+    add_subdirectory(tests/functests)
     add_subdirectory(tests/sybil_attacher)
 endif()
 

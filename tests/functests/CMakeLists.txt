@@ -11,9 +11,9 @@ if(HAVE_UNISTD_H)
     add_definitions(-DHAVE_UNISTD_H=1)
 endif()
 
-check_include_file(io.h HAVE_IO_H)
-if(HAVE_IO_H)
-    add_definitions(-DHAVE_IO_H=1)
+check_include_file(dirent.h HAVE_DIRENT_H)
+if(HAVE_DIRENT_H)
+    add_definitions(-DHAVE_DIRENT_H=1)
 endif()
 
 check_symbol_exists(SIGKILL signal.h HAVE_SIGKILL)
@@ -36,26 +36,7 @@ include_directories(
 list(APPEND APITESTS_SOURCES
     main.cc
     ../common/utils.cc
-    messages/ping_tests.cc
-    messages/find_node_tests.cc
-    messages/store_value_tests.cc
-    messages/find_value_tests.cc
-    messages/announce_peer_tests.cc
-    messages/find_peer_tests.cc
-    messages/error_message_tests.cc
-    task/closest_candidates_tests.cc
-    id_tests.cc
-    value_tests.cc
-    nodeinfo_tests.cc
-    peerinfo_tests.cc
-    prefix_tests.cc
-    crypto_tests.cc
-    log_tests.cc
-    storage_tests.cc
-    store_find_value_tests.cc
-    announce_find_peer_tests.cc
-    address_tests.cc
-    node_api_tests.cc
+    node_automation_tests.cc
 )
 
 set(LIBS
@@ -96,20 +77,20 @@ if(ENABLE_STATIC)
     set(LIBS carrier-static ${LIBS})
 endif()
 
-add_executable(apitests ${APITESTS_SOURCES})
-target_link_libraries(apitests ${LIBS} ${SYSTEM_LIBS})
-add_dependencies(apitests ${APITESTS_DEPENDS})
+add_executable(functests ${APITESTS_SOURCES})
+target_link_libraries(functests ${LIBS} ${SYSTEM_LIBS})
+add_dependencies(functests ${APITESTS_DEPENDS})
 
-configure_file(log_test.conf log_test.conf COPYONLY)
+configure_file(automation.conf automation.conf COPYONLY)
 
 enable_testing()
-add_test(TEST apitests)
+add_test(TEST functests)
 
 if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
-    install(TARGETS apitests
+    install(TARGETS functests
         RUNTIME DESTINATION "bin"
         ARCHIVE DESTINATION "lib"
         LIBRARY DESTINATION "lib")
 endif()
 
-install(FILES log_test.conf DESTINATION "bin")
+install(FILES automation.conf DESTINATION "bin")
