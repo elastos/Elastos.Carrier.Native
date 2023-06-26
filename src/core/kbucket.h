@@ -26,9 +26,9 @@
 #include <memory>
 
 #include "carrier/prefix.h"
-#include "carrier/log.h"
 #include "carrier/types.h"
 #include "utils/random_generator.h"
+#include "utils/log.h"
 #include "constants.h"
 #include "kbucket_entry.h"
 

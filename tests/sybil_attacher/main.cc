@@ -24,8 +24,9 @@
 #include <stddef.h>
 #include <signal.h>
 #include <stdlib.h>
-
 #include <chrono>
+#include <thread>
+
 #if defined(_WIN32) || defined(_WIN64)
 #include <windows.h>
 #include <io.h>

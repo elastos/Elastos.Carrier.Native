@@ -44,9 +44,9 @@
 #include <algorithm>
 
 #include "utils.h"
+#include "../../src/core/utils/log.h"
 
 // carrier
-#define CARRIER_LOG_ACTIVE_LEVEL CARRIER_LOG_LEVEL_TRACE
 #include <carrier.h>
 using namespace elastos::carrier;
 

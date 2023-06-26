@@ -34,7 +34,6 @@
 #include "value.h"
 #include "node_info.h"
 #include "peer_info.h"
-#include "log.h"
 #include "configuration.h"
 #include "lookup_option.h"
 #include "node_status.h"
@@ -48,6 +47,7 @@ class CryptoCache;
 class TokenManager;
 class DataStorage;
 class DHT;
+class Logger;
 
 class CARRIER_PUBLIC Node{
 public:

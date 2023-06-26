@@ -30,11 +30,11 @@
 
 #include "carrier/id.h"
 #include "carrier/node_info.h"
-#include "carrier/log.h"
 #include "carrier/types.h"
 
 #include "utils/random_generator.h"
 #include "utils/mtqueue.h"
+#include "utils/log.h"
 #include "task/ping_refresh_task.h"
 #include "kbucket.h"
 

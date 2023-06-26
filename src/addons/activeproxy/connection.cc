@@ -34,6 +34,7 @@
 #include "activeproxy.h"
 #include "packetflag.h"
 #include "exceptions.h"
+#include "../core/utils/log.h"
 
 namespace elastos {
 namespace carrier {

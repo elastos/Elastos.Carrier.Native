@@ -26,7 +26,7 @@
 #include <list>
 #include <atomic>
 
-#include "carrier/log.h"
+#include "utils/log.h"
 #include "constants.h"
 
 namespace elastos {

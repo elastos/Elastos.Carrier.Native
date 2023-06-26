@@ -74,7 +74,6 @@ list(APPEND CARRIER_HEADERS
     ${INCLUDE_DIR}/carrier/addon.h
     ${INCLUDE_DIR}/carrier/blob.h
     ${INCLUDE_DIR}/carrier/def.h
-    ${INCLUDE_DIR}/carrier/log.h
     ${INCLUDE_DIR}/carrier/types.h
     ${INCLUDE_DIR}/carrier/crypto_core.h
     ${INCLUDE_DIR}/carrier/socket_address.h
@@ -207,5 +206,3 @@ endif()
 
 install(FILES ${CARRIER_HEADERS} DESTINATION "include/carrier")
 install(FILES "${INCLUDE_DIR}/carrier.h" DESTINATION "include")
-#momentarily, to remove it
-install(DIRECTORY ${PROJECT_INT_DIST_DIR}/include/spdlog DESTINATION "include")
