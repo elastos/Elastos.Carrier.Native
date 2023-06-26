@@ -120,6 +120,7 @@ private:
     }
 
     bool verifySignature() const;
+    static std::vector<uint8_t> getSignData(const Id& nodeId, const Id& proxyId, uint16_t port, const std::string& alt);
 
 private:
     Id nodeId {};
