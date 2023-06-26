@@ -23,7 +23,7 @@
 #include "carrier/value.h"
 #include "messages/find_value_request.h"
 #include "messages/find_value_response.h"
-#include "carrier/log.h"
+#include "utils/log.h"
 #include "kclosest_nodes.h"
 #include "value_lookup.h"
 

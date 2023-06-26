@@ -28,7 +28,7 @@
 #include "carrier/value.h"
 
 #include "utils/time.h"
-#include "carrier/log.h"
+#include "utils/log.h"
 #include "task/node_lookup.h"
 #include "task/task_manager.h"
 #include "task/value_lookup.h"
