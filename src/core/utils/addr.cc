@@ -47,7 +47,7 @@ namespace carrier {
 #define ntohll(x) htobe64(x)
 #endif
 
-CARRIER_PUBLIC std::string getLocalIpAddresses(bool ipv4) {
+std::string getLocalIpAddresses(bool ipv4) {
     std::string ipAddress {};
 
 #if defined(_WIN32) || defined(_WIN64)
