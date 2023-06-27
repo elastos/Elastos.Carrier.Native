@@ -91,6 +91,8 @@ public:
         return this->_ptr + this->_size;
     }
 
+    const std::string toHexString() const;
+
 private:
     const uint8_t* _ptr {};
     size_t _size {0};

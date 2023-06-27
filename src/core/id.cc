@@ -23,6 +23,7 @@
 #include <iostream>
 #include <climits>
 #include <string>
+#include <algorithm>
 
 #include "carrier/id.h"
 #include "utils/hex.h"
@@ -49,6 +50,17 @@ Id Id::ofHex(const std::string& hexId) {
 Id Id::ofBase58(const std::string& base58Id) {
     Id id;
     id.fromBase58String(base58Id);
+    return id;
+}
+
+Id Id::ofName(std::string name) {
+    std::transform(name.begin(), name.end(), name.begin(), ::tolower);
+
+    int len = strlen(name.c_str());
+    std::vector<uint8_t> data(len);
+    std::memcpy((void*)data.data(), name.c_str(), len);
+    auto d = SHA256::digest(data);
+    auto id = Id(d);
     return id;
 }
 

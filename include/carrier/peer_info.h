@@ -85,7 +85,8 @@ struct CARRIER_PUBLIC PeerInfo {
     }
 
     int estimateSize() const {
-        return nodeId.size() + 16 + proxyId.size() + alt.size() + signature.size() + sizeof(int) + sizeof(bool);
+        // return nodeId.size() + sizeof(port) + proxyId.size() + alt.size() + signature.size() + sizeof(int) + sizeof(bool);
+        return 1024; //TODO:: should estimate size later
     }
 
 private:
@@ -119,6 +120,7 @@ private:
     }
 
     bool verifySignature() const;
+    static std::vector<uint8_t> getSignData(const Id& nodeId, const Id& proxyId, uint16_t port, const std::string& alt);
 
 private:
     Id nodeId {};

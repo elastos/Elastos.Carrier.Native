@@ -139,7 +139,7 @@ void NodeApiTester::testSelfNodes() {
     CPPUNIT_ASSERT_MESSAGE("Peer not found!", !peers.empty());
     for (auto& peer: peers) {
         std::cout << "Peer: " << peer << std::endl;
-        peer->isValid();
+        CPPUNIT_ASSERT_MESSAGE("peer is invalid!", peer->isValid());
     }
 
     node3->stop();

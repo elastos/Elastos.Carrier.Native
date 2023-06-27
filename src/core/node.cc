@@ -594,13 +594,7 @@ std::string Node::toString() const {
 }
 
 std::vector<uint8_t> Node::createPeerSignature(uint16_t port, const std::string& alt) const {
-    auto size = id.size() + sizeof(port) + alt.size();
-    std::vector<uint8_t> toSign(size);
-
-    toSign.insert(toSign.begin(), id.cbegin(), id.cend());
-    toSign.insert(toSign.end(), (uint8_t*)(&port), (uint8_t*)(&port) + sizeof(port));
-    toSign.insert(toSign.end(), alt.cbegin(), alt.cend());
-
+    std::vector<uint8_t> toSign = PeerInfo::getSignData(id, Id::zero(), port, alt);
     return keyPair.privateKey().sign(toSign);
 }
 

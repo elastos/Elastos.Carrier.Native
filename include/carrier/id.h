@@ -86,6 +86,7 @@ public:
 
     static Id ofHex(const std::string& hexId);
     static Id ofBase58(const std::string& base58Id);
+    static Id ofName(std::string name);
     static Id random();
     static Id zero() {
         return Id();

@@ -48,7 +48,7 @@ PeerInfo::PeerInfo(const Id& id, const Id& pid, uint16_t _port, const std::strin
 }
 
 PeerInfo::PeerInfo(const PeerInfo& pi)
-    : nodeId(pi.nodeId), proxyId(pi.proxyId), port(pi.port), alt(pi.alt), signature(pi.signature), family(pi.family) {}
+    : nodeId(pi.nodeId), proxyId(pi.proxyId), port(pi.port), alt(pi.alt), signature(pi.signature), family(pi.family), proxied(pi.proxied) {}
 
 
 bool PeerInfo::operator==(const PeerInfo& other) const {
@@ -76,27 +76,38 @@ std::ostream& operator<< (std::ostream& os, const PeerInfo& pi) {
     return os;
 }
 
-bool PeerInfo::verifySignature() const {
+std::vector<uint8_t> PeerInfo::getSignData(const Id& nodeId, const Id& proxyId, uint16_t port, const std::string& alt) {
+    bool proxied = false;
+    if (proxyId != Id::zero()) {
+        proxied = true;
+    }
     auto size = nodeId.size() + sizeof(port) + alt.size();
     if (proxied)
         size += proxyId.size();
 
-    std::vector<uint8_t> toVerify(size);
-    toVerify.insert(toVerify.begin(), nodeId.cbegin(), nodeId.cend());
+    std::vector<uint8_t> toSign {};
+    toSign.reserve(size);
+    toSign.insert(toSign.begin(), nodeId.cbegin(), nodeId.cend());
     if (proxied)
-        toVerify.insert(toVerify.end(), proxyId.cbegin(), proxyId.cend());
+        toSign.insert(toSign.end(), proxyId.cbegin(), proxyId.cend());
 
-    toVerify.insert(toVerify.end(), (uint8_t*)(&port), (uint8_t*)(&port) + sizeof(port));
-    toVerify.insert(toVerify.end(), alt.cbegin(), alt.cend());
+    toSign.insert(toSign.end(), (uint8_t*)(&port), (uint8_t*)(&port) + sizeof(port));
+    const uint8_t* ptr = (const uint8_t*)alt.c_str();
+    toSign.insert(toSign.end(), ptr, ptr + strlen(alt.c_str()));
+    return toSign;
+}
+
+bool PeerInfo::verifySignature() const {
+    std::vector<uint8_t> toVerify = getSignData(nodeId, proxyId, port, alt);
 
     Signature::PublicKey sender {};
     if (proxied)
         sender = Signature::PublicKey(proxyId.blob());
     else
         sender = Signature::PublicKey(nodeId.blob());
-    return sender.verify(signature, toVerify);
-}
 
+   return sender.verify(signature, toVerify);
+}
 
 bool PeerInfo::isValid() const {
     // assert(!signature.empty());
