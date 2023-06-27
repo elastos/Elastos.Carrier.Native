@@ -28,6 +28,8 @@
 #include "setting.h"
 #include <carrier.h>
 
+#include "utils/log.h"
+
 /* Minutes to wait between new crawler round */
 #define CRAWLER_INTERVAL            30
 

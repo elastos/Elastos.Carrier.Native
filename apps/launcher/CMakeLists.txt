@@ -50,6 +50,7 @@ include_directories(
     .
     ../common
     ../../include
+    ../../src/core
     )
 
 list(APPEND LAUNCHER_SOURCES

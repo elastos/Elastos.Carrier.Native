@@ -29,6 +29,7 @@
 #include <IP2Location.h>
 
 #include "setting.h"
+#include "utils/log.h"
 
 using namespace elastos::carrier;
 
