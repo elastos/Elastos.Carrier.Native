@@ -29,7 +29,6 @@
 namespace elastos {
 namespace carrier {
 
-
 const std::string Blob::toHexString() const {
     return "0x" + Hex::encode(_ptr, _size);
 }
