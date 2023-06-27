@@ -50,6 +50,7 @@ include_directories(
     .
     ../common
     ../../include
+    ../../src/core
     )
 
 add_definitions(-DCARRIER_CRAWLER)
@@ -95,5 +96,5 @@ install(TARGETS carrier-crawler
     ARCHIVE DESTINATION "lib"
     LIBRARY DESTINATION "lib")
 
-install(FILES crawler.conf
+install(FILES default.conf
     DESTINATION "etc/carrier-crawler")

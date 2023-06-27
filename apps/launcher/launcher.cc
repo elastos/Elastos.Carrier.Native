@@ -36,7 +36,7 @@
 #include <application_lock.h>
 #include <coredump.h>
 
-#include "../../src/core/utils/log.h"
+#include "utils/log.h"
 
 using namespace std::chrono_literals;
 using namespace elastos::carrier;
