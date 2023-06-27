@@ -27,6 +27,7 @@
 #include <algorithm>
 #include <memory>
 #include <cstdint>
+#include <stdlib.h>
 
 #include "carrier/blob.h"
 
@@ -638,7 +639,7 @@ void ProxyConnection::sendSignatureRequest() noexcept
     const char* domainName = proxy.getDomainName().c_str();
     int len = strlen(domainName);
     size_t _size = 1 + len;
-    uint8_t data[_size];
+    uint8_t* data = (uint8_t*)alloca(_size);
 
     if (len > 0) {
         data[0] = 1;
@@ -952,7 +953,8 @@ void ProxyConnection::onDataRequest(const uint8_t* packet, size_t size) noexcept
     }
 }
 
-void ProxyConnection::onSignature(const uint8_t* packet, size_t size) noexcept {
+void ProxyConnection::onSignature(const uint8_t* packet, size_t size) noexcept
+{
     if (size < 66) {
         log->error("Connection {} got an invalid signature from server {}", id, proxy.serverEndpoint());
         close();
@@ -970,8 +972,8 @@ void ProxyConnection::onSignature(const uint8_t* packet, size_t size) noexcept {
     const uint8_t* ptr = plain.data();
     uint16_t port = ntohs(*(uint16_t*)ptr);
     ptr += sizeof(port);
-    int len = plain.size() - sizeof(port) - Signature::BYTES;
-    char domainName[len + 1];
+    size_t len = plain.size() - sizeof(port) - Signature::BYTES;
+    char *domainName = (char*)alloca(len + 1);
     memcpy(domainName, ptr, len);
     domainName[len] = '\0';
     ptr += len;
