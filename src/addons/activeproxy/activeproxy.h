@@ -52,6 +52,10 @@ public:
         return isRunning();
     }
 
+    const std::string& getServerHost() const noexcept {
+        return serverHost;
+    }
+
     const std::string& serverEndpoint() const noexcept {
         return serverName;
     }

@@ -35,7 +35,7 @@
 #include "activeproxy.h"
 #include "packetflag.h"
 #include "exceptions.h"
-#include "../core/utils/log.h"
+#include "utils/log.h"
 
 namespace elastos {
 namespace carrier {
@@ -953,9 +953,8 @@ void ProxyConnection::onDataRequest(const uint8_t* packet, size_t size) noexcept
     }
 }
 
-void ProxyConnection::onSignature(const uint8_t* packet, size_t size) noexcept
-{
-    if (size < 66) {
+void ProxyConnection::onSignature(const uint8_t* packet, size_t size) noexcept {
+    if (size < PACKET_HEADER_BYTES + CryptoBox::MAC_BYTES + sizeof(uint16_t) + Signature::BYTES) {
         log->error("Connection {} got an invalid signature from server {}", id, proxy.serverEndpoint());
         close();
         return;
@@ -980,6 +979,8 @@ void ProxyConnection::onSignature(const uint8_t* packet, size_t size) noexcept
     std::vector<uint8_t> sig(Signature::BYTES);
     memcpy(sig.data(), ptr, Signature::BYTES);
 
+    log->info("announcePeer Id: {}, server: {}, port: {}, domain: {} ",
+            proxy.getPeerId().toBase58String(), proxy.getServerHost(), port, (char*)domainName);
     proxy.getNode()->announcePeer(proxy.getPeerId(), proxy.getServerId(), port, domainName, sig);
 
     log->info("announcePeer.");

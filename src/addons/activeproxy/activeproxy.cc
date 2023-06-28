@@ -31,7 +31,7 @@
 #include "activeproxy.h"
 #include "connection.h"
 #include "exceptions.h"
-#include "../core/utils/log.h"
+#include "utils/log.h"
 
 #include "utils/addr.h"
 
