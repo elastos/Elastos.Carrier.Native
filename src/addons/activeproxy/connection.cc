@@ -785,7 +785,7 @@ void ProxyConnection::processRelayPacket(const uint8_t* packet, size_t size) noe
             onAttachResponse(packet, size);
             return;
         } else {
-            log->error("Connection {} got a wrong packet({}), AUTH or ATTACH acknowledge expected.", flag, id);
+            log->error("Connection {} got a wrong packet({}), AUTH or ATTACH acknowledge expected.", id, flag);
             close();
             return;
         }
@@ -802,7 +802,7 @@ void ProxyConnection::processRelayPacket(const uint8_t* packet, size_t size) noe
             onSignature(packet, size);
             return;
         } else {
-            log->error("Connection {} got a wrong packet({}), PING acknowledge or CONNECT expected.", flag, id);
+            log->error("Connection {} got a wrong packet({}), PING acknowledge or CONNECT expected.", id, flag);
             close();
             return;
         }
@@ -816,7 +816,7 @@ void ProxyConnection::processRelayPacket(const uint8_t* packet, size_t size) noe
             onDisconnectRequest(packet, size);
             return;
         } else {
-            log->error("Connection {} got a wrong packet({}), DATA or DISCONNECT expected.", flag, id);
+            log->error("Connection {} got a wrong packet({}), DATA or DISCONNECT expected.", id, flag);
             close();
             return;
         }
