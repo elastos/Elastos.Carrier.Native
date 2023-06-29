@@ -131,7 +131,7 @@ void NodeTester::testNode() {
     auto peers = future4.get();
     CPPUNIT_ASSERT_MESSAGE("Peer not found!", !peers.empty());
     for (auto& peer: peers) {
-        peer->isValid();
+        CPPUNIT_ASSERT(peer->isValid());
         std::cout << "Peer: " << static_cast<std::string>(*peer) << std::endl;
     }
 

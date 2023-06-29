@@ -100,6 +100,8 @@ private:
 
     void setProxyId(const Blob& id) {
         this->proxyId = Id(id);
+        if (this->proxyId != Id::zero())
+            proxied = true;
     }
 
     void setPort(const int port) {

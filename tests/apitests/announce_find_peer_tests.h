@@ -43,6 +43,7 @@ private:
     std::shared_ptr<Node> node1 = nullptr;
     std::shared_ptr<Node> node2 = nullptr;
     std::shared_ptr<Node> node3 = nullptr;
+    std::shared_ptr<Node> proxy = nullptr;
 };
 
 }  // namespace test
