@@ -23,6 +23,7 @@
 #pragma once
 #include <list>
 
+#include <carrier.h>
 #include "utils/random_generator.h"
 
 using namespace elastos::carrier;
@@ -82,6 +83,8 @@ static void removeStorage(const std::string path);
 static bool isFileExists(const std::string path);
 
 static uint64_t currentTimeMillis();
+
+static std::vector<uint8_t> getSignData(const Id& nodeId, const Id& proxyId, uint16_t port, const std::string& alt);
 };
 
 }

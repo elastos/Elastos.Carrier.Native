@@ -489,9 +489,18 @@ std::future<bool> Node::announcePeer(const Id& peerId, uint16_t port, const std:
 
 std::future<bool> Node::announcePeer(const Id& peerId, const Id& proxyId, uint16_t port,
         const std::string& alt, std::vector<uint8_t> signature) const {
+    auto promise = std::make_shared<std::promise<bool>>();
 
-    if (proxyId == Id::zero())
+    if (proxyId == Id::zero()) {
         signature = createPeerSignature(port, alt);
+    } else {
+        std::vector<uint8_t> toVerify = PeerInfo::getSignData(id, proxyId, port, alt);
+        auto sender = Signature::PublicKey(proxyId.blob());
+        if(!sender.verify(signature, toVerify)) {
+            promise->set_value(false);
+            return promise->get_future();
+        }
+    }
 
     if (!isRunning())
         throw std::runtime_error("Node is not running");
@@ -517,7 +526,6 @@ std::future<bool> Node::announcePeer(const Id& peerId, const Id& proxyId, uint16
     }
     */
 
-    auto promise = std::make_shared<std::promise<bool>>();
     auto completion = std::make_shared<std::atomic<int>>(0);
 
     // TODO: improve the complete handler, check the announced nodes
@@ -558,6 +566,17 @@ void Node::encrypt(const Id& recipient, Blob& cipher, const Blob& plain) const {
 void Node::decrypt(const Id& sender, Blob& plain, const Blob& cipher) const {
     auto ctx = cryptoContexts->get(sender);
     ctx.decrypt(plain, cipher);
+}
+
+std::vector<uint8_t> Node::sign(const Blob& data) const {
+    return keyPair.privateKey().sign(data);
+}
+
+void Node::sign(Blob& sig, const Blob& data) const {
+    return keyPair.privateKey().sign(sig, data);
+}
+bool Node::verify(const Blob& sig, const Blob& data) const {
+    return keyPair.publicKey().verify(sig, data);
 }
 
 int Node::getPort() {
