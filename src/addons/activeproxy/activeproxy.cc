@@ -24,7 +24,6 @@
 
 #include <memory>
 #include <algorithm>
-#include <list>
 #include <thread>
 #include <cassert>
 
@@ -32,7 +31,6 @@
 #include "connection.h"
 #include "exceptions.h"
 #include "utils/log.h"
-
 #include "utils/addr.h"
 
 namespace elastos {
@@ -48,19 +46,19 @@ static const uint32_t MAX_IDLE_TIME = 300000;       // 3 minutes
 std::future<void> ActiveProxy::initialize(Sp<Node> node, const std::map<std::string, std::any>& configure) {
     //get value from configure
     if (!configure.count("serverId"))
-        throw std::runtime_error("Service 'ActiveProxy': missing serverId!");
+        throw std::runtime_error("Addon ActiveProxy's configure item has error: missing serverId!");
 
     if (!configure.count("serverHost"))
-        throw std::runtime_error("Service 'ActiveProxy': missing serverHost!");
+        throw std::runtime_error("Addon ActiveProxy's configure item has error: missing serverHost!");
 
     if (!configure.count("serverPort"))
-        throw std::runtime_error("Service 'ActiveProxy': missing serverPort!");
+        throw std::runtime_error("Addon ActiveProxy's configure item has error: missing serverPort!");
 
     if (!configure.count("upstreamHost"))
-        throw std::runtime_error("Service 'ActiveProxy': missing upstreamHost!");
+        throw std::runtime_error("Addon ActiveProxy's configure item has error: missing upstreamHost!");
 
     if (!configure.count("upstreamPort"))
-        throw std::runtime_error("Service 'ActiveProxy': missing upstreamPort!");
+        throw std::runtime_error("Addon ActiveProxy's configure item has error: missing upstreamPort!");
 
     std::string strId = std::any_cast<std::string>(configure.at("serverId"));
     serverId = Id(strId);
@@ -86,9 +84,9 @@ std::future<void> ActiveProxy::initialize(Sp<Node> node, const std::map<std::str
         domainName = std::any_cast<std::string>(configure.at("domainName"));
 
     if (serverHost.empty() || serverPort == 0)
-        throw std::runtime_error("Service `ActiveProxy': empty serverHost or serverPort is not allowed");
+        throw std::runtime_error("Addon ActiveProxy's configure item has error: empty serverHost or serverPort is not allowed");
     if (upstreamName.empty() || upstreamPort == 0)
-        throw std::runtime_error("Service `ActiveProxy': empty upstreamHost or upstreamPort is not allowed");
+        throw std::runtime_error("Addon ActiveProxy's configure item has error: empty upstreamHost or upstreamPort is not allowed");
 
     //init data
     log->setLevel(Level::Info);
@@ -121,7 +119,7 @@ std::future<void> ActiveProxy::deinitialize() {
 
 void ActiveProxy::onStop() noexcept
 {
-    log->info("ActiveProxy stopping...");
+    log->info("Addon ActiveProxy is on-stopping...");
     running = false;
 
     if (reconnectTimer.data)
@@ -137,14 +135,13 @@ void ActiveProxy::onStop() noexcept
     uv_close((uv_handle_t*)&stopHandle, nullptr);
 
     // close all connections
-    for (auto& c : connections) {
+    for (const auto& c : connections) {
         c->onClosed(nullptr);
         c->close();
         c->unref();
     }
 
     connections.clear();
-
     stopPromise.set_value();
 }
 
@@ -180,11 +177,11 @@ void ActiveProxy::onIteration() noexcept
 void ActiveProxy::idleCheck() noexcept
 {
     // Dump the current status: should change the log level to debug later
-    log->info("STATUS: Connections = {}, inFlights = {}, idle = {}",
+    log->info("Addon ActiveProxy STATUS dump: Connections = {}, inFlights = {}, idle = {}",
             connections.size(), inFlights,
             idleTimestamp == MAX_IDLE_TIME ? 0 : (uv_now(&loop) - idleTimestamp) / 1000);
-    for (auto c : connections)
-        log->info("STATUS: {}", c->status());
+    for (const auto& c: connections)
+        log->info("Addon ActiveProxy STATUS dump: {}", c->status());
 
     if (idleTimestamp == UINT64_MAX)
         return;
@@ -195,7 +192,7 @@ void ActiveProxy::idleCheck() noexcept
     if (inFlights != 0 || connections.size() <= 1)
         return;
 
-    log->info("ActiveProxy closing the redundant connections due to long time idle...");
+    log->info("Addon ActiveProxy is closing the redundant connections due to long time idle...");
     for (auto c = connections.end() - 1; c > connections.begin(); --c) {
         (*c)->onClosed(nullptr);
         (*c)->close();
@@ -207,11 +204,11 @@ void ActiveProxy::idleCheck() noexcept
 
 void ActiveProxy::start()
 {
-    log->info("ActiveProxy starting...");
+    log->info("Addon ActiveProxy is starting...");
 
     int rc = uv_loop_init(&loop);
     if (rc < 0) {
-        log->error("ActiveProxy failed to initialize the event loop({}): {}", rc, uv_strerror(rc));
+        log->error("Addon ActiveProxy failed to initialize the event loop({}): {}", rc, uv_strerror(rc));
         throw networking_error(uv_strerror(rc));
     }
 
@@ -221,7 +218,7 @@ void ActiveProxy::start()
         ap->onStop();
     });
     if (rc < 0) {
-        log->error("ActiveProxy failed to initialize the stop handle({}): {}", rc, uv_strerror(rc));
+        log->error("Addon ActiveProxy failed ot initialize the stop handle({}): {}", rc, uv_strerror(rc));
         uv_loop_close(&loop);
         throw networking_error(uv_strerror(rc));
     }
@@ -235,7 +232,7 @@ void ActiveProxy::start()
         ap->onIteration();
     });
     if (rc < 0) {
-        log->error("ActiveProxy failed to start the iteration handle({}): {}", rc, uv_strerror(rc));
+        log->error("Addon ActiveProxy failed to start the iteration handle({}): {}", rc, uv_strerror(rc));
         uv_close((uv_handle_t*)&idleHandle, nullptr);
         uv_close((uv_handle_t*)&stopHandle, nullptr);
         uv_loop_close(&loop);
@@ -249,7 +246,7 @@ void ActiveProxy::start()
         self->idleCheck();
     }, IDLE_CHECK_INTERVAL, IDLE_CHECK_INTERVAL);
     if (rc < 0) {
-        log->error("ActiveProxy failed to start the idle check timer({}): {}", rc, uv_strerror(rc));
+        log->error("Addon ActiveProxy failed to start the idle check timer({}): {}", rc, uv_strerror(rc));
         uv_idle_stop(&idleHandle);
         uv_close((uv_handle_t*)&idleHandle, nullptr);
         uv_close((uv_handle_t*)&stopHandle, nullptr);
@@ -264,12 +261,12 @@ void ActiveProxy::start()
 
     // Start the loop in thread
     runner = std::thread([&]() {
-        log->info("ActiveProxy started.");
+        log->info("Addon ActiveProxy is running.");
         running = true;
         first = true;
         int rc = uv_run(&loop, UV_RUN_DEFAULT);
         if (rc < 0) {
-            log->error("ActiveProxy failed to start the event loop({}): {}", rc, uv_strerror(rc));
+            log->error("Addon ActiveProxy failed to start the event loop({}): {}", rc, uv_strerror(rc));
             running = false;
             uv_idle_stop(&idleHandle);
             uv_close((uv_handle_t*)&idleHandle, nullptr);
@@ -287,21 +284,20 @@ void ActiveProxy::start()
 
         running = false;
         uv_loop_close(&loop);
-        log->info("ActiveProxy stopped.");
+        log->info("Addon ActiveProxy is stopped.");
     });
 }
 
 void ActiveProxy::stop() noexcept
 {
     if (running) {
-        log->info("ActiveProxy stopping...");
+        log->info("Addon ActiveProxy is stopping...");
         uv_async_send(&stopHandle);
         try {
             runner.join();
         } catch(...) {
         }
-    }
-    else {
+    } else {
         stopPromise.set_value();
     }
 }
@@ -316,7 +312,7 @@ void ActiveProxy::connect() noexcept
     }
 
     reconnectInterval = (1 << (serverFails <= 6 ? serverFails : 6)) * 1000;
-    log->info("ActiveProxy try to reconnect after {} seconeds.", reconnectInterval / 1000);
+    log->info("Addon ActiveProxy tried to reconnect after {} seconeds.", reconnectInterval / 1000);
     reconnectTimer.data = this;
     auto rc = uv_timer_start(&reconnectTimer, [](uv_timer_t* handle) {
         ActiveProxy* self = (ActiveProxy*)handle->data;
@@ -325,14 +321,14 @@ void ActiveProxy::connect() noexcept
         self->_connect();
     }, reconnectInterval, 0);
     if (rc < 0) {
-        log->error("ActiveProxy failed to start the reconnect timer({}): {}", rc, uv_strerror(rc));
+        log->error("Addon ActiveProxy failed to start the reconnect timer({}): {}", rc, uv_strerror(rc));
         reconnectInterval = 0;
     }
 }
 
 void ActiveProxy::_connect() noexcept
 {
-    log->debug("ActiveProxy try to create a new connectoin.");
+    log->debug("Addon ActiveProxy tried to create a new connectoin.");
 
     ProxyConnection* connection = new ProxyConnection {*this};
     connections.push_back(connection);
