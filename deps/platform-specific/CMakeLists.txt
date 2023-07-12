@@ -53,7 +53,7 @@ elseif(WIN32)
     set(CYGWIN_PCRE2_HASH "069e2f9115b839fa3a22613717c3effe")
     set(CYGWIN_GMP10_HASH "1ad0e65cb6eeba404fb7da22c8d48ee6")
     set(CYGWIN_MPFR6_HASH "7ba134f28d1a7583f254cfddbaa2166b")
-    set(CYGWIN_NCURESESW_HASH "d82a5d7d6637afa00cedad703d8009d1")
+    set(CYGWIN_NCURESESW_HASH "74d9c06a7229a7f9f07f6ab36caa9c54")
     set(CYGWIN_GCC_HASH "1d4e1691e361e4c43e42533ef335ed90")
     set(CYGWIN_READLINE7_HASH "6bced7ea9c1b5ad1e8fb17d62a431cc9")
     set(CYGWIN_PATCH_HASH "c254e28e0687685e74b8213af0b2c6c0")
@@ -201,9 +201,9 @@ elseif(WIN32)
         DEPENDS cygwin-runtime
 
         PREFIX ${PROJECT_DEPS_BUILD_PREFIX}
-        URL "${URL_PREFIX}/ncurses/libncursesw10/libncursesw10-6.4-7.20230603.tar.xz"
+        URL "${URL_PREFIX}/ncurses/libncursesw10/libncursesw10-6.4-9.20230625.tar.xz"
         URL_HASH MD5=${CYGWIN_NCURESESW_HASH}
-        DOWNLOAD_NAME "libncursesw10-6.4-7.20230603.tar.xz"
+        DOWNLOAD_NAME "libncursesw10-6.4-9.20230625.tar.xz"
         DOWNLOAD_DIR ${PROJECT_DEPS_TARBALL_DIR}
         DOWNLOAD_NO_PROGRESS 1
 
