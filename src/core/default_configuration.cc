@@ -146,10 +146,10 @@ void Builder::reset() {
 
 Sp<Configuration> Builder::build() {
     if (autoAddr4 && ip4.empty())
-        ip4 = getLocalIpAddresses();
+        ip4 = getLocalIPv4();
 
     if (autoAddr6 && ip6.empty())
-        ip6 = getLocalIpAddresses(false);
+        ip6 = getLocalIPv6();
 
     auto dataStorage = std::make_shared<DefaultConfiguration>(ip4, ip6,  port, normailize(storagePath), bootstrapNodes, services);
     return std::static_pointer_cast<Configuration>(dataStorage);
