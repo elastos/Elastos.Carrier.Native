@@ -48,19 +48,19 @@ static const uint32_t MAX_IDLE_TIME = 300000;       // 3 minutes
 std::future<void> ActiveProxy::initialize(Sp<Node> node, const std::map<std::string, std::any>& configure) {
     //get value from configure
     if (!configure.count("serverId"))
-        throw std::runtime_error("Service 'ActiveProxy': invalid serverId! " );
+        throw std::runtime_error("Service 'ActiveProxy': missing serverId!");
 
     if (!configure.count("serverHost"))
-        throw std::runtime_error("Service 'ActiveProxy': invalid serverHost! " );
+        throw std::runtime_error("Service 'ActiveProxy': missing serverHost!");
 
     if (!configure.count("serverPort"))
-        throw std::runtime_error("Service 'ActiveProxy': invalid serverPort! " );
+        throw std::runtime_error("Service 'ActiveProxy': missing serverPort!");
 
     if (!configure.count("upstreamHost"))
-        throw std::runtime_error("Service 'ActiveProxy': invalid upstreamHost! " );
+        throw std::runtime_error("Service 'ActiveProxy': missing upstreamHost!");
 
     if (!configure.count("upstreamPort"))
-        throw std::runtime_error("Service 'ActiveProxy': invalid upstreamPort! " );
+        throw std::runtime_error("Service 'ActiveProxy': missing upstreamPort!");
 
     std::string strId = std::any_cast<std::string>(configure.at("serverId"));
     serverId = Id(strId);
@@ -75,21 +75,20 @@ std::future<void> ActiveProxy::initialize(Sp<Node> node, const std::map<std::str
 
     if (configure.count("peerName")) {
         peerId = Id::ofName(std::any_cast<std::string>(configure.at("peerName")));
-    }
-    else if (configure.count("peerId")) {
+    } else if (configure.count("peerId")) {
         std::string strId = std::any_cast<std::string>(configure.at("peerId"));
         peerId = Id(strId);
-    }
-    else {
+    } else {
         peerId = Id::random();
     }
 
-    if (configure.count("domainName")) {
+    if (configure.count("domainName"))
         domainName = std::any_cast<std::string>(configure.at("domainName"));
-    }
 
-    assert(!serverHost.empty() && serverPort != 0);
-    assert(!upstreamHost.empty() && upstreamPort != 0);
+    if (serverHost.empty() || serverPort == 0)
+        throw std::runtime_error("Service `ActiveProxy': empty serverHost or serverPort is not allowed");
+    if (upstreamName.empty() || upstreamPort == 0)
+        throw std::runtime_error("Service `ActiveProxy': empty upstreamHost or upstreamPort is not allowed");
 
     //init data
     log->setLevel(Level::Info);
@@ -127,7 +126,6 @@ void ActiveProxy::onStop() noexcept
 
     if (reconnectTimer.data)
         uv_timer_stop(&reconnectTimer);
-
     uv_close((uv_handle_t*)&reconnectTimer, nullptr);
 
     uv_timer_stop(&idleCheckTimer);
@@ -139,7 +137,7 @@ void ActiveProxy::onStop() noexcept
     uv_close((uv_handle_t*)&stopHandle, nullptr);
 
     // close all connections
-    for (auto c : connections) {
+    for (auto& c : connections) {
         c->onClosed(nullptr);
         c->close();
         c->unref();
