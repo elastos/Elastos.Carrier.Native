@@ -68,9 +68,9 @@ std::future<void> ActiveProxy::initialize(Sp<Node> node, const std::map<std::str
     serverPort = (uint16_t)std::any_cast<int64_t>(configure.at("serverPort"));
     upstreamHost = std::any_cast<std::string>(configure.at("upstreamHost"));
     if (upstreamHost == "LOCAL-IP4-ADDRESS")
-        upstreamHost = getLocalIpAddresses();
+        upstreamHost = getLocalIPv4();
     else if (upstreamHost == "LOCAL-IP6-ADDRESS")
-        upstreamHost = getLocalIpAddresses(false);
+        upstreamHost = getLocalIPv6();
     upstreamPort = (uint16_t)std::any_cast<int64_t>(configure.at("upstreamPort"));
 
     if (configure.count("peerName")) {

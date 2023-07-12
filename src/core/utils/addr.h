@@ -23,12 +23,18 @@
 #pragma once
 
 #include <cstring>
-#include <carrier/def.h>
 
 namespace elastos {
 namespace carrier {
 
 std::string getLocalIpAddresses(bool ipv4 = true);
+inline std::string getLocalIPv4() {
+    return getLocalIpAddresses(true);
+}
+inline std::string getLocalIPv6() {
+    return getLocalIpAddresses(false);
+}
+
 
 } // namespace carrier
 } // namespace elastos
