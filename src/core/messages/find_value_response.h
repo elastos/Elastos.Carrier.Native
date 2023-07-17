@@ -33,66 +33,18 @@ namespace carrier {
 
 class FindValueResponse : public LookupResponse {
 public:
-    FindValueResponse(int txid, const Sp<Value> _value)
-        : LookupResponse(Message::Method::FIND_VALUE, txid), value(_value) {}
+    FindValueResponse(int txid)
+        : LookupResponse(Message::Method::FIND_VALUE, txid) {}
 
     FindValueResponse()
-        : FindValueResponse(0, std::make_shared<Value>()) {}
+        : FindValueResponse(0) {}
 
-    const Id& getPublicKey() const {
-        return value->getPublicKey();
-    }
+    void setValue(const Value& value);
 
-    void setPublicKey(const Id& publicKey) {
-        value->setPublicKey(publicKey.blob());
-    }
-
-    const Id& getRecipient() const {
-        return value->getRecipient();
-    }
-
-    void setRecipient(const Id& recipient) {
-        value->setRecipient(recipient.blob());
-    }
-
-    const CryptoBox::Nonce& getNonce() const {
-        return value->getNonce();
-    }
-
-    void setNonce(CryptoBox::Nonce& nonce) {
-        value->setNonce(Blob(nonce.bytes(), nonce.size()));
-    }
-
-    const std::vector<uint8_t>& getSignature() const {
-        return value->getSignature();
-    }
-
-    void setSignature(const std::vector<uint8_t>& signature) {
-        value->setSignature(Blob(signature.data(), signature.size()));
-    }
-
-    int getSequenceNumber() const {
-        return value->getSequenceNumber();
-    }
-
-    void setSequenceNumber(int sequenceNumber) {
-        value->setSequenceNumber(sequenceNumber);
-    }
-
-    const std::vector<uint8_t>& getData() const {
-        return value->getData();
-    }
-
-    void setData(const std::vector<uint8_t>& data) {
-        value->setData(Blob(data.data(), data.size()));
-    }
-
-    Sp<Value> getValue() const {
-        return value;
-    }
+    Value getValue() const;
 
     int estimateSize() const override {
-        return LookupResponse::estimateSize() + 195 + value->getData().size();
+        return LookupResponse::estimateSize() + 195 + value.size();
     }
 
 protected:
@@ -101,7 +53,12 @@ protected:
     void _toString(std::stringstream& ss) const override;
 
 private:
-    Sp<Value> value;
+    Id publicKey {};
+	Id recipient {};
+	Blob nonce {};
+    int sequenceNumber {-1};
+	std::vector<uint8_t> signature {};
+	std::vector<uint8_t> value;
 };
 
 }

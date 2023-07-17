@@ -79,16 +79,15 @@ StoreFindValueTests::setUp() {
 void
 StoreFindValueTests::testValue() {
     auto data = Utils::getRandomData(32);
-    auto val = node1->createValue(data);
-    CPPUNIT_ASSERT(val);
+    auto val = Value::of(data);
 
     //node1 to find value: no value
-    auto future1 = node1->findValue(val->getId());
+    auto future1 = node1->findValue(val.getId());
     auto val1 = future1.get();
     CPPUNIT_ASSERT(val1 == nullptr);
 
     //node2 to find value: no value
-    auto future2 = node2->findValue(val->getId());
+    auto future2 = node2->findValue(val.getId());
     auto val2 = future2.get();
     CPPUNIT_ASSERT(val2 == nullptr);
 
@@ -98,35 +97,34 @@ StoreFindValueTests::testValue() {
     CPPUNIT_ASSERT(result);
 
     //node1 to find value: has value
-    auto future4 = node1->findValue(val->getId());
+    auto future4 = node1->findValue(val.getId());
     auto val4 = future4.get();
     CPPUNIT_ASSERT(val4);
     CPPUNIT_ASSERT(val4->isValid());
-    CPPUNIT_ASSERT(*val4 == *val);
+    CPPUNIT_ASSERT(*val4 == val);
 
     //node2 to find value: has value
-    auto future6 = node2->findValue(val->getId());
+    auto future6 = node2->findValue(val.getId());
     auto val6 = future6.get();
     CPPUNIT_ASSERT(val6);
     CPPUNIT_ASSERT(val6->isValid());
-    CPPUNIT_ASSERT(*val6 == *val);
+    CPPUNIT_ASSERT(*val6 == val);
 }
 
 void
 StoreFindValueTests::testSignedValue() {
     auto data1 = Utils::getRandomData(32);
-    auto val = node1->createSignedValue(data1);
-    CPPUNIT_ASSERT(val);
+    auto val = Value::createSignedValue(data1);
 
-    auto valueId = val->getId();
+    auto valueId = val.getId();
 
     //node1 to find value: no value
-    auto future1 = node1->findValue(val->getId());
+    auto future1 = node1->findValue(val.getId());
     auto val1 = future1.get();
     CPPUNIT_ASSERT(val1 == nullptr);
 
     //node2 to find value: no value
-    auto future2 = node2->findValue(val->getId());
+    auto future2 = node2->findValue(val.getId());
     auto val2 = future2.get();
     CPPUNIT_ASSERT(val2 == nullptr);
 
@@ -136,16 +134,15 @@ StoreFindValueTests::testSignedValue() {
     CPPUNIT_ASSERT(result);
 
     //node2 to find value with default mode: has value
-    auto future4 = node2->findValue(val->getId());
+    auto future4 = node2->findValue(val.getId());
     auto val4 = future4.get();
     CPPUNIT_ASSERT(val4);
     CPPUNIT_ASSERT(val4->isValid());
-    CPPUNIT_ASSERT(*val4 == *val);
+    CPPUNIT_ASSERT(*val4 == val);
 
     //node1 update signed value
     auto data2 = Utils::getRandomData(64);
-    auto val5 = node1->updateValue(valueId, data2);
-    CPPUNIT_ASSERT(val5);
+    auto val5 = val.update(data2);
 
     auto future6 = node1->storeValue(val5);
     auto result2 = future6.get();
@@ -156,18 +153,17 @@ StoreFindValueTests::testSignedValue() {
     auto val7 = future7.get();
     CPPUNIT_ASSERT(val7);
 
-    CPPUNIT_ASSERT(*val7 == *val5);
-    CPPUNIT_ASSERT(!(*val7 == *val));
+    CPPUNIT_ASSERT(*val7 == val5);
+    CPPUNIT_ASSERT(!(*val7 == val));
 }
 
 void
 StoreFindValueTests::testEncryptedValue() {
     auto data1 = Utils::getRandomData(32);
-    auto val = node1->createEncryptedValue(node2->getId(), data1);
-    CPPUNIT_ASSERT(val);
-    CPPUNIT_ASSERT(val->isValid());
+    auto val = Value::createEncryptedValue(node2->getId(), data1);
+    CPPUNIT_ASSERT(val.isValid());
 
-    auto valueId = val->getId();
+    auto valueId = val.getId();
 
     //node1 store value: success
     auto future1 = node1->storeValue(val);
@@ -178,25 +174,24 @@ StoreFindValueTests::testEncryptedValue() {
     auto future2 = node1->findValue(valueId);
     auto val2 = future2.get();
     CPPUNIT_ASSERT(val2);
-    CPPUNIT_ASSERT(*val == *val2);
+    CPPUNIT_ASSERT(val == *val2);
 
     //node2 to find value: has value
     auto future3 = node2->findValue(valueId);
     auto val3 = future3.get();
     CPPUNIT_ASSERT(val3);
-    CPPUNIT_ASSERT(*val == *val3);
+    CPPUNIT_ASSERT(val == *val3);
 
     //node3 to find value: has value
     auto future4 = node3->findValue(valueId);
     auto val4 = future4.get();
     CPPUNIT_ASSERT(val4);
-    CPPUNIT_ASSERT(*val == *val4);
+    CPPUNIT_ASSERT(val == *val4);
 
     //update encrypted value
     auto data2 = Utils::getRandomData(64);
-    auto val5 = node1->updateValue(valueId, data2);
-    CPPUNIT_ASSERT(val5);
-    CPPUNIT_ASSERT(val5->isValid());
+    auto val5 = val.update(data2);
+    CPPUNIT_ASSERT(val5.isValid());
 
     auto future6 = node1->storeValue(val5);
     auto result2 = future6.get();
@@ -206,20 +201,20 @@ StoreFindValueTests::testEncryptedValue() {
     auto future7 = node1->findValue(valueId);
     auto val7 = future7.get();
     CPPUNIT_ASSERT(val7);
-    CPPUNIT_ASSERT(*val7 == *val5);
-    CPPUNIT_ASSERT(!(*val7 == *val));
+    CPPUNIT_ASSERT(*val7 == val5);
+    CPPUNIT_ASSERT(!(*val7 == val));
 
     auto future8 = node2->findValue(valueId);
     auto val8 = future8.get();
     CPPUNIT_ASSERT(val8);
-    CPPUNIT_ASSERT(*val8 == *val5);
-    CPPUNIT_ASSERT(!(*val8 == *val));
+    CPPUNIT_ASSERT(*val8 == val5);
+    CPPUNIT_ASSERT(!(*val8 == val));
 
     auto future9 = node3->findValue(valueId);
     auto val9 = future9.get();
     CPPUNIT_ASSERT(val9);
-    CPPUNIT_ASSERT(*val9 == *val5);
-    CPPUNIT_ASSERT(!(*val9 == *val));
+    CPPUNIT_ASSERT(*val9 == val5);
+    CPPUNIT_ASSERT(!(*val9 == val));
 }
 
 void

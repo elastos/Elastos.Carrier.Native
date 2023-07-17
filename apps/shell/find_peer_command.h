@@ -38,7 +38,7 @@ protected:
     void setupOptions() override {
         add_option("-m, --mode", mode, "lookup mode: 0(arbitrary), 1(optimistic), 2(conservative).");
         add_option("-x, --expected-count", excepted, "expected number of peers.");
-        add_option("NAME", name, "The service name to be find.");
+        add_option("ID", id, "The peer id to be find.");
         require_option(1, 3);
     };
 
@@ -50,31 +50,21 @@ protected:
             return;
         }
 
-        std::transform(name.cbegin(), name.cend(), name.begin(), // write to the same location
-                [](unsigned char c) { return std::tolower(c); });
-
-        const char* nname = (const char *)utf8proc_NFC((unsigned char *)(name.c_str()));
-        std::vector<uint8_t> data;
-        data.resize(strlen(nname));
-        std::memcpy((void*)data.data(), nname, strlen(nname));
-        auto d = SHA256::digest(data);
-        auto id = Id(d);
-
         LookupOption option {mode};
-        auto future = node->findPeer(id, excepted, option);
+        auto future = node->findPeer(Id(id), excepted, option);
         auto peers = future.get();
         std::cout << "----------------------------------------------" << std::endl;
         if (peers.empty()) {
             std::cout<< " Not found peer [" << static_cast<std::string>(id) << "]" << std::endl;
         } else {
             for (auto& p : peers)
-                std::cout << static_cast<std::string>(*p) << std::endl;
+                std::cout << static_cast<std::string>(p) << std::endl;
         }
         std::cout << "----------------------------------------------" << std::endl;
     };
 
 private:
-    std::string name {};
+    std::string id {};
     int excepted = 0;
     int mode = 2;
 

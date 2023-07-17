@@ -31,9 +31,15 @@ namespace test {
 class StoreValueTests : public MessageTests, public CppUnit::TestFixture {
     CPPUNIT_TEST_SUITE(StoreValueTests);
     CPPUNIT_TEST(testStoreValueRequestSize);
-    //CPPUNIT_TEST(testStoreValueRequest);
-    //CPPUNIT_TEST(testStoreValueResponseSize);
-    //CPPUNIT_TEST(testStoreValueResponse);
+    CPPUNIT_TEST(testStoreSignedValueRequestSize);
+    CPPUNIT_TEST(testStoreEncryptedValueRequestSize);
+
+    CPPUNIT_TEST(testStoreValueRequest);
+    CPPUNIT_TEST(testStoreSignedValueRequest);
+    CPPUNIT_TEST(testStoreEncryptedValueRequest);
+
+    CPPUNIT_TEST(testStoreValueResponseSize);
+    CPPUNIT_TEST(testStoreValueResponse);
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -41,7 +47,13 @@ public:
     void tearDown();
 
     void testStoreValueRequestSize();
+    void testStoreSignedValueRequestSize();
+    void testStoreEncryptedValueRequestSize();
+
     void testStoreValueRequest();
+    void testStoreSignedValueRequest();
+    void testStoreEncryptedValueRequest();
+
     void testStoreValueResponseSize();
     void testStoreValueResponse();
 };

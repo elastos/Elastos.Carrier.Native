@@ -31,85 +31,90 @@ namespace carrier {
 int FindPeerResponse::estimateSize() const {
     int size = LookupResponse::estimateSize();
 
-    for (const auto&  peer : peers4) {
-        size += peer->estimateSize();
-    }
-
-    for (const auto& peer : peers6) {
-        size += peer->estimateSize();
+    if (peers.empty()) {
+        size += (2 + 2 + 2 + Id::BYTES);
+        for (const auto&  pi : peers) {
+            size += (2 + 2 + Id::BYTES + 1 + sizeof(uint16_t) + 2 + Signature::BYTES);
+            size += pi.isDelegated() ? 2 + Id::BYTES : 1;
+            size += pi.hasAlternativeURL() ? 2 + strlen(pi.getAlternativeURL().c_str()) : 1;
+        }
     }
 
     return size;
 }
 
 void FindPeerResponse::_serialize(nlohmann::json& json) const {
-    if (!peers4.empty())
-        serializePeers(json, Message::KEY_RES_PEERS4, peers4);
-    if (!peers6.empty())
-        serializePeers(json, Message::KEY_RES_PEERS6, peers6);
-}
+    if (peers.empty())
+        return;
 
-void FindPeerResponse::serializePeers(nlohmann::json& object, const std::string& fieldName, const std::list<Sp<PeerInfo>>& peers) const {
     auto array = nlohmann::json::array();
-    for (const auto& peer: peers)
-        array.push_back(*peer);
+    array.push_back(peers.front().getId());
+    for (const auto& peer: peers) {
+        auto ar = nlohmann::json::array();
+        ar.push_back(peer.getNodeId());
+        if (peer.isDelegated())
+            ar.push_back(peer.getOrigin());
+        else
+            ar.push_back(nullptr);
+        ar.push_back(peer.getPort());
+        if (peer.hasAlternativeURL())
+            ar.push_back(peer.getAlternativeURL());
+        else
+            ar.push_back(nullptr);
+        ar.push_back(nlohmann::json::binary_t(peer.getSignature()));
 
-    object[fieldName] = array;
+        array.push_back(ar);
+    }
+
+    json[Message::KEY_RES_PEERS] = array;
 }
 
 void FindPeerResponse::_parse(const std::string& fieldName, nlohmann::json& object) {
-    if (fieldName == KEY_RES_PEERS4) {
-        parsePeers(object, peers4, AF_INET);
-    } else if (fieldName == Message::KEY_RES_PEERS6) {
-        parsePeers(object, peers6, AF_INET6);
-    } else {
-        throw std::invalid_argument("invalid find peer response message");
-    }
-}
-
-void FindPeerResponse::parsePeers(const nlohmann::json& object, std::list<Sp<PeerInfo>>& peers, int family) {
     if (!object.is_array())
         throw std::invalid_argument("Invalid response peers message");
 
-    for (const auto& elem : object) {
-        auto peer = std::make_shared<PeerInfo>(elem.get<PeerInfo>());
-        peer->setFamily(family);
-        peers.emplace_back(peer);
+    if (fieldName == KEY_RES_PEERS) {
+        bool first {true};
+        Id peerId {};
+        for (const auto& elem : object) {
+            if (first) {
+                peerId = Id(elem[0].get_binary());
+            }
+            else {
+                auto nodeId = Id(elem[0].get_binary());
+                //TODO::check the nullptr
+                auto origin = Id(elem[1].get_binary());
+                auto port = elem[2].get<uint16_t>();
+                //TODO::check the nullptr
+                auto alt = elem[3].get<std::string>();
+                auto sig = elem[4].get_binary();
+
+                auto pi = PeerInfo::of(peerId, nodeId, origin, port, alt, sig);
+                peers.emplace_back(pi);
+            }
+        }
+    } else {
+        throw std::invalid_argument("invalid find peer response message");
     }
 }
 
 #ifdef MSG_PRINT_DETAIL
 void FindPeerResponse::_toString(std::stringstream& ss) const {
     if (!peers4.empty()) {
-        ss << "\n    peer4:\n";
-        for (const auto& peer: peers4) {
-            ss <<""      "" << *peer << "\n";
-        }
-    }
-    if (!peers6.empty()) {
-        ss << "\n    peer6:\n";
-        for (const auto& peer: peers4) {
-            ss << ""      "" << *peer << "\n";
+        ss << "\n    peers:\n";
+        for (const auto& peer: peers) {
+            ss <<""      "" << peer << "\n";
         }
     }
 }
 #else
 void FindPeerResponse::_toString(std::stringstream& ss) const {
-    if (!peers4.empty()) {
-        ss << "p4:";
-        bool first_peer4 {true};
-        for (const auto& peer: peers4) {
-            ss << (first_peer4 ? "" : ",") << "[" << *peer << "]";
-            first_peer4 = false;
-        }
-        ss << ",";
-    }
-    if (!peers6.empty()) {
-        ss << "p6:";
-        bool first_peer6 {true};
-        for (const auto& peer: peers6) {
-            ss << (first_peer6 ? "" : ",") << "[" << *peer << "]";
-            first_peer6 = false;
+    if (!peers.empty()) {
+        ss << ",p:";
+        bool first_peer {true};
+        for (const auto& peer: peers) {
+            ss << (first_peer ? "" : ",") << "[" << peer << "]";
+            first_peer = false;
         }
     }
 }

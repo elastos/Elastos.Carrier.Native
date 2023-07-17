@@ -43,14 +43,14 @@ public:
     void close() override;
 
     Sp<Value> getValue(const Id& valueId) override;
-    Sp<Value> putValue(const Sp<Value>& value, int expectedSeq) override;
-    Sp<Value> putValue(const Sp<Value>& value) override;
+    Sp<Value> putValue(const Value& value, int expectedSeq) override;
+    Sp<Value> putValue(const Value& value) override;
     std::list<Id> listValueId() override;
 
-    std::list<Sp<PeerInfo>> getPeer(const Id& peerId, int family, int maxPeers) override;
-    Sp<PeerInfo> getPeer(const Id& peerId, int family, const Id& nodeId) override;
-    void putPeer(const Id& peerId, const std::list<Sp<PeerInfo>>& peers) override;
-    void putPeer(const Id& peerId, const Sp<PeerInfo>& peer) override;
+    std::list<PeerInfo> getPeer(const Id& peerId, int maxPeers) override;
+    Sp<PeerInfo> getPeer(const Id& peerId, const Id& origin) override;
+    void putPeer(const std::list<PeerInfo>& peers) override;
+    void putPeer(const PeerInfo& peer) override;
     std::list<Id> listPeerId() override;
 
 private:

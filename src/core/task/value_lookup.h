@@ -36,7 +36,7 @@ class ValueLookup : public LookupTask {
 public:
     ValueLookup(DHT* dht, const Id& target): LookupTask(dht, target, "ValueLookup") {}
 
-    void setResultHandler(std::function<void(Sp<Value>, Task* t)> resultHandler) {
+    void setResultHandler(std::function<void(const Value&, Task* t)> resultHandler) {
         this->resultHandler = resultHandler;
     }
 
@@ -51,7 +51,7 @@ protected:
 
 private:
     int expectedSequence {-1};
-    std::function<void(Sp<Value>, Task* t)> resultHandler {};
+    std::function<void(const Value& , Task*)> resultHandler {};
 };
 
 }

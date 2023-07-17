@@ -124,10 +124,10 @@ void CryptoTester::testSignatrue()
     };
 
     auto sign = keyPair.privateKey().sign(data);
-    CPPUNIT_ASSERT(keyPair.publicKey().verify(sign, data));
+    CPPUNIT_ASSERT(keyPair.publicKey().verify(data, sign));
 
     sign[2]++;
-    CPPUNIT_ASSERT(keyPair.publicKey().verify(sign, data) == false);
+    CPPUNIT_ASSERT(keyPair.publicKey().verify(data, sign) == false);
 
     //for multi data
     auto signature = Signature();

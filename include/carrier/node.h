@@ -99,7 +99,7 @@ public:
         return findValue(id, defaultLookupOption);
     }
 
-    std::future<std::list<Sp<PeerInfo>>> findPeer(const Id &id, int expectedNum) const {
+    std::future<std::list<PeerInfo>> findPeer(const Id &id, int expectedNum) const {
         return findPeer(id, expectedNum, defaultLookupOption);
     }
 
@@ -110,11 +110,9 @@ public:
 
     std::future<std::list<Sp<NodeInfo>>> findNode(const Id& id, LookupOption option) const;
     std::future<Sp<Value>> findValue(const Id& id, LookupOption option) const;
-    std::future<bool> storeValue(const Sp<Value> value) const;
-    std::future<std::list<Sp<PeerInfo>>> findPeer(const Id &id, int expectedNum, LookupOption option) const;
-    std::future<bool> announcePeer(const Id& peerId, const Id& proxyId, uint16_t port,
-            const std::string& alt, std::vector<uint8_t> signature) const;
-    std::future<bool> announcePeer(const Id& peerId, uint16_t port, const std::string& alt) const;
+    std::future<bool> storeValue(const Value& value) const;
+    std::future<std::list<PeerInfo>> findPeer(const Id &id, int expectedNum, LookupOption option) const;
+    std::future<bool> announcePeer(const PeerInfo& peer) const;
 
     Sp<DataStorage> getStorage() const {
 		return storage;
@@ -124,34 +122,17 @@ public:
 
     Sp<DHT> getDHT(int type) const noexcept;
 
-    /******************************************************************************
-    * Value from Node
-    *****************************************************************************/
-    Sp<Value> createValue(const std::vector<uint8_t>& data) {
-        return Value::create(data);
-    }
-
-    Sp<Value> createSignedValue(const std::vector<uint8_t>& data) {
-        return Value::createSigned(data);
-    }
-
-    Sp<Value> createEncryptedValue(const Id& target, const std::vector<uint8_t>& data){
-        return Value::createEncrypted(target, data);
-    }
-
-    Sp<Value> updateValue(const Id& valueId, const std::vector<uint8_t>& data);
-
     std::vector<uint8_t> encrypt(const Id& recipient, const Blob& plain) const;
     std::vector<uint8_t> decrypt(const Id& sender, const Blob& cipher) const;
 
     void encrypt(const Id& recipient, Blob& cipher, const Blob& plain) const;
     void decrypt(const Id& sender, Blob& plain, const Blob& cipher) const;
 
-    std::vector<uint8_t> sign(const Blob& data) const;
-    void sign(Blob& sig, const Blob& data) const;
-    bool verify(const Blob& sig, const Blob& data) const;
+    std::vector<uint8_t> sign(const std::vector<uint8_t>& data) const;
+    bool verify(const std::vector<uint8_t>& data, const std::vector<uint8_t>& signature) const;
 
-    std::vector<uint8_t> createPeerSignature(uint16_t port, const std::string& alt) const;
+    Sp<Value> getValue(const Id& valueId);
+    Sp<PeerInfo> getPeerInfo(const Id& peerId);
 
     std::string toString() const;
 private:

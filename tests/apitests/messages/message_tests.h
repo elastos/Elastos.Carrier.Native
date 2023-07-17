@@ -37,7 +37,7 @@ public:
     std::string VERSION_STR = "hi/1";
 
 protected:
-    void printMessage(Message msg, std::vector<uint8_t> bin) {
+    void printMessage(const Message& msg, std::vector<uint8_t> bin) {
 		std::cout << "======== " << msg.getTypeString() << ":" << msg.getMethodString() << std::endl;
 		std::cout << "String: " << static_cast<std::string>(msg);
 		std::cout << "   Hex: " << bin.size() << Utils::PATH_SEP << msg.estimateSize() << " : " << Hex::encode(bin);

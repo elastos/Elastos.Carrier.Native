@@ -30,6 +30,7 @@
 
 #include "carrier/node.h"
 #include "carrier/node_status.h"
+#include "utils/check.h"
 #include "sqlite_storage.h"
 #include "crypto_cache.h"
 #include "dht.h"
@@ -186,6 +187,13 @@ Node::Node(std::shared_ptr<Configuration> _config): config(_config)
 }
 
 void Node::bootstrap(const NodeInfo& node) {
+    // checkArgument(node != null, "Invalid bootstrap node");
+
+    if (node.getId() == id) {
+        log->warn("Can not bootstrap from local node: {}", node.getId());
+        return;
+    }
+
     if (dht4 != nullptr)
         dht4->bootstrap(node);
     if (dht6 != nullptr)
@@ -301,8 +309,8 @@ void Node::getNodes(const Id& id, Sp<NodeInfo> node, std::function<void(std::lis
 #endif
 
 std::future<std::list<Sp<NodeInfo>>> Node::findNode(const Id& id, LookupOption option) const {
-    if (!isRunning())
-        throw std::runtime_error("Node is not running");
+    checkState(isRunning(), "Node not running");
+	checkArgument(id != Id::zero(), "Invalid peer id");
 
     auto promise = std::make_shared<std::promise<std::list<Sp<NodeInfo>>>>();
     auto results = std::make_shared<std::list<Sp<NodeInfo>>>();
@@ -345,8 +353,8 @@ std::future<std::list<Sp<NodeInfo>>> Node::findNode(const Id& id, LookupOption o
 }
 
 std::future<Sp<Value>> Node::findValue(const Id& id, LookupOption option) const {
-    if (!isRunning())
-        throw std::runtime_error("Node is not running");
+    checkState(isRunning(), "Node not running");
+	checkArgument(id != Id::zero(), "Invalid peer id");
 
     auto promise = std::make_shared<std::promise<Sp<Value>>>();
     auto valuePtr = std::make_shared<Sp<Value>>();
@@ -372,7 +380,7 @@ std::future<Sp<Value>> Node::findValue(const Id& id, LookupOption option) const 
         if ((option == LookupOption::OPTIMISTIC && value != nullptr) || *completion >= numDHTs) {
             try {
                 if ((*valuePtr) != nullptr)
-                    getStorage()->putValue(*valuePtr);
+                    getStorage()->putValue(**valuePtr);
             } catch (const std::exception& e) {
                 log->warn("Perisist value in local storage failed {}", e.what());
             }
@@ -388,9 +396,10 @@ std::future<Sp<Value>> Node::findValue(const Id& id, LookupOption option) const 
     return promise->get_future();
 }
 
-std::future<bool> Node::storeValue(const Sp<Value> value) const {
-    if (!value)
-        throw std::runtime_error("Value can not be empty");
+std::future<bool> Node::storeValue(const Value& value) const {
+    checkState(isRunning(), "Node not running");
+    // checkArgument(value != nullptr, "Invalid value: null");
+    checkArgument(value.isValid(), "Invalid value");
 
     if (!isRunning())
         throw std::runtime_error("Node is not running");
@@ -420,24 +429,17 @@ std::future<bool> Node::storeValue(const Sp<Value> value) const {
     return promise->get_future();
 }
 
-std::future<std::list<Sp<PeerInfo>>> Node::findPeer(const Id& id, int expected, LookupOption option) const {
-    if (!isRunning())
-        throw std::runtime_error("Node is not running");
+std::future<std::list<PeerInfo>> Node::findPeer(const Id& id, int expected, LookupOption option) const {
+    checkState(isRunning(), "Node not running");
+	checkArgument(id != Id::zero(), "Invalid peer id");
 
-    auto promise = std::make_shared<std::promise<std::list<Sp<PeerInfo>>>>();
+    auto promise = std::make_shared<std::promise<std::list<PeerInfo>>>();
     auto dedup_result = std::make_shared<std::set<PeerInfo>>();
-    auto results = std::make_shared<std::list<Sp<PeerInfo>>>();
+    auto results = std::make_shared<std::list<PeerInfo>>();
 
-    int family = 0;
-
-    if (dht4 != nullptr)
-        family += 4;
-    if (dht6 != nullptr)
-        family += 6;
-
-    auto peers = getStorage()->getPeer(id, family, expected);
+    auto peers = getStorage()->getPeer(id, expected);
     for (const auto& item : peers) {
-        auto rc = dedup_result->insert(*item);
+        auto rc = dedup_result->insert(item);
         if (rc.second)
             results->push_back(item);
     }
@@ -457,18 +459,16 @@ std::future<std::list<Sp<PeerInfo>>> Node::findPeer(const Id& id, int expected, 
     // deal with iteration while adding/removing.
 
     auto completion = std::make_shared<std::atomic<int>>(0);
-    auto completeHandler = [=](std::list<Sp<PeerInfo>> peers) {
+    auto completeHandler = [=](std::list<PeerInfo> peers) {
         (*completion)++;
 
         for (const auto &item : peers) {
-            auto rc = dedup_result->insert(*item);
+            auto rc = dedup_result->insert(item);
             if (rc.second)
                 results->push_back(item);
         }
 
-        getStorage()->putPeer(id, *results);
-        // TODO: excpeiton;
-        //log.error("Save peer " + id + " failed", ignore);
+        getStorage()->putPeer(*results);
 
         if (*completion >= numDHTs) {
             promise->set_value(std::move(*results));
@@ -483,65 +483,47 @@ std::future<std::list<Sp<PeerInfo>>> Node::findPeer(const Id& id, int expected, 
     return promise->get_future();
 }
 
-std::future<bool> Node::announcePeer(const Id& peerId, uint16_t port, const std::string& alt) const {
-    return announcePeer(peerId, {}, port, alt, {});
-}
+std::future<bool> Node::announcePeer(const PeerInfo& peer) const {
+    checkState(isRunning(), "Node not running");
+    // checkArgument(peer != nullptr, "Invalid peer: null");
+    checkArgument(!peer.getOrigin() == getId(), "Invaid peer: not belongs to current node");
+    checkArgument(peer.isValid(), "Invalid peer");
 
-std::future<bool> Node::announcePeer(const Id& peerId, const Id& proxyId, uint16_t port,
-        const std::string& alt, std::vector<uint8_t> signature) const {
     auto promise = std::make_shared<std::promise<bool>>();
 
-    if (proxyId == Id::zero()) {
-        signature = createPeerSignature(port, alt);
-    } else {
-        std::vector<uint8_t> toVerify = PeerInfo::getSignData(id, proxyId, port, alt);
-        auto sender = Signature::PublicKey(proxyId.blob());
-        if(!sender.verify(signature, toVerify)) {
-            promise->set_value(false);
-            return promise->get_future();
-        }
-    }
-
-    if (!isRunning())
-        throw std::runtime_error("Node is not running");
-
-    // JAVA's comment
-    // TODO: can not create a peer with local address.
-    //       how to get the public peer address?
-    /*
-    PeerInfo peer4 = null, peer6 = null;
-    if (dht4 != null)
-        peer4 = new PeerInfo(getId(), dht4.getServer().getAddress().getAddress(), port);
-    if (dht6 != null)
-        peer6 = new PeerInfo(getId(), dht6.getServer().getAddress().getAddress(), port);
-
     try {
-        if (peer4 != null)
-            getStorage().putPeer(id, peer4);
-
-        if (peer6 != null)
-            getStorage().putPeer(id, peer6);
-    } catch(KadException e) {
-        return CompletableFuture.failedFuture(e);
+        getStorage()->putPeer(peer);
+    } catch (std::exception& ex) {
+        log->error("Perisist peer in local storage failed {}", ex.what());
+        promise->set_exception(std::current_exception());
+        return promise->get_future();
     }
-    */
 
     auto completion = std::make_shared<std::atomic<int>>(0);
-
-    // TODO: improve the complete handler, check the announced nodes
     auto completeHandler = [=](std::list<Sp<NodeInfo>> nl) {
         (*completion)++;
-
         if (*completion >= numDHTs)
             promise->set_value(true);
     };
 
     if (dht4 != nullptr)
-        dht4->announcePeer(peerId, proxyId, port, alt, signature, completeHandler);
+        dht4->announcePeer(peer, completeHandler);
     if (dht6 != nullptr)
-        dht6->announcePeer(peerId, proxyId, port, alt, signature, completeHandler);
+        dht6->announcePeer(peer, completeHandler);
 
 	return promise->get_future();
+}
+
+Sp<Value> Node::getValue(const Id& valueId) {
+    checkArgument(valueId != Id::zero(), "Invalid value id");
+
+	return getStorage()->getValue(valueId);
+}
+
+Sp<PeerInfo> Node::getPeerInfo(const Id& peerId) {
+    checkArgument(peerId != Id::zero(), "Invalid peer id");
+
+	return getStorage()->getPeer(peerId, this->getId());
 }
 
 void Node::setupCryptoBoxesCache() {
@@ -568,15 +550,12 @@ void Node::decrypt(const Id& sender, Blob& plain, const Blob& cipher) const {
     ctx.decrypt(plain, cipher);
 }
 
-std::vector<uint8_t> Node::sign(const Blob& data) const {
+std::vector<uint8_t> Node::sign(const std::vector<uint8_t>& data) const {
     return keyPair.privateKey().sign(data);
 }
 
-void Node::sign(Blob& sig, const Blob& data) const {
-    return keyPair.privateKey().sign(sig, data);
-}
-bool Node::verify(const Blob& sig, const Blob& data) const {
-    return keyPair.publicKey().verify(sig, data);
+bool Node::verify(const std::vector<uint8_t>& data, const std::vector<uint8_t>& signature) const {
+    return keyPair.publicKey().verify(signature, data);
 }
 
 int Node::getPort() {
@@ -586,17 +565,6 @@ int Node::getPort() {
 
 Sp<DHT> Node::getDHT(int type) const noexcept {
     return type == DHT::Type::IPV4 ? dht4 : dht6;
-}
-
-Sp<Value> Node::updateValue(const Id& valueId, const std::vector<uint8_t>& data) {
-    auto oldValue = storage->getValue(valueId);
-    if (!oldValue)
-        throw std::invalid_argument("No such value with valueId {" + static_cast<std::string>(valueId) + "}");
-
-    if (!oldValue->isMutable())
-        throw std::invalid_argument("The value with valueId {" + static_cast<std::string>(valueId) + "} is immutable");
-
-    return Value::updateValue(oldValue, data);
 }
 
 std::string Node::toString() const {
@@ -610,11 +578,6 @@ std::string Node::toString() const {
         str.append(dht6->toString());
 
     return str;
-}
-
-std::vector<uint8_t> Node::createPeerSignature(uint16_t port, const std::string& alt) const {
-    std::vector<uint8_t> toSign = PeerInfo::getSignData(id, Id::zero(), port, alt);
-    return keyPair.privateKey().sign(toSign);
 }
 
 }

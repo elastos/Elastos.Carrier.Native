@@ -114,7 +114,7 @@ void DHT::bootstrap() {
 }
 
 void DHT::bootstrap(const NodeInfo& ni) {
-    if (!canUseSocketAddress(ni.getAddress()))
+    if (!canUseSocketAddress(ni.getAddress()) || ni.getId() == node.getId())
         return;
 
     auto nodes = getBootstraps();
@@ -435,20 +435,21 @@ void DHT::onFindNode(const Sp<Message>& msg) {
 void DHT::onFindValue(const Sp<Message>& msg) {
     auto request = std::dynamic_pointer_cast<FindValueRequest>(msg);
 
+
+    auto response = std::make_shared<FindValueResponse>(msg->getTxid());
+
+    auto token = tokenManager->generateToken(request->getId(), request->getOrigin(), node.getId());
+    response->setToken(token);
+
     auto hasValue {false};
     auto value = node.getStorage()->getValue(request->getTarget());
     if (value != nullptr) {
         if (request->getSequenceNumber() < 0 || value->getSequenceNumber() < 0
                 || request->getSequenceNumber() <= value->getSequenceNumber()) {
             hasValue = true;
+            response->setValue(*value);
         }
     }
-
-    auto _value = hasValue ? value : std::make_shared<Value>();
-    auto response = std::make_shared<FindValueResponse>(msg->getTxid(), _value);
-
-    auto token = tokenManager->generateToken(request->getId(), request->getOrigin(), node.getId());
-    response->setToken(token);
 
     if (!hasValue) {
         int want4 = request->doesWant4() ? Constants::MAX_ENTRIES_PER_BUCKET : 0;
@@ -458,20 +459,19 @@ void DHT::onFindValue(const Sp<Message>& msg) {
 
     response->setRemote(request->getId(), request->getOrigin());
     rpcServer->sendMessage(response);
-    // TODO: Exception
 }
 
 void DHT::onStoreValue(const Sp<Message>& msg) {
     auto request = std::dynamic_pointer_cast<StoreValueRequest>(msg);
     auto value = request->getValue();
-    auto valueId = value->getId();
+    auto valueId = value.getId();
     if (!tokenManager->verifyToken(request->getToken(), request->getId(), request->getOrigin(), valueId)) {
         log->warn("Received a store value request with invalid token from {}", request->getOrigin().toString());
         sendError(request, ErrorCode::ProtocolError, "Invalid token for STORE VALUE request");
         return;
     }
 
-    if (!value->isValid()) {
+    if (!value.isValid()) {
         sendError(request, ErrorCode::ProtocolError, "Invalid value");
         return;
     }
@@ -481,7 +481,6 @@ void DHT::onStoreValue(const Sp<Message>& msg) {
     auto response = std::make_shared<StoreValueResponse>(request->getTxid());
     response->setRemote(request->getId(), request->getOrigin());
     rpcServer->sendMessage(response);
-    // TODO: exception
 }
 
 void DHT::onFindPeers(const Sp<Message>& msg) {
@@ -494,19 +493,10 @@ void DHT::onFindPeers(const Sp<Message>& msg) {
     response->setToken(token);
 
     bool hasPeers {false};
-    if (request->doesWant4()) {
-        auto peers = storage->getPeer(request->getTarget(), 4, 8);
-        if (!peers.empty()) {
-            response->setPeers4(peers);
-            hasPeers = true;
-        }
-    }
-    if (request->doesWant6()) {
-        auto peers = storage->getPeer(request->getTarget(), 6, 8);
-        if (!peers.empty()) {
-            response->setPeers6(peers);
-            hasPeers = true;
-        }
+    auto peers = storage->getPeer(request->getTarget(), 8);
+    if (!peers.empty()) {
+        response->setPeers(peers);
+        hasPeers = true;
     }
 
     if (!hasPeers) {
@@ -517,7 +507,6 @@ void DHT::onFindPeers(const Sp<Message>& msg) {
 
     response->setRemote(request->getId(), request->getOrigin());
     rpcServer->sendMessage(response);
-    // TODO: exception
 }
 
 void DHT::onAnnouncePeer(const Sp<Message>& msg) {
@@ -540,9 +529,11 @@ void DHT::onAnnouncePeer(const Sp<Message>& msg) {
         return;
     }
 
-    auto peer = std::make_shared<PeerInfo>(request->getId(), request->getProxyId(), request->getPort(),
-            request->getAlt(), request->getSignature(), request->getOrigin().family());
-    node.getStorage()->putPeer(request->getTarget(), peer);
+
+    auto peer = request->getPeer();
+    log->debug("Received an announce peer request from {}, saving peer {}", request->getOrigin().toString(),
+					request->getTarget());
+    node.getStorage()->putPeer(peer);
 
     auto response = std::make_shared<AnnouncePeerResponse>(request->getTxid());
     response->setRemote(request->getId(), request->getOrigin());
@@ -623,18 +614,17 @@ Sp<Task> DHT::findValue(const Id& id, LookupOption option, std::function<void(Sp
     auto task = std::make_shared<ValueLookup>(this, id);
     Sp<Sp<Value>> valuePtr = std::make_shared<Sp<Value>>();
 
-    task->setResultHandler([=](Sp<Value> value, Task* t) {
+    task->setResultHandler([=](const Value& value, Task* t) {
         if (!*valuePtr)
-            *valuePtr = value;
+            *valuePtr = std::make_shared<Value>(value);
+        else if (value.isMutable() && (*valuePtr)->getSequenceNumber() < value.getSequenceNumber())
+            *valuePtr = std::make_shared<Value>(value);
 
-        if (option != LookupOption::CONSERVATIVE || !value->isMutable()) {
+        if (option != LookupOption::CONSERVATIVE || !value.isMutable()) {
             t->cancel();
-            return;
         }
-
-        if (value->isMutable() && (*valuePtr)->getSequenceNumber() < value->getSequenceNumber())
-            *valuePtr = value;
     });
+
     task->addListener([=](Task*) {
         completeHandler(*valuePtr);
     });
@@ -643,9 +633,9 @@ Sp<Task> DHT::findValue(const Id& id, LookupOption option, std::function<void(Sp
     return task;
 }
 
-Sp<Task> DHT::storeValue(const Sp<Value> value, std::function<void(std::list<Sp<NodeInfo>>)> completeHandler) {
-    auto task = std::make_shared<NodeLookup>(this, value->getId());
-
+Sp<Task> DHT::storeValue(const Value& value, std::function<void(std::list<Sp<NodeInfo>>)> completeHandler) {
+    auto _value = std::make_shared<Value>(value);
+    auto task = std::make_shared<NodeLookup>(this, value.getId());
     task->setWantToken(true);
     task->addListener([=](Task* t) {
         if (t->getState() != Task::State::FINISHED)
@@ -659,7 +649,7 @@ Sp<Task> DHT::storeValue(const Sp<Value> value, std::function<void(std::list<Sp<
             return;
         }
 
-        auto announce = std::make_shared<ValueAnnounce>(this, closestSet, value);
+        auto announce = std::make_shared<ValueAnnounce>(this, closestSet, *_value);
         announce->addListener([=](Task*) {
             std::list<Sp<NodeInfo>> result{};
             for(const auto& item: closestSet.getEntries()) {
@@ -677,7 +667,7 @@ Sp<Task> DHT::storeValue(const Sp<Value> value, std::function<void(std::list<Sp<
     return task;
 }
 
-Sp<Task> DHT::findPeer(const Id& id, int expected, LookupOption option, std::function<void(std::list<Sp<PeerInfo>>)> completeHandler) {
+Sp<Task> DHT::findPeer(const Id& id, int expected, LookupOption option, std::function<void(std::list<PeerInfo>)> completeHandler) {
     // NOTICE: Concurrent threads adding to ArrayList
     //
     // There is no guaranteed behavior for what happens when add is
@@ -686,9 +676,9 @@ Sp<Task> DHT::findPeer(const Id& id, int expected, LookupOption option, std::fun
     // added fine. Most of the thread safety issues related to lists
     // deal with iteration while adding/removing.
     auto task = std::make_shared<PeerLookup>(this, id);
-    auto peers = std::make_shared<std::list<Sp<PeerInfo>>>();
+    auto peers = std::make_shared<std::list<PeerInfo>>();
 
-    task->setResultHandler([=](std::list<Sp<PeerInfo>>& listOfPeers, Task* self){
+    task->setResultHandler([=](std::list<PeerInfo>& listOfPeers, Task* self){
         peers->splice(peers->end(), listOfPeers);
 
         if (option != LookupOption::CONSERVATIVE && peers->size() >= expected) {
@@ -706,10 +696,9 @@ Sp<Task> DHT::findPeer(const Id& id, int expected, LookupOption option, std::fun
     return task;
 }
 
-Sp<Task> DHT::announcePeer(const Id& peerId, const Id& proxyId, uint16_t port,
-        const std::string& alt, const std::vector<uint8_t>& signature,
-        const std::function<void(std::list<Sp<NodeInfo>>)> completeHandler) {
-    auto task = std::make_shared<NodeLookup>(this, peerId);
+Sp<Task> DHT::announcePeer(const PeerInfo& peer, const std::function<void(std::list<Sp<NodeInfo>>)> completeHandler) {
+    auto pi = std::make_shared<PeerInfo>(peer);
+    auto task = std::make_shared<NodeLookup>(this, peer.getId());
     task->setWantToken(true);
     task->addListener([=](Task* t) {
         if (t->getState() != Task::State::FINISHED)
@@ -723,7 +712,7 @@ Sp<Task> DHT::announcePeer(const Id& peerId, const Id& proxyId, uint16_t port,
             return;
         }
 
-        auto announce = std::make_shared<PeerAnnounce>(this, closestSet, peerId, proxyId, port, alt, signature);
+        auto announce = std::make_shared<PeerAnnounce>(this, closestSet, *pi);
         announce->addListener([=](Task* t) {
             std::list<Sp<NodeInfo>> result{};
             for(const auto& item: closestSet.getEntries()) {

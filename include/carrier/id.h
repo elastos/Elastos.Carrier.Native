@@ -40,6 +40,8 @@ namespace carrier {
 
 class CARRIER_PUBLIC Id {
 public:
+    static const uint32_t BYTES { 32 };
+
     static Id MIN_ID;
     static Id MAX_ID;
 
@@ -91,6 +93,14 @@ public:
     static Id zero() {
         return Id();
     }
+
+    Signature::PublicKey toSignatureKey() const {
+		return Signature::PublicKey(bytes);
+	}
+
+	CryptoBox::PublicKey toEncryptionKey() const {
+		return CryptoBox::PublicKey::fromSignatureKey(toSignatureKey());
+	}
 
     /**
      * Checks the distance between this and another Id

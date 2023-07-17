@@ -101,9 +101,9 @@ void DataStorageTests::testPutAndGetValue() {
         std::vector<uint8_t> data;
         data.resize(1024);
         std::fill(data.begin(), data.end(), (uint8_t)(i % (126 - 32) + 33));
-        auto v = node1->createValue(data);
+        auto v = Value::of(data);
 
-        ids.push_back(v->getId());
+        ids.push_back(v.getId());
         ds->putValue(v, -1);
 
         std::cout << ".";
@@ -138,44 +138,44 @@ void DataStorageTests::testUpdateSignedValue() {
     std::string str = "Hello, world";
     std::vector<uint8_t> data1(str.cbegin(), str.cend());
 
-    auto signedValue = node1->createSignedValue(data1);
+    auto signedValue = Value::createSignedValue(data1);
     auto p1 = node1->storeValue(signedValue);
     auto result1 = p1.get();
     CPPUNIT_ASSERT_EQUAL(true, result1);
 
-    auto valueId = signedValue->getId();
+    auto valueId = signedValue.getId();
     std::cout << valueId << std::endl;
 
     ds->putValue(signedValue, 0);
     auto v = ds->getValue(valueId);
 
-    CPPUNIT_ASSERT(*signedValue == *v);
+    CPPUNIT_ASSERT(signedValue == *v);
     CPPUNIT_ASSERT(v->isValid());
 
     // update: invalid sequence number
-    CPPUNIT_ASSERT_THROW(ds->putValue(v, 10), std::invalid_argument);
+    CPPUNIT_ASSERT_THROW(ds->putValue(*v, 10), std::invalid_argument);
 
     // update: CAS fail
-    CPPUNIT_ASSERT_THROW(ds->putValue(v, 9), std::invalid_argument);
+    CPPUNIT_ASSERT_THROW(ds->putValue(*v, 9), std::invalid_argument);
 
     // should be the original value
     v = ds->getValue(valueId);
     CPPUNIT_ASSERT(nullptr != v);
-    CPPUNIT_ASSERT(*signedValue == *v);
+    CPPUNIT_ASSERT(signedValue == *v);
     CPPUNIT_ASSERT(v->isValid());
 
     // update: success
     str = "Hello, world";
     std::vector<uint8_t> data2(str.cbegin(), str.cend());
-    signedValue = node1->updateValue(valueId, data2);
+    signedValue = signedValue.update(data2);
 
-    CPPUNIT_ASSERT(signedValue->getId() == valueId);
+    CPPUNIT_ASSERT(signedValue.getId() == valueId);
 
     ds->putValue(signedValue, 0);
 
     v = ds->getValue(valueId);
     CPPUNIT_ASSERT(nullptr != v);
-    CPPUNIT_ASSERT(*signedValue == *v);
+    CPPUNIT_ASSERT(signedValue == *v);
     CPPUNIT_ASSERT(v->isValid());
 
     ds->close();
@@ -188,44 +188,43 @@ void DataStorageTests::testUpdateEncryptedValue() {
     auto to = node2->getId();
     std::string str = "Hello, world";
     std::vector<uint8_t> data1(str.cbegin(), str.cend());
-    auto encryptedValue = node1->createEncryptedValue(to, data1);
+    auto encryptedValue = Value::createEncryptedValue(to, data1);
     node1->storeValue(encryptedValue);
 
-    auto valueId = encryptedValue->getId();
+    auto valueId = encryptedValue.getId();
     std::cout << valueId << std::endl;
 
     ds->putValue(encryptedValue, 0);
     auto v = ds->getValue(valueId);
 
     CPPUNIT_ASSERT(nullptr != v);
-    CPPUNIT_ASSERT(*encryptedValue == *v);
+    CPPUNIT_ASSERT(encryptedValue == *v);
     CPPUNIT_ASSERT(v->isValid());
 
     // update: invalid sequence number
-    CPPUNIT_ASSERT_THROW(ds->putValue(v, 10), std::invalid_argument);
+    CPPUNIT_ASSERT_THROW(ds->putValue(*v, 10), std::invalid_argument);
 
     // update: CAS fail
-    CPPUNIT_ASSERT_THROW(ds->putValue(v, 9), std::invalid_argument);
+    CPPUNIT_ASSERT_THROW(ds->putValue(*v, 9), std::invalid_argument);
 
     // should be the original value
     v = ds->getValue(valueId);
 
     CPPUNIT_ASSERT(nullptr != v);
-    CPPUNIT_ASSERT(*encryptedValue == *v);
+    CPPUNIT_ASSERT(encryptedValue == *v);
     CPPUNIT_ASSERT(v->isValid());
 
     // update: success
     str = "Foo bar";
     std::vector<uint8_t> data2(str.cbegin(), str.cend());
-    encryptedValue = node1->updateValue(valueId, data2);
-    CPPUNIT_ASSERT(encryptedValue != nullptr);
-    CPPUNIT_ASSERT(encryptedValue->getId() == valueId);
+    encryptedValue = encryptedValue.update(data2);
+    CPPUNIT_ASSERT(encryptedValue.getId() == valueId);
 
     ds->putValue(encryptedValue, 0);
 
     v = ds->getValue(valueId);
     CPPUNIT_ASSERT(nullptr != v);
-    CPPUNIT_ASSERT(*encryptedValue == *v);
+    CPPUNIT_ASSERT(encryptedValue == *v);
     CPPUNIT_ASSERT(v->isValid());
 
     ds->close();
@@ -244,15 +243,12 @@ void DataStorageTests::testPutAndGetPeer() {
         auto id = Id::random();
         ids.push_back(id);
 
-        std::list<Sp<PeerInfo>> peers = {};
+        std::list<PeerInfo> peers = {};
         for (int j = 0; j < i; j++) {
-            auto pi = std::make_shared<PeerInfo>(Id::random(), Id::random(), basePort + i, "ipv4-" + std::to_string(i), sig);
-            peers.push_back(pi);
-
-            pi = std::make_shared<PeerInfo>(Id::random(), Id::random(), basePort + i, "ipv6:" + std::to_string(i), sig, AF_INET6);
+            auto pi = PeerInfo::of(Id::random(), Id::random(), basePort + i, "alt:" + std::to_string(i), sig);
             peers.push_back(pi);
         }
-        ds->putPeer(id, peers);
+        ds->putPeer(peers);
         std::cout << ".";
         if (i % 16 == 0)
             std::cout << std::endl;
@@ -263,36 +259,16 @@ void DataStorageTests::testPutAndGetPeer() {
         auto id = ids.front();
 
         // all
-        auto ps = ds->getPeer(id, 10, 2 * i + 16);
+        auto ps = ds->getPeer(id, 2 * i + 16);
         CPPUNIT_ASSERT(2 * i == ps.size());
         for (auto pi: ps)
-            CPPUNIT_ASSERT(basePort + i == pi->getPort());
-
-        ps = ds->getPeer(id, 4, i + 16);
-        CPPUNIT_ASSERT(i == ps.size());
-        for (auto pi : ps)
-            CPPUNIT_ASSERT(basePort + i == pi->getPort());
-
-        ps = ds->getPeer(id, 6, i + 16);
-        CPPUNIT_ASSERT(i == ps.size());
-        for (auto pi : ps)
-            CPPUNIT_ASSERT(basePort + i == pi->getPort());
+            CPPUNIT_ASSERT(basePort + i == pi.getPort());
 
         // limited
-        ps = ds->getPeer(id, 10, 32);
+        ps = ds->getPeer(id, 32);
         CPPUNIT_ASSERT(std::min(2 * i, 64) == ps.size());
         for (auto pi : ps)
-            CPPUNIT_ASSERT(basePort + i == pi->getPort());
-
-        ps = ds->getPeer(id, 4, 32);
-        CPPUNIT_ASSERT(std::min(i, 32) == ps.size());
-        for (auto pi : ps)
-            CPPUNIT_ASSERT(basePort + i == pi->getPort());
-
-        ps = ds->getPeer(id, 6, 32);
-        CPPUNIT_ASSERT(std::min(i, 32) == ps.size());
-        for (auto pi : ps)
-            CPPUNIT_ASSERT(basePort + i == pi->getPort());
+            CPPUNIT_ASSERT(basePort + i == pi.getPort());
 
         std::cout << ".";
         if (i % 16 == 0)
