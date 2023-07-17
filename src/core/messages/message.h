@@ -42,11 +42,8 @@ class RPCServer;
 
 class Message {
 public:
-    static const std::string KEY_REQ_SID;
     static const std::string KEY_REQ_NODES4;
     static const std::string KEY_REQ_NODES6;
-    static const std::string KEY_REQ_EXPIRED;
-    static const std::string KEY_REQ_REFRESHED;
 
     static const std::string KEY_TYPE;
     static const std::string KEY_ID;
@@ -72,7 +69,7 @@ public:
     static const std::string KEY_RES_NODES4;
     static const std::string KEY_RES_NODES6;
     static const std::string KEY_RES_TOKEN;
-    // static const std::string KEY_RES_PEERS_ID {"pid"};
+    static const std::string KEY_RES_PEERS;
     static const std::string KEY_RES_PEERS4;
     static const std::string KEY_RES_PEERS6;
     static const std::string KEY_RES_PUBLICKEY;
@@ -200,7 +197,7 @@ protected:
     explicit Message(Type _type, Method _method, int _txid = 0)
         : type((int)_type | (int)_method), txid(_txid), version(0) {}
 
-    explicit Message(const Message&) = delete;
+    // explicit Message(const Message&) = delete;
 
     virtual void parse(const std::string& fieldName, nlohmann::json& object) {}
     virtual void toString(std::stringstream& ss) const {}

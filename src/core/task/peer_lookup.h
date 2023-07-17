@@ -35,7 +35,7 @@ class PeerLookup : public LookupTask {
 public:
     PeerLookup(DHT* dht, const Id& target) : LookupTask(dht, target, "PeerLookup") {}
 
-    void setResultHandler(std::function<void(std::list<Sp<PeerInfo>>&, Task*)> resultHandler) {
+    void setResultHandler(std::function<void(std::list<PeerInfo>&, Task*)> resultHandler) {
         this->resultHandler = resultHandler;
     }
 
@@ -45,7 +45,7 @@ protected:
     void callResponsed(RPCCall* call, Sp<Message> response) override;
 
 private:
-    std::function<void(std::list<Sp<PeerInfo>>&, Task*)> resultHandler;
+    std::function<void(std::list<PeerInfo>&, Task*)> resultHandler;
 };
 
 }

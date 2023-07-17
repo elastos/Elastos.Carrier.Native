@@ -190,7 +190,7 @@ public:
             key.fill(0);
         }
 
-        bool verify(const Blob& sig, const Blob& data) const;
+        bool verify(const std::vector<uint8_t>& data, const std::vector<uint8_t>& signature) const;
 
         operator std::string() const noexcept;
 
@@ -205,7 +205,7 @@ public:
         static const uint32_t SEED_BYTES { 32 };
 
         KeyPair() noexcept;
-        KeyPair(PrivateKey& sk) noexcept;
+        KeyPair(const PrivateKey& sk) noexcept;
         KeyPair(PrivateKey&& sk) noexcept;
         KeyPair(const Blob& sk);
 
@@ -214,7 +214,12 @@ public:
         KeyPair(KeyPair&& o) noexcept :
                 sk(std::move(o.sk)), pk(std::move(o.pk)) {}
 
+        static KeyPair fromPrivateKey(const PrivateKey& key) {
+            return KeyPair(key);
+        }
+
         static KeyPair fromSeed(const Blob& seed);
+        static KeyPair random();
 
         explicit operator bool() const noexcept {
             return static_cast<bool>(sk);
@@ -310,6 +315,15 @@ public:
 
     bool verify(const Blob& sig, const PublicKey& pk) const;
 
+    static std::vector<uint8_t> sign(const std::vector<uint8_t>& data, const PrivateKey& sk) {
+        return sk.sign(data);
+    }
+
+    static bool verify(const std::vector<uint8_t>& data, const std::vector<uint8_t>& sig, const PublicKey& pk) {
+        return pk.verify(data, sig);
+    }
+
+
 private:
     struct SignState { uint8_t __opaque__[256]; };
     SignState state;
@@ -327,7 +341,7 @@ public:
 
         PrivateKey(const Blob& sk);
 
-        PrivateKey(PrivateKey& o) noexcept :
+        PrivateKey(const PrivateKey& o) noexcept :
                 PrivateKey(o.blob()) {}
         PrivateKey(PrivateKey&& o) noexcept :
                 PrivateKey(o.blob()) {
@@ -403,7 +417,7 @@ public:
 
         PublicKey(const Blob& pk);
 
-        PublicKey(PublicKey& o) noexcept :
+        PublicKey(const PublicKey& o) noexcept :
                 PublicKey(o.blob()) {}
         PublicKey(PublicKey&& o) noexcept :
                 PublicKey(o.blob()) {
@@ -490,6 +504,16 @@ public:
             clear();
         }
 
+
+        static Nonce fromBytes(const Blob& bytes) {
+            return Nonce(bytes);
+        }
+
+        static Nonce random();
+        static Nonce zero() {
+            return Nonce();
+        }
+
         explicit operator bool() const noexcept {
             return !std::all_of(nonce.cbegin(), nonce.cend(), [](uint8_t i){ return !i; });
         }
@@ -538,12 +562,11 @@ public:
         }
 
         Nonce& increment() noexcept;
-        Nonce& random() noexcept;
 
         operator std::string() const noexcept;
 
     private:
-        std::array<uint8_t, BYTES> nonce {};
+        std::array<uint8_t, BYTES> nonce { 0 };
     };
 
     class CARRIER_PUBLIC KeyPair {
@@ -551,11 +574,11 @@ public:
         static const uint32_t SEED_BYTES { 32 };
 
         KeyPair() noexcept;
-        KeyPair(PrivateKey& sk) noexcept;
+        KeyPair(const PrivateKey& sk) noexcept;
         KeyPair(PrivateKey&& sk) noexcept;
         KeyPair(const Blob& sk);
 
-        KeyPair(KeyPair& o) noexcept :
+        KeyPair(const KeyPair& o) noexcept :
                 sk(o.sk), pk(o.pk) {}
         KeyPair(KeyPair&& o) noexcept :
                 sk(std::move(o.sk)), pk(std::move(o.pk)) {}
@@ -667,7 +690,7 @@ public:
     const Blob blob() const noexcept {
         return key;
     }
-    
+
     void clear() noexcept {
         key.fill(0);
     }
@@ -704,7 +727,7 @@ public:
     static void decrypt(Blob& plain, const Blob& cipher, const Nonce& nonce,
             const PublicKey& pk, const PrivateKey& sk);
 
-    static std::vector<uint8_t> decrypt(const Blob& cipher, const Nonce &nonce, 
+    static std::vector<uint8_t> decrypt(const Blob& cipher, const Nonce &nonce,
             const PublicKey& pk, const PrivateKey& sk) {
         std::vector<uint8_t> plain(cipher.size() - MAC_BYTES);
         Blob _plain{plain};
@@ -767,6 +790,8 @@ public:
     static uint64_t uint64(uint64_t upbound);
 
     static void buffer(void* buf, size_t length);
+    static void buffer(Blob blob);
+    static void buffer(std::vector<uint8_t> bytes);
 };
 
 class CryptoError : public std::runtime_error

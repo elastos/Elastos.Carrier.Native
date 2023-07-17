@@ -31,7 +31,9 @@ namespace test {
 class AnnouncePeerTests : public MessageTests, public CppUnit::TestFixture {
     CPPUNIT_TEST_SUITE(AnnouncePeerTests);
     CPPUNIT_TEST(testAnnouncePeerRequestSize);
+    CPPUNIT_TEST(testAnnouncePeerRequestSize2);
     CPPUNIT_TEST(testAnnouncePeerRequest);
+    CPPUNIT_TEST(testAnnouncePeerRequest2);
     CPPUNIT_TEST(testAnnouncePeerResponseSize);
     CPPUNIT_TEST(testAnnouncePeerResponse);
     CPPUNIT_TEST_SUITE_END();
@@ -41,7 +43,9 @@ public:
     void tearDown();
 
     void testAnnouncePeerRequestSize();
+    void testAnnouncePeerRequestSize2();
     void testAnnouncePeerRequest();
+    void testAnnouncePeerRequest2();
     void testAnnouncePeerResponseSize();
     void testAnnouncePeerResponse();
 };

@@ -71,30 +71,25 @@ void ValueLookup::callResponsed(RPCCall* call, Sp<Message> message) {
     LookupTask::callResponsed(call, message);
 
     auto response = std::dynamic_pointer_cast<FindValueResponse>(message);
-    if (!response->getData().empty()) {
-        auto value = response->getValue();
-        auto id = value->getId();
-        if (!(id == getTarget())) {
-            log->warn("Responsed value id {} mismatched with expected {}", static_cast<std::string>(id), static_cast<std::string>(getTarget()));
-            return;
-        }
-        if (!value->isValid()) {
-            log->warn("Responsed value {} is invalid, signature mismatch", static_cast<std::string>(id));
-            return;
-        }
 
-        if (expectedSequence >= 0 && value->getSequenceNumber() < expectedSequence) {
-            log->warn("Responsed value {} is outdated, sequence {}, expected {}",
-                    static_cast<std::string>(id), value->getSequenceNumber(), expectedSequence);
-            return;
-        }
-
-        resultHandler(value, this);
-    } else {
-        auto nodes = response->getNodes(getDHT().getType());
-        if (!nodes.empty())
-            addCandidates(nodes);
+    auto value = response->getValue();
+    auto id = value.getId();
+    if (!(id == getTarget())) {
+        log->warn("Responsed value id {} mismatched with expected {}", static_cast<std::string>(id), static_cast<std::string>(getTarget()));
+        return;
     }
+    if (!value.isValid()) {
+        log->warn("Responsed value {} is invalid, signature mismatch", static_cast<std::string>(id));
+        return;
+    }
+
+    if (expectedSequence >= 0 && value.getSequenceNumber() < expectedSequence) {
+        log->warn("Responsed value {} is outdated, sequence {}, expected {}",
+                static_cast<std::string>(id), value.getSequenceNumber(), expectedSequence);
+        return;
+    }
+
+    resultHandler(value, this);
 }
 
 }

@@ -33,72 +33,83 @@ CPPUNIT_TEST_SUITE_REGISTRATION(StoreValueTests);
 void StoreValueTests::setUp() {
 }
 
-void StoreValueTests::testStoreValueRequestSize() {
-#if 0
-    std::vector<uint8_t> sig {};
-    uint8_t s = 'S';
-    for (int i = 0; i < 64; i++)
-        sig.push_back(s);
 
-    std::vector<uint8_t> value {};
-    uint8_t v = 'D';
-    for (int i = 0; i < 1056; i++)
-        value.push_back(v);
+void StoreValueTests::testStoreValueRequestSize() {
+    std::vector<uint8_t> data(1025, 'D');
+
+    Value value = Value::of(data);
 
     auto msg = StoreValueRequest();
     msg.setId(Id::random());
     msg.setTxid(0x87654321);
     msg.setVersion(VERSION);
-    msg.setPublicKey(Id::random());
-    msg.setRecipient(Id::random());
-    auto n = CryptoBox::Nonce().random();
-    msg.setNonce(n);
-    msg.setExpectedSequenceNumber(0x77654320);
-    msg.setSequenceNumber(0x77654321);
-    msg.setSignature(sig);
     msg.setToken(0x88888888);
-    msg.setData(value);
+    msg.setValue(value);
 
     auto serialized = msg.serialize();
+    printMessage(msg, serialized);
     CPPUNIT_ASSERT(serialized.size() <= msg.estimateSize());
-#endif
+}
+
+void StoreValueTests::testStoreSignedValueRequestSize() {
+    std::vector<uint8_t> nonce(24, 'N');
+    std::vector<uint8_t> sig(64, 'S');
+    std::vector<uint8_t> data(1025, 'D');
+    int seq = 0x77654321;
+
+    Value value = Value::of(Id::random(), nonce, seq, sig, data);
+    StoreValueRequest msg = StoreValueRequest();
+    msg.setId(Id::random());
+    msg.setTxid(0x87654321);
+    msg.setVersion(VERSION);
+    msg.setToken(0x88888888);
+    msg.setExpectedSequenceNumber(seq - 1);
+    msg.setValue(value);
+
+    auto serialized = msg.serialize();
+    printMessage(msg, serialized);
+    CPPUNIT_ASSERT(serialized.size() <= msg.estimateSize());
+}
+
+void StoreValueTests::testStoreEncryptedValueRequestSize() {
+	std::vector<uint8_t> nonce(24, 'N');
+    std::vector<uint8_t> sig(64, 'S');
+    std::vector<uint8_t> data(1025, 'D');
+    int seq = 0x77654321;
+
+    Value value = Value::of(Id::random(), Id::random(), nonce, seq, sig, data);
+    StoreValueRequest msg = StoreValueRequest();
+    msg.setId(Id::random());
+    msg.setTxid(0x87654321);
+    msg.setVersion(VERSION);
+    msg.setToken(0x88888888);
+    msg.setExpectedSequenceNumber(seq - 1);
+    msg.setValue(value);
+
+    auto serialized = msg.serialize();
+    printMessage(msg, serialized);
+    CPPUNIT_ASSERT(serialized.size() <= msg.estimateSize());
 }
 
 void StoreValueTests::testStoreValueRequest() {
-#if 0
     auto nodeId = Id::random();
-    auto pk = Id::random();
-    auto recipient = Id::random();
     int txid = Utils::getRandomInteger(62);
-
-    int cas = Utils::getRandomInteger(62);
-    int seq = cas + 1;
-
-    std::vector<uint8_t> sig {};
-    sig.resize(64);
-    Utils::setRandomBytes(sig.data(), sig.size());
-
     int token = Utils::getRandomValue();
+    std::vector<uint8_t> data(1025);
+    Random::buffer(data);
 
-    std::vector<uint8_t> value {};
-    value.resize(1056);
-    Utils::setRandomBytes(value.data(), value.size());
+    Value value = Value::of(data);
 
     auto msg = StoreValueRequest();
     msg.setId(nodeId);
     msg.setTxid(txid);
     msg.setVersion(VERSION);
-    msg.setPublicKey(pk);
-    msg.setRecipient(recipient);
-    auto n = CryptoBox::Nonce().random();
-    msg.setNonce(n);
-    msg.setExpectedSequenceNumber(cas);
-    msg.setSequenceNumber(seq);
-    msg.setSignature(sig);
     msg.setToken(token);
-    msg.setData(value);
+    msg.setValue(value);
 
     auto serialized = msg.serialize();
+    printMessage(msg, serialized);
+
     auto parsed = Message::parse(serialized.data(), serialized.size());
     parsed->setId(nodeId);
     auto _msg = std::static_pointer_cast<StoreValueRequest>(parsed);
@@ -108,16 +119,88 @@ void StoreValueTests::testStoreValueRequest() {
     CPPUNIT_ASSERT_EQUAL(nodeId, _msg->getId());
     CPPUNIT_ASSERT_EQUAL(txid, _msg->getTxid());
     CPPUNIT_ASSERT_EQUAL(VERSION_STR, _msg->getReadableVersion());
-    CPPUNIT_ASSERT_EQUAL(pk, _msg->getPublicKey());
-    CPPUNIT_ASSERT_EQUAL(recipient, _msg->getRecipient());
-    //todo:
-    //CPPUNIT_ASSERT(nonce == m->getNonce());
-    CPPUNIT_ASSERT_EQUAL(cas, _msg->getExpectedSequenceNumber());
-    CPPUNIT_ASSERT_EQUAL(seq, _msg->getSequenceNumber());
-    CPPUNIT_ASSERT(sig == _msg->getSignature());
     CPPUNIT_ASSERT_EQUAL(token, _msg->getToken());
-    CPPUNIT_ASSERT(value == _msg->getData());
-#endif
+
+    CPPUNIT_ASSERT(value == _msg->getValue());
+}
+
+void StoreValueTests::testStoreSignedValueRequest() {
+    auto nodeId = Id::random();
+    int txid = Utils::getRandomInteger(62);
+    auto pk = Id::random();
+    auto nonce = CryptoBox::Nonce::random();
+    int cas = Utils::getRandomInteger(62);
+    int seq = cas + 1;
+    std::vector<uint8_t> sig(64);
+    Utils::setRandomBytes(sig.data(), sig.size());
+    int token = Utils::getRandomValue();
+    std::vector<uint8_t> data(1025);
+    Random::buffer(data);
+
+    Value value = Value::of(pk, nonce.blob(), seq, sig, data);
+    auto msg = StoreValueRequest();
+    msg.setId(nodeId);
+    msg.setTxid(txid);
+    msg.setVersion(VERSION);
+    msg.setToken(token);
+    msg.setExpectedSequenceNumber(cas);
+    msg.setValue(value);
+
+    auto serialized = msg.serialize();
+    printMessage(msg, serialized);
+
+    auto parsed = Message::parse(serialized.data(), serialized.size());
+    parsed->setId(nodeId);
+    auto _msg = std::static_pointer_cast<StoreValueRequest>(parsed);
+
+    CPPUNIT_ASSERT_EQUAL(Message::Type::REQUEST, _msg->getType());
+    CPPUNIT_ASSERT_EQUAL(Message::Method::STORE_VALUE, _msg->getMethod());
+    CPPUNIT_ASSERT_EQUAL(nodeId, _msg->getId());
+    CPPUNIT_ASSERT_EQUAL(txid, _msg->getTxid());
+    CPPUNIT_ASSERT_EQUAL(VERSION_STR, _msg->getReadableVersion());
+    CPPUNIT_ASSERT_EQUAL(token, _msg->getToken());
+
+    CPPUNIT_ASSERT(value == _msg->getValue());
+}
+
+void StoreValueTests::testStoreEncryptedValueRequest() {
+    auto nodeId = Id::random();
+    int txid = Utils::getRandomInteger(62);
+    auto pk = Id::random();
+    auto recipient = Id::random();
+    auto nonce = CryptoBox::Nonce::random();
+    int cas = Utils::getRandomInteger(62);
+    int seq = cas + 1;
+    std::vector<uint8_t> sig(64);
+    Utils::setRandomBytes(sig.data(), sig.size());
+    int token = Utils::getRandomValue();
+    std::vector<uint8_t> data(1025);
+    Random::buffer(data);
+
+    Value value = Value::of(pk, recipient, nonce.blob(), seq, sig, data);
+    auto msg = StoreValueRequest();
+    msg.setId(nodeId);
+    msg.setTxid(txid);
+    msg.setVersion(VERSION);
+    msg.setToken(token);
+    msg.setExpectedSequenceNumber(cas);
+    msg.setValue(value);
+
+    auto serialized = msg.serialize();
+    printMessage(msg, serialized);
+
+    auto parsed = Message::parse(serialized.data(), serialized.size());
+    parsed->setId(nodeId);
+    auto _msg = std::static_pointer_cast<StoreValueRequest>(parsed);
+
+    CPPUNIT_ASSERT_EQUAL(Message::Type::REQUEST, _msg->getType());
+    CPPUNIT_ASSERT_EQUAL(Message::Method::STORE_VALUE, _msg->getMethod());
+    CPPUNIT_ASSERT_EQUAL(nodeId, _msg->getId());
+    CPPUNIT_ASSERT_EQUAL(txid, _msg->getTxid());
+    CPPUNIT_ASSERT_EQUAL(VERSION_STR, _msg->getReadableVersion());
+    CPPUNIT_ASSERT_EQUAL(token, _msg->getToken());
+
+    CPPUNIT_ASSERT(value == _msg->getValue());
 }
 
 void StoreValueTests::testStoreValueResponseSize() {

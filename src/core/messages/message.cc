@@ -38,11 +38,8 @@
 namespace elastos {
 namespace carrier {
 
-const std::string Message::KEY_REQ_SID        = "sid";
 const std::string Message::KEY_REQ_NODES4     = "n4";
 const std::string Message::KEY_REQ_NODES6     = "n6";
-const std::string Message::KEY_REQ_EXPIRED    = "exp";
-const std::string Message::KEY_REQ_REFRESHED  = "re";
 
 const std::string Message::KEY_TYPE           = "y";
 const std::string Message::KEY_ID             = "i";
@@ -68,7 +65,7 @@ const std::string Message::KEY_RESPONSE       = "r";
 const std::string Message::KEY_RES_NODES4     = "n4";
 const std::string Message::KEY_RES_NODES6     = "n6";
 const std::string Message::KEY_RES_TOKEN      = "tok";
-// const std::string Message::KEY_RES_PEERS_ID    = "pid";
+const std::string Message::KEY_RES_PEERS      = "p";
 const std::string Message::KEY_RES_PEERS4     = "p4";
 const std::string Message::KEY_RES_PEERS6     = "p6";
 const std::string Message::KEY_RES_PUBLICKEY  = "k";

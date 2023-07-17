@@ -26,6 +26,8 @@
 #include <vector>
 #include <array>
 
+#include "carrier/blob.h"
+
 #if defined(_WIN32) || defined(_WIN64)
 typedef ptrdiff_t       ssize_t;
 #endif
@@ -45,6 +47,10 @@ public:
 
     static std::string encode(const std::vector<uint8_t>& data) {
         return encode(data.data(), data.size());
+    }
+
+    static std::string encode(const Blob& data) {
+        return encode(data.ptr(), data.size());
     }
 
     template <size_t S>

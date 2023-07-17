@@ -23,6 +23,7 @@
 #pragma once
 
 #include "carrier/id.h"
+#include "carrier/peer_info.h"
 #include "message.h"
 
 namespace elastos {
@@ -30,32 +31,13 @@ namespace carrier {
 
 class AnnouncePeerRequest : public Message {
 public:
-    AnnouncePeerRequest(const Id& _target, const Id& _proxyId, int _port,
-        const std::string _alt,  const std::vector<uint8_t>& sig, int _token)
-        : Message(Message::Type::REQUEST, Message::Method::ANNOUNCE_PEER),
-        peerId(_target), proxyId(_proxyId), port(_port), alt(_alt), signature(sig), token(_token) {
-            if (proxyId != Id::zero()) {
-                proxied = true;
-            }
-        }
-
     AnnouncePeerRequest()
         : Message(Message::Type::REQUEST, Message::Method::ANNOUNCE_PEER) {}
 
-    const Id& getTarget() const {
-        return peerId;
-    }
-
-    void setTarget(const Id& target) {
-        this->peerId = target;
-    }
-
-    uint16_t getPort() const {
-        return port;
-    }
-
-    void setPort(uint16_t port) {
-        this->port = port;
+    AnnouncePeerRequest(const PeerInfo& peer, int token)
+            : Message(Message::Type::REQUEST, Message::Method::ANNOUNCE_PEER){
+		setPeer(peer);
+		setToken(token);
     }
 
     int getToken() const {
@@ -66,25 +48,28 @@ public:
         this->token = token;
     }
 
-    const Id& getProxyId() const {
-        return proxyId;
+    void setPeer(const PeerInfo& peer) {
+		peerId = peer.getId();
+		nodeId = peer.getNodeId();
+		port = peer.getPort();
+		if (peer.hasAlternativeURL())
+			alternativeURL = peer.getAlternativeURL();
+		signature = peer.getSignature();
+	}
+
+	PeerInfo getPeer() {
+		if (nodeId == Id::zero())
+			nodeId = getId();
+
+		return PeerInfo::of(peerId, nodeId, getId(), port, alternativeURL, signature);
+	}
+
+    const Id& getTarget() const {
+        return peerId;
     }
 
-    const std::string& getAlt() const {
-        return alt;
-    }
+    int estimateSize() const override;
 
-    const std::vector<uint8_t>& getSignature() const {
-        return signature;
-    }
-
-    int estimateSize() const override {
-        auto size = Message::estimateSize() + peerId.size() + sizeof(port) + alt.size() + signature.size() + sizeof(token);
-        if (proxied) {
-            size += proxyId.size();
-        }
-        return size;
-    }
 
 protected:
     void serializeInternal(nlohmann::json& root) const override;
@@ -92,11 +77,11 @@ protected:
     void toString(std::stringstream& ss) const override;
 
 private:
-    Id peerId;
-    Id proxyId;
-    uint16_t port;
     int token;
-    std::string alt {};
+    Id peerId;
+    Id nodeId; // Optional, only for the delegated peers
+    uint16_t port;
+    std::string alternativeURL {};
     std::vector<uint8_t> signature {};
 
     bool proxied {false};

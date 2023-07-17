@@ -29,7 +29,7 @@
 namespace elastos {
 namespace carrier {
 
-ValueAnnounce::ValueAnnounce(DHT* dht, const ClosestSet& closestSet, Sp<Value> _value)
+ValueAnnounce::ValueAnnounce(DHT* dht, const ClosestSet& closestSet, const Value& _value)
         :Task(dht, "ValueAnnounce"), value(_value) {
 
     for (const auto& entry: closestSet.getEntries()) {
@@ -40,9 +40,8 @@ ValueAnnounce::ValueAnnounce(DHT* dht, const ClosestSet& closestSet, Sp<Value> _
 void ValueAnnounce::update() {
     while (!todo.empty() && canDoRequest()) {
         auto candidateNode = todo.front();
-        auto request = std::make_shared<StoreValueRequest>(value);
+        auto request = std::make_shared<StoreValueRequest>(value, candidateNode->getToken());
 
-        request->setToken(candidateNode->getToken());
         try {
             sendCall(candidateNode, request, [=](Sp<RPCCall>&) {
                 todo.pop_front();

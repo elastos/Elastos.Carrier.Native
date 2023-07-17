@@ -34,20 +34,12 @@ public:
     FindPeerResponse(int txid) : LookupResponse(Message::Method::FIND_PEER, txid) {}
     FindPeerResponse() : FindPeerResponse(0) {}
 
-    void setPeers4(const std::list<Sp<PeerInfo>>& peers) {
-        this->peers4 = peers;
+    void setPeers(const std::list<PeerInfo>& peers) {
+        this->peers = peers;
     }
 
-    const std::list<Sp<PeerInfo>>& getPeers4() const {
-        return peers4;
-    }
-
-    void setPeers6(const std::list<Sp<PeerInfo>>& peers) {
-        this->peers6 = peers;
-    }
-
-    const std::list<Sp<PeerInfo>>& getPeers6() const {
-        return peers6;
+    const std::list<PeerInfo>& getPeers() const {
+        return peers;
     }
 
     int estimateSize() const override;
@@ -58,11 +50,7 @@ protected:
     void _toString(std::stringstream& ss) const override;
 
 private:
-    void serializePeers(nlohmann::json& object, const std::string& fieldName, const std::list<Sp<PeerInfo>>& peers) const;
-    void parsePeers(const nlohmann::json& object, std::list<Sp<PeerInfo>>& to, int family);
-
-    std::list<Sp<PeerInfo>> peers4 = {};
-    std::list<Sp<PeerInfo>> peers6 = {};
+    std::list<PeerInfo> peers {};
 };
 
 }

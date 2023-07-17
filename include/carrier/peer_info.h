@@ -32,40 +32,123 @@ namespace carrier {
 struct CARRIER_PUBLIC PeerInfo {
     PeerInfo() = default;
 
-    PeerInfo(const Blob& id, const Blob& pid, uint16_t port, const std::string& alt, const Blob& sig, int family = AF_INET);
-    PeerInfo(const Blob& id, const uint16_t port, const std::string& alt, const Blob& sig, int family = AF_INET);
+    // PeerInfo(const PeerInfo& pi) noexcept;
+    // PeerInfo(PeerInfo&& pi) noexcept;
 
-    PeerInfo(const Id& id, const Id& pid, uint16_t port, const std::string& alt, const std::vector<uint8_t>& sig, int family = AF_INET);
+    static PeerInfo of(const Id& peerId, const Id& nodeId, int port, const std::vector<uint8_t>& signature) {
+		return PeerInfo(peerId, {}, nodeId, {}, port, {}, signature);
+	}
 
-    PeerInfo(const PeerInfo& pi);
+	static PeerInfo of(const Id& peerId, Blob& privateKey, const Id& nodeId, int port, const std::vector<uint8_t>& signature) {
+		return PeerInfo(peerId, privateKey, nodeId, {}, port, {}, signature);
+	}
 
-    const Id& getNodeId() const noexcept {
-        return nodeId;
-    }
+	static PeerInfo of(const Id& peerId, const Id& nodeId, int port, const std::string& alternativeURL, const std::vector<uint8_t>& signature) {
+		return PeerInfo(peerId, {}, nodeId, {}, port, alternativeURL, signature);
+	}
 
-    const Id& getProxyId() const noexcept {
-        return proxyId;
-    }
+	static PeerInfo of(const Id& peerId, Blob& privateKey, const Id& nodeId, int port,
+			const std::string& alternativeURL, const std::vector<uint8_t>& signature) {
+		return PeerInfo(peerId, privateKey, nodeId, {}, port, alternativeURL, signature);
+	}
 
-    uint16_t getPort() const noexcept {
+	static PeerInfo of(const Id& peerId, const Id& nodeId, Id origin, int port, const std::vector<uint8_t>& signature) {
+		return PeerInfo(peerId, {}, nodeId, origin, port, {}, signature);
+	}
+
+	static PeerInfo of(const Id& peerId, Blob& privateKey, const Id& nodeId,  Id origin, int port, const std::vector<uint8_t>& signature) {
+		return PeerInfo(peerId, privateKey, nodeId, origin, port, {}, signature);
+	}
+
+	static PeerInfo of(const Id& peerId, const Id& nodeId, Id origin, int port, const std::string& alternativeURL, const std::vector<uint8_t>& signature) {
+		return PeerInfo(peerId, {}, nodeId, origin, port, alternativeURL, signature);
+	}
+
+	static PeerInfo of(const Id& peerId, Blob& privateKey, const Id& nodeId, Id origin, int port,
+			const std::string& alternativeURL, const std::vector<uint8_t>& signature) {
+		return PeerInfo(peerId, privateKey, nodeId, origin, port, alternativeURL, signature);
+	}
+
+	static PeerInfo create(const Id& nodeId, int port) {
+		Signature::KeyPair keypair = Signature::KeyPair::random();
+		return create(keypair, nodeId, {}, port, {});
+	}
+
+	static PeerInfo create(const Signature::KeyPair& keypair, const Id& nodeId, int port) {
+		return create(keypair, nodeId, {}, port, {});
+	}
+
+	static PeerInfo create(const Id& nodeId, Id origin, int port) {
+		Signature::KeyPair keypair = Signature::KeyPair::random();
+		return create(keypair, nodeId, origin, port, {});
+	}
+
+	static PeerInfo create(const Signature::KeyPair& keypair, const Id& nodeId, Id origin, int port) {
+		return create(keypair, nodeId, origin, port, {});
+	}
+
+	static PeerInfo create(const Id& nodeId, int port, const std::string& alternativeURL) {
+		Signature::KeyPair keypair = Signature::KeyPair::random();
+		return create(keypair, nodeId, {}, port, alternativeURL);
+	}
+
+	static PeerInfo create(const Signature::KeyPair& keypair, const Id& nodeId, int port, const std::string& alternativeURL) {
+		return create(keypair, nodeId, {}, port, alternativeURL);
+	}
+
+	static PeerInfo create(const Id& nodeId, Id origin, int port, const std::string& alternativeURL) {
+		Signature::KeyPair keypair = Signature::KeyPair::random();
+		return create(keypair, nodeId, origin, port, alternativeURL);
+	}
+
+	static PeerInfo create(const Signature::KeyPair& keypair, const Id& nodeId, Id origin,
+			int port, const std::string& alternativeURL) {
+		return PeerInfo(keypair, nodeId, origin, port, alternativeURL);
+	}
+
+    const Id& getId() const noexcept {
+		return publicKey;
+	}
+
+	bool hasPrivateKey() const noexcept {
+		return privateKey.size() != 0;
+	}
+
+	const Blob& getPrivateKey() const noexcept {
+		return privateKey;
+	}
+
+	const Id& getNodeId() const noexcept {
+		return nodeId;
+	}
+
+	const Id& getOrigin() const noexcept {
+		return origin;
+	}
+
+	bool isDelegated() const noexcept {
+		return delegated;
+	}
+
+	uint16_t getPort() const noexcept {
         return port;
     };
 
-    const std::string& getAlt() const noexcept {
-        return alt;
-    }
+	const std::string& getAlternativeURL() const noexcept {
+		return alternativeURL;
+	}
+
+	bool hasAlternativeURL() const noexcept {
+		return alternativeURL.empty();
+	}
 
     const std::vector<uint8_t>& getSignature() const noexcept {
         return signature;
     }
 
-    bool usingProxy() const noexcept { return proxied;  }
-    bool isIPv4() const noexcept { return family == AF_INET;  }
-    bool isIPv6() const noexcept { return family == AF_INET6; }
-
     bool isValid() const;
 
-    int getFamily() const noexcept { return family; }
+    // int getFamily() const noexcept { return family; }
 
     bool operator==(const PeerInfo& other) const;
 
@@ -76,64 +159,25 @@ struct CARRIER_PUBLIC PeerInfo {
     operator std::string() const;
     friend std::ostream& operator<< (std::ostream& s, const PeerInfo& pi);
 
-    int size() const {
-        auto size = nodeId.size() + sizeof(port) + alt.size() + signature.size();
-        if (proxied) {
-            size += proxyId.size();
-        }
-        return size;
-    }
+private:
+    PeerInfo(const Id& peerId, const Blob& privateKey, const Id& nodeId, const Id& origin, uint16_t port,
+			const std::string& alternativeURL, const std::vector<uint8_t>& signature);
 
-    int estimateSize() const {
-        // return nodeId.size() + sizeof(port) + proxyId.size() + alt.size() + signature.size() + sizeof(int) + sizeof(bool);
-        return 1024; //TODO:: should estimate size later
-    }
+    PeerInfo(const Signature::KeyPair& keypair, const Id& nodeId, const Id& origin, uint16_t port,
+			const std::string& alternativeURL);
+
+    std::vector<uint8_t> getSignData() const;
 
 private:
-    friend class FindPeerResponse;
-    friend class SqliteStorage;
-    friend class Node;
+    Id publicKey {};
+	Blob privateKey {};
+	Id nodeId {};
+	Id origin {};
+	uint16_t port {0};
+	std::string alternativeURL {};
+	std::vector<uint8_t> signature {};
 
-    void setNodeId(const Blob& id) {
-        this->nodeId = Id(id);
-    }
-
-    void setProxyId(const Blob& id) {
-        this->proxyId = Id(id);
-        if (this->proxyId != Id::zero())
-            proxied = true;
-    }
-
-    void setPort(const int port) {
-        this->port = port;
-    }
-
-    void setAlt(const std::string& alt) {
-        this->alt = alt;
-    }
-
-    void setSignature(const Blob& val) {
-        signature.resize(val.size());
-        std::memcpy(signature.data(), val.ptr(), val.size());
-    }
-
-    void setFamily(int family) {
-        this->family = family;
-    }
-
-    bool verifySignature() const;
-    static std::vector<uint8_t> getSignData(const Id& nodeId, const Id& proxyId, uint16_t port, const std::string& alt);
-
-private:
-    Id nodeId {};
-
-    Id proxyId {};
-    uint16_t port {0};
-    std::string alt {};
-    std::vector<uint8_t> signature {};
-
-    bool proxied {false};
-    int family {AF_INET};
+    bool delegated {false};
 };
 
 }

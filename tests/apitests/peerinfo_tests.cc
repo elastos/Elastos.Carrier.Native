@@ -39,61 +39,25 @@ PeerInfoTests::setUp() {
 }
 
 void
-PeerInfoTests::testPeerInfo4() {
+PeerInfoTests::testPeerInfo() {
     auto id1 = Id::random();
     auto pid1 = Id::random();
     uint16_t port = 65535;
     std::vector<uint8_t> sig1(64, 1);
     std::string address1 = "251.251.251.251";
-    auto peer1 = PeerInfo(id1, pid1, port, address1, sig1);
-    CPPUNIT_ASSERT(peer1.isIPv4());
-    CPPUNIT_ASSERT(!peer1.isIPv6());
+    auto peer1 = PeerInfo::of(id1, pid1, port, address1, sig1);
+
     CPPUNIT_ASSERT_EQUAL(id1, peer1.getNodeId());
-    CPPUNIT_ASSERT_EQUAL(pid1, peer1.getProxyId());
+    CPPUNIT_ASSERT_EQUAL(pid1, peer1.getNodeId());
     CPPUNIT_ASSERT_EQUAL(port, peer1.getPort());
-    CPPUNIT_ASSERT_EQUAL(address1, peer1.getAlt());
+    CPPUNIT_ASSERT_EQUAL(address1, peer1.getAlternativeURL());
     CPPUNIT_ASSERT(sig1 == peer1.getSignature());
-    CPPUNIT_ASSERT(peer1.usingProxy());
+    CPPUNIT_ASSERT(peer1.isDelegated());
 
-    nlohmann::json object1 = peer1;
-    PeerInfo peer2 = object1;
+    // nlohmann::json object1 = peer1;
+    // PeerInfo peer2 = object1;
 
-    CPPUNIT_ASSERT_EQUAL(peer1.getNodeId(), peer2.getNodeId());
-    CPPUNIT_ASSERT_EQUAL(peer1.getPort(), peer2.getPort());
-    CPPUNIT_ASSERT_EQUAL(peer1.getProxyId(), peer2.getProxyId());
-    CPPUNIT_ASSERT(peer1.getSignature() == peer2.getSignature());
-    CPPUNIT_ASSERT_EQUAL(peer1.getAlt(), peer2.getAlt());
-    CPPUNIT_ASSERT_EQUAL(peer1.getFamily(), peer2.getFamily());
-
-    CPPUNIT_ASSERT(peer1 ==  peer2);
-}
-
-void
-PeerInfoTests::testPeerInfo6() {
-    auto id1 = Id::random();
-    uint16_t port = 65535;
-    std::vector<uint8_t> sig1(64, 2);
-    std::string address1 = "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff";
-    auto peer1 = PeerInfo(id1, Id(), port, address1, sig1, AF_INET6);
-    CPPUNIT_ASSERT(!peer1.isIPv4());
-    CPPUNIT_ASSERT(peer1.isIPv6());
-    CPPUNIT_ASSERT_EQUAL(id1, peer1.getNodeId());
-    CPPUNIT_ASSERT_EQUAL(Id::zero(), peer1.getProxyId());
-    CPPUNIT_ASSERT_EQUAL(port, peer1.getPort());
-    CPPUNIT_ASSERT_EQUAL(address1, peer1.getAlt());
-    CPPUNIT_ASSERT(sig1 == peer1.getSignature());
-    CPPUNIT_ASSERT(!peer1.usingProxy());
-
-    nlohmann::json object1 = peer1;
-    PeerInfo peer2 = object1;
-
-    CPPUNIT_ASSERT_EQUAL(peer1.getNodeId(), peer2.getNodeId());
-    CPPUNIT_ASSERT_EQUAL(peer1.getProxyId(), peer2.getProxyId());
-    CPPUNIT_ASSERT_EQUAL(peer1.getPort(), peer2.getPort());
-    CPPUNIT_ASSERT_EQUAL(peer1.getAlt(), peer2.getAlt());
-    CPPUNIT_ASSERT(peer1.getSignature() == peer2.getSignature());
-
-    // CPPUNIT_ASSERT(peer1 ==  peer2); the family don't serialize
+    // CPPUNIT_ASSERT(peer1 ==  peer2);
 }
 
 void

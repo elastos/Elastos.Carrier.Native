@@ -59,23 +59,5 @@ namespace carrier {
         ni = NodeInfo(id, ip, port);
     }
 
-    void to_json(nlohmann::json& json, const PeerInfo& pi) {
-        json = nlohmann::json::array();
-        json.push_back(pi.getNodeId());
-        json.push_back(pi.getProxyId());
-        json.push_back(pi.getPort());
-        json.push_back(pi.getAlt());
-        json.push_back(nlohmann::json::binary_t(pi.getSignature()));
-    }
-
-    void from_json(const nlohmann::json& json, PeerInfo& pi) {
-        auto id = json[0].get_binary();
-        auto proxyId = json[1].get_binary();
-        auto port = json[2].get<uint16_t>();
-        auto alt = json[3].get<std::string>();
-        auto sig = json[4].get_binary();
-
-        pi = PeerInfo(id, proxyId, port, alt, sig);
-    }
 }
 }

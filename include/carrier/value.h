@@ -37,14 +37,72 @@ namespace carrier {
 class CARRIER_PUBLIC Value {
 public:
     Value() = default;
-    Value(const Value&) = delete;
-    Value(Value&&) = delete;
-    Value& operator=(const Value&) = delete;
+    // Value(const Value& val) noexcept;
+    // Value(Value&& val) noexcept;
+    // Value& operator=(const Value&) = delete;
 
-    static Id calculateId(const Value& value);
+    static Value of(const std::vector<uint8_t>& data) {
+		return Value({}, {}, {}, {}, -1, {}, data);
+	}
+
+	static Value of(const Id& publicKey, const Blob& nonce, int sequenceNumber, const std::vector<uint8_t>& signature,
+            const std::vector<uint8_t>& data) {
+		return Value(publicKey, {}, {}, nonce, sequenceNumber, signature, data);
+	}
+
+	static Value of(const Id& publicKey, const Id& recipient, const Blob& nonce, int sequenceNumber,
+			const std::vector<uint8_t>& signature, const std::vector<uint8_t>& data) {
+		return Value(publicKey, {}, recipient, nonce, sequenceNumber, signature, data);
+	}
+
+	static Value of(const Id& publicKey, const Blob& privateKey, const Id& recipient, const Blob& nonce,
+			int sequenceNumber, const std::vector<uint8_t>& signature, const std::vector<uint8_t>& data) {
+		return Value(publicKey, privateKey, recipient, nonce, sequenceNumber, signature, data);
+	}
+
+	static Value createValue(const std::vector<uint8_t>& data) {
+		return Value({}, {}, {}, {}, -1, {}, data);
+	}
+
+	static Value createSignedValue(const std::vector<uint8_t>& data) {
+		auto keypair = Signature::KeyPair::random();
+		auto nonce = CryptoBox::Nonce::random();
+
+		return  createSignedValue(keypair, nonce.blob(), 0, data);
+	}
+
+	static Value createSignedValue(Signature::KeyPair keypair, const Blob& nonce,
+			const std::vector<uint8_t>& data) {
+		return createSignedValue(keypair, nonce, 0, data);
+	}
+
+	static Value createSignedValue(Signature::KeyPair keypair, const Blob& nonce,
+			int sequenceNumber, const std::vector<uint8_t>& data) {
+		return Value(keypair, {}, nonce, sequenceNumber, data);
+	}
+
+	static Value createEncryptedValue(const Id& recipient, const std::vector<uint8_t>& data) {
+		auto keypair = Signature::KeyPair::random();
+		auto nonce = CryptoBox::Nonce::random();
+
+		return createEncryptedValue(keypair, recipient, nonce.blob(), 0, data);
+	}
+
+	static Value createEncryptedValue(Signature::KeyPair keypair, const Id& recipient, const Blob& nonce, const std::vector<uint8_t>& data) {
+		return createEncryptedValue(keypair, recipient, nonce, 0, data);
+	}
+
+	static Value createEncryptedValue(Signature::KeyPair keypair, const Id& recipient, const Blob& nonce, int sequenceNumber, const std::vector<uint8_t>& data) {
+		if (recipient == Id::zero())
+			throw std::invalid_argument("Invalid recipient");
+
+		return Value(keypair, recipient, nonce, sequenceNumber, data);
+	}
+
+    static Id calculateId(const Id& publicKey, const Blob& nonce, const std::vector<uint8_t>& data);
 
     Id getId() const {
-        return Value::calculateId(*this);
+        return Value::calculateId(publicKey, nonce, data);
     }
 
     const Id& getPublicKey() const noexcept {
@@ -59,11 +117,15 @@ public:
         return static_cast<bool>(privateKey);
     }
 
+    const Signature::PrivateKey& getPrivateKey() const {
+        return privateKey;
+    }
+
     int getSequenceNumber() const noexcept {
         return sequenceNumber;
     }
 
-    const CryptoBox::Nonce& getNonce() const  noexcept{
+    const Blob& getNonce() const  noexcept{
         return nonce;
     }
 
@@ -74,6 +136,8 @@ public:
     const std::vector<uint8_t>& getData() const noexcept {
         return data;
     }
+
+    Value update(const std::vector<uint8_t>& data);
 
     size_t size() const noexcept {
         return data.size() + signature.size();
@@ -97,57 +161,22 @@ public:
     operator std::string() const;
 
 private: // internal methods used in friend class.
-    friend class SqliteStorage;
-    friend class FindValueResponse;
-    friend class StoreValueRequest;
-    friend class Node;
+    // friend class SqliteStorage;
+    // friend class FindValueResponse;
+    // friend class StoreValueRequest;
+    // friend class Node;
 
-    // internal setts used in SqliteStorage type.
-    void setPrivateKey(const Blob& val) noexcept {
-        this->privateKey = Signature::PrivateKey(val);
-    }
-    void setPublicKey(const Blob& val) {
-        this->publicKey = Id(val);
-    }
-    void setRecipient(const Blob& val) {
-        this->recipient = Id(val);
-    }
-    void setSignature(const Blob& val) {
-        signature.resize(val.size());
-        std::memcpy(signature.data(), val.ptr(), val.size());
-    }
-    void setNonce(const Blob& val) {
-        this->nonce = CryptoBox::Nonce(val);
-    }
-    void setData(const Blob& val) {
-        data.resize(val.size());
-        std::memcpy(data.data(), val.ptr(), val.size());
-    }
+    Value(const Id& publicKey, const Blob& privateKey, const Id& recipient, const Blob& nonce,
+        int sequenceNumber, const std::vector<uint8_t>& signature, const std::vector<uint8_t>& data);
+    Value(const Signature::KeyPair& keypair, const Id& recipient, const Blob& nonce,
+        int sequenceNumber, const std::vector<uint8_t>& data);
 
-    void setSequenceNumber(int seqNumber) {
-        this->sequenceNumber = seqNumber;
-    }
-
-    const Signature::PrivateKey& getPrivateKey() const {
-        return privateKey;
-    }
-
-    void purgePrivateKey() {
-        privateKey.clear();
-    }
-
-    static Sp<Value> create(const std::vector<uint8_t>& data);
-    static Sp<Value> createSigned(const std::vector<uint8_t>& data);
-    static Sp<Value> createEncrypted(const Id& to, const std::vector<uint8_t>& data);
-    static Sp<Value> updateValue(const Sp<Value> oldValue, const std::vector<uint8_t>& newData);
-
-    void createSignature();
-    bool verifySignature() const;
+    std::vector<uint8_t> getSignData() const;
 
     Id publicKey {};
     Id recipient {};
     Signature::PrivateKey privateKey {};
-    CryptoBox::Nonce nonce {};
+    Blob nonce {};
     std::vector<uint8_t> signature {};
     std::vector<uint8_t> data {};
     int32_t sequenceNumber {0};

@@ -20,6 +20,7 @@
 * SOFTWARE.
 */
 #include <sstream>
+#include <utf8proc.h>
 
 #include "carrier/peer_info.h"
 #include "carrier/socket_address.h"
@@ -28,45 +29,79 @@
 namespace elastos {
 namespace carrier {
 
-PeerInfo::PeerInfo(const Blob& id, const Blob& pid, uint16_t _port, const std::string& _alt, const Blob& sig, int _family)
-    : nodeId(id), proxyId(pid), port(_port), alt(_alt), family(_family) {
-    setSignature(sig);
-    if (proxyId != Id::zero()) {
-        proxied = true;
-    }
+PeerInfo::PeerInfo(const Id& peerId, const Blob& privateKey, const Id& nodeId, const Id& origin, uint16_t port,
+			const std::string& alternativeURL, const std::vector<uint8_t>& signature) {
+
+    if (peerId == Id::zero())
+		throw std::invalid_argument("Invalid peer id");
+
+    if (privateKey.size() != Signature::PrivateKey::BYTES)
+        throw std::invalid_argument("Invalid private key");
+
+    if (nodeId == Id::zero())
+        throw std::invalid_argument("Invalid node id");
+
+    if (port <= 0 || port > 65535)
+        throw std::invalid_argument("Invalid port");
+
+    if (signature.size() != Signature::BYTES)
+        throw std::invalid_argument("Invalid signature");
+
+    this->publicKey = peerId;
+    this->privateKey = privateKey;
+    this->nodeId = nodeId;
+    this->delegated = origin != Id::zero();
+    this->origin = this->delegated ? origin : nodeId;
+    this->port = port;
+    if (!alternativeURL.empty())
+        this->alternativeURL = (char *)utf8proc_NFC((unsigned char *)(alternativeURL.c_str()));
+    this->signature = signature;
 }
 
-PeerInfo::PeerInfo(const Blob& id, uint16_t port, const std::string& alt, const Blob& sig, int family) {
-    PeerInfo(id, {}, port, alt, sig, family);
+PeerInfo::PeerInfo(const Signature::KeyPair& keypair, const Id& nodeId, const Id& origin, uint16_t port,
+			const std::string& alternativeURL) {
+
+    if (nodeId == Id::zero())
+        throw std::invalid_argument("Invalid node id");
+
+    if (port <= 0 || port > 65535)
+        throw std::invalid_argument("Invalid port");
+
+    this->publicKey = Id(keypair.publicKey());
+    this->privateKey = keypair.privateKey().blob();
+    this->nodeId = nodeId;
+    this->delegated = origin != Id::zero();
+    this->origin = this->delegated ? origin : nodeId;
+    this->port = port;
+    if (!alternativeURL.empty())
+        this->alternativeURL = (char *)utf8proc_NFC((unsigned char *)(alternativeURL.c_str()));
+    this->signature = Signature::sign(getSignData(), keypair.privateKey());
 }
 
-PeerInfo::PeerInfo(const Id& id, const Id& pid, uint16_t _port, const std::string& _alt,  const std::vector<uint8_t>& sig, int _family)
-    : nodeId(id), proxyId(pid), port(_port), alt(_alt), signature(sig), family(_family) {
-    if (proxyId != Id::zero()) {
-        proxied = true;
-    }
-}
+// PeerInfo::PeerInfo(const PeerInfo& pi) noexcept
+//     : publicKey(pi.publicKey), nodeId(pi.nodeId), origin(pi.origin), port(pi.port),
+//         alternativeURL(pi.alternativeURL), signature(pi.signature), delegated(pi.delegated) {}
 
-PeerInfo::PeerInfo(const PeerInfo& pi)
-    : nodeId(pi.nodeId), proxyId(pi.proxyId), port(pi.port), alt(pi.alt), signature(pi.signature), family(pi.family), proxied(pi.proxied) {}
-
+// PeerInfo::PeerInfo(PeerInfo&& pi) noexcept
+//     : publicKey(std::move(pi.publicKey)), nodeId(std::move(pi.nodeId)), origin(std::move(pi.origin)), port(std::move(pi.port)),
+//         alternativeURL(std::move(pi.alternativeURL)), signature(std::move(pi.signature)), delegated(std::move(pi.delegated)) {}
 
 bool PeerInfo::operator==(const PeerInfo& other) const {
-    return nodeId == other.nodeId && proxyId == other.proxyId && port == other.port
-                && alt == other.alt && signature == other.signature && family == other.family;
+    return publicKey == other.publicKey && nodeId == other.nodeId && origin == other.origin
+                && port == other.port && alternativeURL == other.alternativeURL && signature == other.signature;
 }
 
 PeerInfo::operator std::string() const {
     std::stringstream ss;
-    ss.str().reserve(80);
-    ss << "<" << nodeId.toBase58String();
-    if (proxied)
-        ss << "," << proxyId.toBase58String();
-    ss << "," << std::to_string(port);
-    if (!alt.empty())
-        ss << "," << alt;
-    ss << ",sig:" << Hex::encode(signature)
-        << ">";
+    // ss.str().reserve(80);
+    ss << "<" << nodeId.toBase58String() << ",";
+
+    if (isDelegated())
+        ss<< origin.toBase58String() << ",";
+    ss << std::to_string(port);
+    if (hasAlternativeURL())
+        ss << "," << alternativeURL;
+    ss << ">";
 
     return ss.str();
 }
@@ -76,42 +111,25 @@ std::ostream& operator<< (std::ostream& os, const PeerInfo& pi) {
     return os;
 }
 
-std::vector<uint8_t> PeerInfo::getSignData(const Id& nodeId, const Id& proxyId, uint16_t port, const std::string& alt) {
-    bool proxied = false;
-    if (proxyId != Id::zero()) {
-        proxied = true;
-    }
-    auto size = nodeId.size() + sizeof(port) + alt.size();
-    if (proxied)
-        size += proxyId.size();
+std::vector<uint8_t> PeerInfo::getSignData() const {
+    auto size = Id::BYTES * 2  + sizeof(port) + alternativeURL.size();
 
     std::vector<uint8_t> toSign {};
     toSign.reserve(size);
     toSign.insert(toSign.begin(), nodeId.cbegin(), nodeId.cend());
-    if (proxied)
-        toSign.insert(toSign.end(), proxyId.cbegin(), proxyId.cend());
-
+    toSign.insert(toSign.end(), origin.cbegin(), origin.cend());
     toSign.insert(toSign.end(), (uint8_t*)(&port), (uint8_t*)(&port) + sizeof(port));
-    const uint8_t* ptr = (const uint8_t*)alt.c_str();
-    toSign.insert(toSign.end(), ptr, ptr + strlen(alt.c_str()));
+    const uint8_t* ptr = (const uint8_t*)alternativeURL.c_str();
+    toSign.insert(toSign.end(), ptr, ptr + strlen(alternativeURL.c_str()));
     return toSign;
 }
 
-bool PeerInfo::verifySignature() const {
-    std::vector<uint8_t> toVerify = getSignData(nodeId, proxyId, port, alt);
-
-    Signature::PublicKey sender {};
-    if (proxied)
-        sender = Signature::PublicKey(proxyId.blob());
-    else
-        sender = Signature::PublicKey(nodeId.blob());
-
-   return sender.verify(signature, toVerify);
-}
-
 bool PeerInfo::isValid() const {
-    // assert(!signature.empty());
-    return verifySignature();
+    if (signature.size() != Signature::BYTES)
+			return false;
+
+    Signature::PublicKey pk = publicKey.toSignatureKey();
+    return Signature::verify(getSignData(), signature, pk);
 }
 
 

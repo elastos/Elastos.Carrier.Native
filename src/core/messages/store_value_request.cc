@@ -29,24 +29,38 @@
 namespace elastos {
 namespace carrier {
 
+void StoreValueRequest::setValue(const Value& value) {
+    this->publicKey = value.getPublicKey();
+    this->recipient = value.getRecipient();
+    this->nonce = value.getNonce();
+    this->signature = value.getSignature();;
+    this->sequenceNumber = value.getSequenceNumber();
+    this->value = value.getData();
+}
+
+Value StoreValueRequest::getValue() const {
+    return Value::of(publicKey, recipient, nonce, sequenceNumber, signature, value);
+}
+
 void StoreValueRequest::serializeInternal(nlohmann::json& root) const {
     nlohmann::json object = nlohmann::json::object();
 
     object[Message::KEY_REQ_TOKEN] = token;
-    if (value->isMutable())
-        object[Message::KEY_REQ_PUBLICKEY] = value->getPublicKey();
-    if (value->isEncrypted())
-        object[Message::KEY_REQ_RECIPIENT] = value->getRecipient();
-    if (value->isMutable())
-        object[Message::KEY_REQ_NONCE] = nlohmann::json::binary_t {{value->getNonce().cbegin(), value->getNonce().cend()}};
-    if (value->isSigned())
-        object[Message::KEY_REQ_SIGNATURE] = nlohmann::json::binary_t {value->getSignature()};
-    if (value->getSequenceNumber() >= 0)
-        object[Message::KEY_REQ_SEQ] = value->getSequenceNumber();
-    if (expectedSequenceNumber >= 0)
-        object[Message::KEY_REQ_CAS] = expectedSequenceNumber;
+    if (isMutable()) {
+        object[Message::KEY_REQ_PUBLICKEY] = publicKey;
+        if (isEncrypted())
+            object[Message::KEY_REQ_RECIPIENT] = recipient;
+        if (nonce.size() > 0)
+            object[Message::KEY_REQ_NONCE] = nlohmann::json::binary_t {{nonce.cbegin(), nonce.cend()}};
+        if (!signature.empty())
+            object[Message::KEY_REQ_SIGNATURE] = nlohmann::json::binary_t {signature};
+        if (sequenceNumber >= 0)
+            object[Message::KEY_REQ_SEQ] = sequenceNumber;
+        if (expectedSequenceNumber >= 0)
+            object[Message::KEY_REQ_CAS] = expectedSequenceNumber;
+    }
 
-    object[Message::KEY_REQ_VALUE] = nlohmann::json::binary_t {value->getData()};
+    object[Message::KEY_REQ_VALUE] = nlohmann::json::binary_t {value};
 
     Message::serializeInternal(root);
     root[getKeyString()] = object;
@@ -58,22 +72,21 @@ void StoreValueRequest::parse(const std::string& fieldName, nlohmann::json& obje
 
     for (const auto& [key, object] : object.items()) {
         if (key == Message::KEY_REQ_PUBLICKEY) {
-            value->publicKey = object.get<Id>();
+            publicKey = object.get<Id>();
         } else if (key == Message::KEY_REQ_RECIPIENT) {
-            value->recipient = object.get<Id>();
+            recipient = object.get<Id>();
         } else if (key == Message::KEY_REQ_NONCE) {
-            auto _nonce = object.get_binary();
-            value->nonce = CryptoBox::Nonce(_nonce);
+            nonce = object.get_binary();
         } else if (key == Message::KEY_REQ_SIGNATURE) {
-            value->signature = object.get_binary();
+           signature = object.get_binary();
         } else if (key == Message::KEY_REQ_SEQ) {
-            value->sequenceNumber = object.get<uint16_t>();
+            sequenceNumber = object.get<uint16_t>();
         } else if (key == Message::KEY_REQ_CAS) {
             object.get_to(expectedSequenceNumber);
         } else if (key == Message::KEY_REQ_TOKEN) {
             object.get_to(token);
         } else if (key == Message::KEY_RES_VALUE) {
-            value->data = object.get_binary();
+            value = object.get_binary();
         } else {
             throw std::invalid_argument("Unknown field: " + key);
         }
@@ -84,47 +97,45 @@ void StoreValueRequest::parse(const std::string& fieldName, nlohmann::json& obje
 void StoreValueRequest::toString(std::stringstream& ss) const {
     ss << "\nRequest: ";
 
-    if (value->isMutable())
-        ss << "\n    PublicKey: " << value->getPublicKey();
-    if (value->isEncrypted())
-        ss << "\n    Recipient: " << value->getRecipient();
-    if (value->isMutable())
-        ss << "\n    Nonce:" << Hex::encode(value->getNonce().bytes(), value->getNonce().size());
-    if (value->isSigned())
-        ss << "\n    Signature: " << Hex::encode(value->getSignature());
-    if (expectedSequenceNumber >= 0)
-        ss << "\n    ExpectedSequenceNumber: " << std::to_string(expectedSequenceNumber);
-    if (value->getSequenceNumber() >= 0)
-        ss << "\n    SequenceNumber: " << std::to_string(value->getSequenceNumber());
+    if (value->isMutable()) {
+        ss << "\n    PublicKey: " << static_cast<std::string>(publicKey);;
+        if (isEncrypted())
+            ss << "\n    Recipient: " << static_cast<std::string>(recipient);
+        if (nonce.size() > 0)
+            ss << "\n    Nonce:" << Hex::encode(nonce);
+        if (sequenceNumber >= 0)
+            ss << "\n    SequenceNumber: " << std::to_string(sequenceNumber);
+        if (!signature.empty())
+            ss << "\n    Signature: " << Hex::encode(signature);
+        if (expectedSequenceNumber >= 0)
+            ss << "\n    ExpectedSequenceNumber: " << std::to_string(expectedSequenceNumber);
+    }
 
     ss << "\n    Token: " << std::to_string(token)
         << "\n    Value: " << Hex::encode(value->getData());
 }
 #else
 void StoreValueRequest::toString(std::stringstream& ss) const {
-    bool hasPublicKey {false};
     ss << ",q:{";
 
-    if (value->isMutable()) {
-        ss << ",k:" << static_cast<std::string>(value->getPublicKey());
-        hasPublicKey = true;
-    }
-    if (value->isEncrypted())
-        ss << ",rec:" << static_cast<std::string>(value->getRecipient());
-    if (value->isMutable())
-        ss << ",n:" << Hex::encode(value->getNonce().bytes(), value->getNonce().size());
-    if (value->isSigned())
-        ss << ",sig:" << Hex::encode(value->getSignature());
-    if (expectedSequenceNumber >= 0)
-        ss << ",cas:" << std::to_string(expectedSequenceNumber);
-    if (value->getSequenceNumber() >= 0)
-        ss << ",seq:" << std::to_string(value->getSequenceNumber());
+    if (isMutable()) {
+        ss << ",k:" << static_cast<std::string>(publicKey);
+        if (isEncrypted())
+            ss << ",rec:" << static_cast<std::string>(recipient);
+        if (nonce.size() > 0)
+            ss << ",n:" << Hex::encode(nonce);
+        if (sequenceNumber >= 0)
+            ss << ",seq:" << std::to_string(sequenceNumber);
+        if (!signature.empty())
+            ss << ",sig:" << Hex::encode(signature);
+        if (expectedSequenceNumber >= 0)
+            ss << ",cas:" << std::to_string(expectedSequenceNumber);
 
-    if (hasPublicKey)
         ss << ",";
+    }
 
     ss << "tok:" << std::to_string(token)
-        << ",v:" << Hex::encode(value->getData())
+        << ",v:" << Hex::encode(value)
         << "}";
 }
 #endif

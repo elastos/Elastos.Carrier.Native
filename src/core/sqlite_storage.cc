@@ -30,7 +30,8 @@
 namespace elastos {
 namespace carrier {
 
-static std::string SET_USER_VERSION = "PRAGMA user_version = 2";
+static int VERSION = 3;
+static std::string SET_USER_VERSION = "PRAGMA user_version = " + std::to_string(VERSION);
 static std::string GET_USER_VERSION = "PRAGMA user_version";
 
 static std::string CREATE_VALUES_TABLE = "CREATE TABLE IF NOT EXISTS valores(\
@@ -50,11 +51,11 @@ static std::string CREATE_VALUES_INDEX =
 
 static std::string CREATE_PEERS_TABLE = "CREATE TABLE IF NOT EXISTS peers (\
     id BLOB NOT NULL, \
-    family INTEGER NOT NULL, \
+    privateKey BLOB, \
     nodeId BLOB NOT NULL ,\
-    proxyId BLOB, \
+    origin BLOB NOT NULL, \
     port INTEGER NOT NULL, \
-    alternative VARCHAR(512), \
+    alternativeURL VARCHAR(512), \
     signature BLOB NOT NULL ,\
     timestamp INTEGER NOT NULL, \
     PRIMARY KEY(id, family, nodeId)\
@@ -62,6 +63,9 @@ static std::string CREATE_PEERS_TABLE = "CREATE TABLE IF NOT EXISTS peers (\
 
 static std::string CREATE_PEERS_INDEX =
     "CREATE INDEX IF NOT EXISTS idx_peers_timpstamp ON peers (timestamp)";
+
+static std::string CREATE_PEERS_ID_INDEX =
+    "CREATE INDEX IF NOT EXISTS idx_peers_id ON peers(id)";
 
 static std::string SELECT_VALUE = "SELECT * from valores \
     WHERE id = ? and timestamp >= ?";
@@ -77,16 +81,17 @@ static std::string UPSERT_VALUE = "INSERT INTO valores(\
     data=excluded.data, timestamp=excluded.timestamp";
 
 static std::string SELECT_PEER = "SELECT * from peers \
-    WHERE id = ? and family = ? and timestamp >= ?\
+    WHERE id = ? and timestamp >= ? \
     ORDER BY RANDOM() LIMIT ?";
 
 static std::string SELECT_PEER_WITH_NODEID = "SELECT * from peers \
-    WHERE id = ? and family = ? and nodeId = ? and timestamp >= ?";
+    WHERE id = ? and origin = ? and timestamp >= ?";
 
 static std::string UPSERT_PEER = "INSERT INTO peers (\
-    id, family, nodeId, proxyId, port, alternative, signature, timestamp) \
-    VALUES(?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id, family, nodeId) DO UPDATE SET \
-    proxyId=excluded.proxyId, port=excluded.port, alternative=excluded.alternative, signature=excluded.signature, timestamp=excluded.timestamp";
+    id, privateKey, nodeId, origin, port, alternativeURL, signature, timestamp) \
+    VALUES(?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id, nodeId, origin) DO UPDATE SET \
+    privateKey=excluded.privateKey, port=excluded.port, alternativeURL=excluded.alternativeURL, \
+    signature=excluded.signature, timestamp=excluded.timestamp";
 
 static std::string LIST_PEER_ID = "SELECT DISTINCT id from peers ORDER BY id";
 
@@ -127,7 +132,9 @@ void SqliteStorage::init(const std::string& path, Scheduler& scheduler) {
     // then increase the user_version;
     int userVersion = getUserVersion();
     if (userVersion == 1) {
-        if (int ret = sqlite3_exec(sqlite_store, "DROP TABLE IF EXISTS peers", 0, 0, 0) != 0) {
+        if (sqlite3_exec(sqlite_store, "DROP TABLE IF EXISTS peers", 0, 0, 0) != 0
+            || sqlite3_exec(sqlite_store, "DROP INDEX IF EXISTS idx_peers_timpstamp", 0, 0, 0) != 0
+            || sqlite3_exec(sqlite_store, "DROP INDEX IF EXISTS idx_peers_id", 0, 0, 0) != 0) {
             throw std::runtime_error("Failed to drop peers table.");
         }
     }
@@ -136,7 +143,8 @@ void SqliteStorage::init(const std::string& path, Scheduler& scheduler) {
         sqlite3_exec(sqlite_store, CREATE_VALUES_TABLE.c_str(), 0, 0, 0) != 0 ||
         sqlite3_exec(sqlite_store, CREATE_VALUES_INDEX.c_str(), 0, 0, 0) != 0 ||
         sqlite3_exec(sqlite_store, CREATE_PEERS_TABLE.c_str(), 0, 0, 0) != 0 ||
-        sqlite3_exec(sqlite_store, CREATE_PEERS_INDEX.c_str(), 0, 0, 0) != 0) {
+        sqlite3_exec(sqlite_store, CREATE_PEERS_INDEX.c_str(), 0, 0, 0) != 0 ||
+        sqlite3_exec(sqlite_store, CREATE_PEERS_ID_INDEX.c_str(), 0, 0, 0) != 0) {
         throw std::runtime_error("Failed to update SQLite text.");
     }
 
@@ -184,8 +192,14 @@ Sp<Value> SqliteStorage::getValue(const Id& valueId) {
     sqlite3_bind_blob(pStmt, 1, valueId.data(), valueId.size(), SQLITE_STATIC);
     sqlite3_bind_int64(pStmt, 2, when);
 
-    while (sqlite3_step(pStmt) == SQLITE_ROW) {
-        auto value = std::make_shared<Value>();
+    if (sqlite3_step(pStmt) == SQLITE_ROW) {
+        Id publicKey {};
+        Blob privateKey {};
+        Id recipient {};
+        Blob nonce {};
+        int sequenceNumber {0};
+        std::vector<uint8_t>  signature {};
+        std::vector<uint8_t>  data {};
 
         int cNum = sqlite3_column_count(pStmt);
         for (int i = 0; i < cNum; i++) {
@@ -200,44 +214,45 @@ Sp<Value> SqliteStorage::getValue(const Id& valueId) {
             }
 
             if (std::strcmp(name, "publicKey") == 0 && len > 0) {
-                value->setPublicKey(Blob(ptr, len));
+                publicKey = Id(Blob(ptr, len));
             } else if (std::strcmp(name, "privateKey") == 0 && len > 0) {
-                value->setPrivateKey(Blob(ptr, len));
+                privateKey = Blob(ptr, len);
             } else if (strcmp(name, "recipient") == 0 && len > 0) {
-                value->setRecipient(Blob(ptr, len));
+                recipient = Id(Blob(ptr, len));
             } else if (strcmp(name, "nonce") == 0 && len > 0 && len == CryptoBox::Nonce::BYTES) {
-                value->setNonce(Blob(ptr, len));
+                nonce = Blob(ptr, len);
             } else if (strcmp(name, "signature") == 0 && len > 0) {
-                value->setSignature(Blob(ptr, len));
+                signature = {Blob(ptr, len)};
             } else if (strcmp(name, "sequenceNumber") == 0 && cType == SQLITE_INTEGER) {
-                value->setSequenceNumber(sqlite3_column_int(pStmt, i));
+                sequenceNumber = sqlite3_column_int(pStmt, i);
             } else if (strcmp(name, "data") == 0 && len > 0) {
-                value->setData(Blob(ptr, len));
+                data = {Blob(ptr, len)};
             }
         }
 
         sqlite3_finalize(pStmt);
-        return value;
+        auto value = Value::of(publicKey, privateKey, recipient, nonce, sequenceNumber, signature, data);
+        return std::make_shared<Value>(value);
     }
 
     sqlite3_finalize(pStmt);
     return nullptr;
 }
 
-Sp<Value> SqliteStorage::putValue(const Sp<Value>& value, int expectedSeq) {
+Sp<Value> SqliteStorage::putValue(const Value& value, int expectedSeq) {
     sqlite3_stmt *pStmt;
 
-    if (value->isMutable() && !value->isValid())
+    if (value.isMutable() && !value.isValid())
         throw std::invalid_argument("Value signature validation failed");
 
-    auto id = value->getId();
+    auto id = value.getId();
     auto old = getValue(id);
     if (old != nullptr && old->isMutable()) {
-        if(!value->isMutable())
+        if(!value.isMutable())
             throw std::invalid_argument("Can not replace mutable value with immutable is not supported");
-        if (old->hasPrivateKey() && !value->hasPrivateKey())
+        if (old->hasPrivateKey() && !value.hasPrivateKey())
             throw std::invalid_argument("Not the owner of value");
-        if(value->getSequenceNumber() < old->getSequenceNumber())
+        if(value.getSequenceNumber() < old->getSequenceNumber())
             throw std::invalid_argument("Sequence number less than current");
         if(expectedSeq >= 0 && old->getSequenceNumber() >= 0 && old->getSequenceNumber() != expectedSeq)
             throw std::invalid_argument("CAS failure");
@@ -250,24 +265,24 @@ Sp<Value> SqliteStorage::putValue(const Sp<Value>& value, int expectedSeq) {
 
     sqlite3_bind_blob(pStmt, 1, id.data(), id.size(), SQLITE_STATIC);
 
-    auto signer = value->getPublicKey().blob();
+    auto signer = value.getPublicKey().blob();
     sqlite3_bind_blob(pStmt, 2, signer.ptr(), signer.size(), SQLITE_STATIC);
 
-    auto sk = value->getPrivateKey();
+    auto sk = value.getPrivateKey();
     sqlite3_bind_blob(pStmt, 3, sk.bytes(), sk.size(), SQLITE_STATIC);
 
-    auto recipient = value->getRecipient().blob();
+    auto recipient = value.getRecipient().blob();
     sqlite3_bind_blob(pStmt, 4, recipient.ptr(), recipient.size(), SQLITE_STATIC);
 
-    auto nonce = value->getNonce();
-    sqlite3_bind_blob(pStmt, 5, nonce.bytes(), nonce.size(), SQLITE_STATIC);
+    auto nonce = value.getNonce();
+    sqlite3_bind_blob(pStmt, 5, nonce.ptr(), nonce.size(), SQLITE_STATIC);
 
-    auto sig = Blob(value->getSignature());
+    auto sig = Blob(value.getSignature());
     sqlite3_bind_blob(pStmt, 6, sig.ptr(), sig.size(), SQLITE_STATIC);
 
-    sqlite3_bind_int(pStmt, 7, value->getSequenceNumber());
+    sqlite3_bind_int(pStmt, 7, value.getSequenceNumber());
 
-    auto data = Blob(value->getData());
+    auto data = Blob(value.getData());
     sqlite3_bind_blob(pStmt, 8, data.ptr(), data.size(), SQLITE_STATIC);
 
     sqlite3_bind_int64(pStmt, 9, currentTimeMillis());
@@ -277,7 +292,7 @@ Sp<Value> SqliteStorage::putValue(const Sp<Value>& value, int expectedSeq) {
     return old;
 }
 
-Sp<Value> SqliteStorage::putValue(const Sp<Value>& value) {
+Sp<Value> SqliteStorage::putValue(const Value& value) {
     return putValue(value, -1);
 }
 
@@ -311,75 +326,66 @@ std::list<Id> SqliteStorage::listValueId() {
     return ids;
 }
 
-std::list<Sp<PeerInfo>> SqliteStorage::getPeer(const Id& peerId, int family, int maxPeers) {
-    std::list<int> families = {};
-
-    if (family == 4) {
-        families.push_back(AF_INET);
-    } else if (family == 6) {
-        families.push_back(AF_INET6);
-    } else if (family == 10) { // IPv4 + IPv6
-        families.push_back(AF_INET);
-        families.push_back(AF_INET6);
-    }
-
+std::list<PeerInfo> SqliteStorage::getPeer(const Id& peerId, int maxPeers) {
     if (maxPeers <=0)
         maxPeers = 0x7fffffff;
 
-    std::list<Sp<PeerInfo>> peers = {};
-    for (auto it = families.begin(); it != families.end(); it++) {
-        sqlite3_stmt *pStmt;
+    std::list<PeerInfo> peers = {};
+    sqlite3_stmt *pStmt;
+    if(sqlite3_prepare_v2(sqlite_store, SELECT_PEER.c_str(), strlen(SELECT_PEER.c_str()), &pStmt, 0) != SQLITE_OK) {
+        sqlite3_finalize(pStmt);
+        throw std::runtime_error("Prepare sqlite failed.");
+    }
 
-        if(sqlite3_prepare_v2(sqlite_store, SELECT_PEER.c_str(), strlen(SELECT_PEER.c_str()), &pStmt, 0) != SQLITE_OK) {
-            sqlite3_finalize(pStmt);
-            throw std::runtime_error("Prepare sqlite failed.");
-        }
+    uint64_t when = currentTimeMillis() - Constants::MAX_VALUE_AGE;
+    sqlite3_bind_blob(pStmt, 1, peerId.data(), peerId.size(), SQLITE_STATIC);
+    sqlite3_bind_int64(pStmt, 2, when);
+    sqlite3_bind_int(pStmt, 3, maxPeers);
 
-        uint64_t when = currentTimeMillis() - Constants::MAX_VALUE_AGE;
-        int family = *it;
-        sqlite3_bind_blob(pStmt, 1, peerId.data(), peerId.size(), SQLITE_STATIC);
-        sqlite3_bind_int(pStmt, 2, family);
-        sqlite3_bind_int64(pStmt, 3, when);
-        sqlite3_bind_int(pStmt, 4, maxPeers);
+    while (sqlite3_step(pStmt) == SQLITE_ROW) {
+        Blob privateKey {};
+        Id nodeId {};
+        Id origin {};
+        uint16_t port {0};
+        std::string alt {};
+        std::vector<uint8_t>  signature {};
 
-        while (sqlite3_step(pStmt) == SQLITE_ROW) {
-            auto peer = std::make_shared<PeerInfo>();
-            peer->setFamily(family);
+        int cNum = sqlite3_column_count(pStmt);
+        for (int i = 0; i < cNum; i++) {
+            const char *name = sqlite3_column_name(pStmt, i);
+            int cType = sqlite3_column_type(pStmt, i);
+            int len = 0;
+            const void *ptr = NULL;
 
-            int cNum = sqlite3_column_count(pStmt);
-            for (int i = 0; i < cNum; i++) {
-                const char *name = sqlite3_column_name(pStmt, i);
-                int cType = sqlite3_column_type(pStmt, i);
-                int len = 0;
-                const void *ptr = NULL;
-
-                if (cType == SQLITE_BLOB) {
-                    len = sqlite3_column_bytes(pStmt, i);
-                    ptr = sqlite3_column_blob(pStmt, i);
-                }
-
-                if (std::strcmp(name, "nodeId") == 0 && len > 0) {
-                    peer->setNodeId(Blob(ptr, len));
-                } else if (std::strcmp(name, "proxyId") == 0 && len > 0) {
-                    peer->setProxyId(Blob(ptr, len));
-                } else if (std::strcmp(name, "port") == 0) {
-                    peer->setPort(sqlite3_column_int(pStmt, i));
-                } else if (std::strcmp(name, "alternative") == 0) {
-                    peer->setAlt((char *)sqlite3_column_text(pStmt, i));
-                } else if (std::strcmp(name, "signature") == 0) {
-                    peer->setSignature(Blob(ptr, len));
-                }
+            if (cType == SQLITE_BLOB) {
+                len = sqlite3_column_bytes(pStmt, i);
+                ptr = sqlite3_column_blob(pStmt, i);
             }
 
-            peers.push_back(peer);
+            if (std::strcmp(name, "privateKey") == 0 && len > 0) {
+                privateKey = Blob(ptr, len);
+            } else if (std::strcmp(name, "nodeId") == 0 && len > 0) {
+                nodeId = Id(Blob(ptr, len));
+            } else if (std::strcmp(name, "origin") == 0 && len > 0) {
+                origin = Id(Blob(ptr, len));
+            } else if (std::strcmp(name, "port") == 0) {
+                port = sqlite3_column_int(pStmt, i);
+            } else if (std::strcmp(name, "alternativeURL") == 0) {
+                alt = (char *)sqlite3_column_text(pStmt, i);
+            } else if (std::strcmp(name, "signature") == 0) {
+                signature = {Blob(ptr, len)};
+            }
         }
-        sqlite3_finalize(pStmt);
+
+        PeerInfo peer = PeerInfo::of(peerId, privateKey, nodeId, origin, port, alt, signature);
+        peers.push_back(peer);
     }
+    sqlite3_finalize(pStmt);
 
     return peers;
 }
 
-Sp<PeerInfo> SqliteStorage::getPeer(const Id& peerId, int family, const Id& nodeId) {
+Sp<PeerInfo> SqliteStorage::getPeer(const Id& peerId, const Id& origin) {
     sqlite3_stmt *pStmt {nullptr};
     if(sqlite3_prepare_v2(sqlite_store, SELECT_PEER_WITH_NODEID.c_str(), strlen(SELECT_PEER_WITH_NODEID.c_str()), &pStmt, 0) != SQLITE_OK) {
         sqlite3_finalize(pStmt);
@@ -388,12 +394,16 @@ Sp<PeerInfo> SqliteStorage::getPeer(const Id& peerId, int family, const Id& node
 
     const uint64_t when = currentTimeMillis() - Constants::MAX_VALUE_AGE;
     sqlite3_bind_blob(pStmt, 1, peerId.data(), peerId.size(), SQLITE_STATIC);
-    sqlite3_bind_int(pStmt, 2, family);
-    sqlite3_bind_blob(pStmt, 3, nodeId.data(), nodeId.size(), SQLITE_STATIC);
-    sqlite3_bind_int64(pStmt, 4, when);
+    sqlite3_bind_blob(pStmt, 2, origin.data(), origin.size(), SQLITE_STATIC);
+    sqlite3_bind_int64(pStmt, 3, when);
 
-    while (sqlite3_step(pStmt) == SQLITE_ROW) {
-        auto peer = std::make_shared<PeerInfo>();
+    if (sqlite3_step(pStmt) == SQLITE_ROW) {
+        Blob privateKey {};
+        Id nodeId {};
+        Id origin {};
+        uint16_t port {0};
+        std::string alt {};
+        std::vector<uint8_t>  signature {};
 
         const int cNum = sqlite3_column_count(pStmt);
         for (int i = 0; i < cNum; i++) {
@@ -407,27 +417,29 @@ Sp<PeerInfo> SqliteStorage::getPeer(const Id& peerId, int family, const Id& node
                 ptr = sqlite3_column_blob(pStmt, i);
             }
 
-            if (std::strcmp(name, "nodeId") == 0 && len > 0) {
-                peer->setNodeId(Blob(ptr, len));
-            } else if (std::strcmp(name, "proxyId") == 0 && len > 0) {
-                peer->setProxyId(Blob(ptr, len));
+			if (std::strcmp(name, "privateKey") == 0 && len > 0) {
+                privateKey = Blob(ptr, len);
+            } else if (std::strcmp(name, "nodeId") == 0 && len > 0) {
+                nodeId = Id(Blob(ptr, len));
             } else if (std::strcmp(name, "port") == 0) {
-                peer->setPort(sqlite3_column_int(pStmt, i));
-            } else if (std::strcmp(name, "alternative") == 0) {
-                peer->setAlt((char *)sqlite3_column_text(pStmt, i));
+                port = sqlite3_column_int(pStmt, i);
+            } else if (std::strcmp(name, "alternativeURL") == 0) {
+                alt = (char *)sqlite3_column_text(pStmt, i);
             } else if (std::strcmp(name, "signature") == 0) {
-                peer->setSignature(Blob(ptr, len));
+                signature = {Blob(ptr, len)};
             }
         }
+
         sqlite3_finalize(pStmt);
-        return peer;
+        auto peer = PeerInfo::of(peerId, privateKey, nodeId, origin, port, alt, signature);
+        return std::make_shared<PeerInfo>(peer);
     }
 
     sqlite3_finalize(pStmt);
     return nullptr;
 }
 
-void SqliteStorage::putPeer(const Id& peerId, const std::list<Sp<PeerInfo>>& peers) {
+void SqliteStorage::putPeer(const std::list<PeerInfo>& peers) {
     if (sqlite3_exec(sqlite_store, "BEGIN", 0, 0, 0) != 0)
         throw std::runtime_error("Open auto commit mode failed.");
 
@@ -439,13 +451,14 @@ void SqliteStorage::putPeer(const Id& peerId, const std::list<Sp<PeerInfo>>& pee
 
     uint64_t now = currentTimeMillis();
     for (const auto& peer : peers) {
-        sqlite3_bind_blob(pStmt, 1, peerId.data(), peerId.size(), SQLITE_STATIC);
-        sqlite3_bind_int(pStmt, 2, peer->getFamily());
-        sqlite3_bind_blob(pStmt, 3, peer->getNodeId().data(), peer->getNodeId().size(), SQLITE_STATIC);
-        sqlite3_bind_blob(pStmt, 4, peer->getProxyId().data(), peer->getProxyId().size(), SQLITE_STATIC);
-        sqlite3_bind_int(pStmt, 5, peer->getPort());
-        sqlite3_bind_text(pStmt, 6, peer->getAlt().c_str(), peer->getAlt().length(), NULL);
-        sqlite3_bind_blob(pStmt, 7, peer->getSignature().data(), peer->getSignature().size(), SQLITE_STATIC);
+        sqlite3_bind_blob(pStmt, 1, peer.getId().data(), peer.getId().size(), SQLITE_STATIC);
+        sqlite3_bind_int(pStmt, 2, peer.getPrivateKey());
+        sqlite3_bind_blob(pStmt, 3, peer.getNodeId().data(), peer.getNodeId().size(), SQLITE_STATIC);
+        sqlite3_bind_blob(pStmt, 4, peer.getOrigin().data(), peer.getOrigin().size(), SQLITE_STATIC);
+        sqlite3_bind_int(pStmt, 5, peer.getPort());
+        const char* alt = peer.getAlternativeURL().c_str();
+        sqlite3_bind_text(pStmt, 6, alt, strlen(alt), NULL);
+        sqlite3_bind_blob(pStmt, 7, peer.getSignature().data(), peer.getSignature().size(), SQLITE_STATIC);
         sqlite3_bind_int64(pStmt, 8, now);
 
         if (sqlite3_step(pStmt) != SQLITE_DONE) {
@@ -460,8 +473,8 @@ void SqliteStorage::putPeer(const Id& peerId, const std::list<Sp<PeerInfo>>& pee
     sqlite3_exec(sqlite_store, "COMMIT", 0, 0, 0);
 }
 
-void SqliteStorage::putPeer(const Id& peerId, const Sp<PeerInfo>& peer) {
-    putPeer(peerId, std::list<Sp<PeerInfo>>{peer});
+void SqliteStorage::putPeer(const PeerInfo& peer) {
+    putPeer(std::list<PeerInfo>{peer});
 }
 
 std::list<Id> SqliteStorage::listPeerId() {

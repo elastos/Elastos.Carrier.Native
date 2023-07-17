@@ -25,16 +25,16 @@
 #include <deque>
 #include "task.h"
 #include "closest_set.h"
+#include "carrier/value.h"
 
 namespace elastos {
 namespace carrier {
 
 class DHT;
-class Value;
 
 class ValueAnnounce: public Task {
 public:
-    ValueAnnounce(DHT* dht, const ClosestSet& closestSet, Sp<Value> _value);
+    ValueAnnounce(DHT* dht, const ClosestSet& closestSet, const Value& _value);
 
 protected:
     void update() override;
@@ -44,7 +44,7 @@ protected:
 
 private:
     std::list<Sp<CandidateNode>> todo {};
-    Sp<Value> value;
+    Value value;
 };
 
 } /* namespace carrier */
