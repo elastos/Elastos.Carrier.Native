@@ -145,7 +145,6 @@ void FindValueTests::testFindValueRequest46() {
 
 void
 FindValueTests::testFindValueResponseSize() {
-#if 0
     std::list<std::shared_ptr<NodeInfo>> nodes4 {};
     nodes4.push_back(std::make_shared<NodeInfo>(Id::random(), "251.251.251.251", 65535));
     nodes4.push_back(std::make_shared<NodeInfo>(Id::random(), "251.251.251.251", 65534));
@@ -166,55 +165,41 @@ FindValueTests::testFindValueResponseSize() {
     nodes6.push_back(std::make_shared<NodeInfo>(Id::random(), "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff", 65529));
     nodes6.push_back(std::make_shared<NodeInfo>(Id::random(), "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff", 65528));
 
-    std::vector<uint8_t> sig {};
-    uint8_t s = 'S';
-    for (int i = 0; i < 64; i++)
-        sig.push_back(s);
+    std::vector<uint8_t> nonce(24, 'N');
+    std::vector<uint8_t> sig(64, 'S');
+    std::vector<uint8_t> data(1056, 'D');
 
-    std::vector<uint8_t> value {};
-    uint8_t v = 'D';
-    for (int i = 0; i < 1056; i++)
-        value.push_back(v);
+    Value value = Value::of(Id::random(), Id::random(), nonce, 0x77654321, sig, data);
 
     auto msg = FindValueResponse(0xF7654321);
     msg.setId(Id::random());
     msg.setVersion(VERSION);
     msg.setNodes4(nodes4);
     msg.setNodes6(nodes6);
-    msg.setPublicKey(Id::random());
-    msg.setRecipient(Id::random());
-    auto n = CryptoBox::Nonce().random();
-    msg.setNonce(n);
-    msg.setSequenceNumber(0x77654321);
-    msg.setSignature(sig);
     msg.setToken(0xF8765432);
-    msg.setData(value);
+    msg.setValue(value);
 
     auto serialized = msg.serialize();
+    printMessage(msg, serialized);
     CPPUNIT_ASSERT(serialized.size() <= msg.estimateSize());
-#endif
 }
 
 void
 FindValueTests::testFindValueResponse4() {
-#if 0
     auto id = Id::random();
+    int txid = Utils::getRandomValue();
     auto pk = Id::random();
     auto recipient = Id::random();
-    int txid = Utils::getRandomValue();
-
+    auto nonce = CryptoBox::Nonce::random();
     int cas = Utils::getRandomInteger(62);
     int seq = cas + 1;
-
-    std::vector<uint8_t> sig {};
-    sig.resize(64);
+    std::vector<uint8_t> sig(64);
     Utils::setRandomBytes(sig.data(), sig.size());
-
     int token = Utils::getRandomValue();
+    std::vector<uint8_t> data(1056);
+    Utils::setRandomBytes(data.data(), data.size());
 
-    std::vector<uint8_t> value {};
-    value.resize(1056);
-    Utils::setRandomBytes(value.data(), value.size());
+    Value value = Value::of(pk, recipient, nonce.blob(), seq, sig, data);
 
     std::list<std::shared_ptr<NodeInfo>> nodes4 {};
     nodes4.push_back(std::make_shared<NodeInfo>(Id::random(), "251.251.251.251", 65535));
@@ -227,14 +212,8 @@ FindValueTests::testFindValueResponse4() {
     msg.setId(id);
     msg.setVersion(VERSION);
     msg.setNodes4(nodes4);
-    msg.setPublicKey(pk);
-    msg.setRecipient(recipient);
-    auto n = CryptoBox::Nonce().random();
-    msg.setNonce(n);
-    msg.setSequenceNumber(seq);
-    msg.setSignature(sig);
     msg.setToken(token);
-    msg.setData(value);
+    msg.setValue(value);
 
     auto serialized = msg.serialize();
     CPPUNIT_ASSERT(serialized.size() <= msg.estimateSize());
@@ -250,28 +229,22 @@ FindValueTests::testFindValueResponse4() {
     CPPUNIT_ASSERT_EQUAL(VERSION_STR, _msg->getReadableVersion());
     CPPUNIT_ASSERT(_msg->getNodes6().empty());
     CPPUNIT_ASSERT(!_msg->getNodes4().empty());
-    CPPUNIT_ASSERT_EQUAL(pk, _msg->getPublicKey());
-    CPPUNIT_ASSERT_EQUAL(recipient, _msg->getRecipient());
-    //assertArrayEquals(nonce, m->getNonce());
-    CPPUNIT_ASSERT_EQUAL(seq, _msg->getSequenceNumber());
-    CPPUNIT_ASSERT(sig == _msg->getSignature());
     CPPUNIT_ASSERT_EQUAL(token, _msg->getToken());
-    CPPUNIT_ASSERT(value == _msg->getData());
+
+    CPPUNIT_ASSERT(value == _msg->getValue());
 
     auto nodes = _msg->getNodes4();
     CPPUNIT_ASSERT(Utils::arrayEquals(nodes4, nodes));
-#endif
 }
 
 void FindValueTests::testFindValueResponse4Immutable() {
-#if 0
     auto id = Id::random();
     int txid = Utils::getRandomValue();
     int token = Utils::getRandomValue();
+    std::vector<uint8_t> data(1056);
+    Utils::setRandomBytes(data.data(), data.size());
 
-    std::vector<uint8_t> value {};
-    value.resize(1056);
-    Utils::setRandomBytes(value.data(), value.size());
+    Value value = Value::of(data);
 
     std::list<std::shared_ptr<NodeInfo>> nodes4 {};
     nodes4.push_back(std::make_shared<NodeInfo>(Id::random(), "251.251.251.251", 65535));
@@ -285,9 +258,8 @@ void FindValueTests::testFindValueResponse4Immutable() {
     msg.setVersion(VERSION);
     msg.setNodes4(nodes4);
     auto n = CryptoBox::Nonce().random();
-    msg.setNonce(n);
     msg.setToken(token);
-    msg.setData(value);
+    msg.setValue(value);
 
     auto serialized = msg.serialize();
     CPPUNIT_ASSERT(serialized.size() <= msg.estimateSize());
@@ -303,34 +275,29 @@ void FindValueTests::testFindValueResponse4Immutable() {
     CPPUNIT_ASSERT_EQUAL(VERSION_STR, _msg->getReadableVersion());
     CPPUNIT_ASSERT(_msg->getNodes6().empty());
     CPPUNIT_ASSERT(!_msg->getNodes4().empty());
-    //assertArrayEquals(nonce, m->getNonce());
     CPPUNIT_ASSERT_EQUAL(token, _msg->getToken());
-    CPPUNIT_ASSERT(value == _msg->getData());
+
+    CPPUNIT_ASSERT(value == _msg->getValue());
 
     auto nodes = _msg->getNodes4();
     CPPUNIT_ASSERT(Utils::arrayEquals(nodes4, nodes));
-#endif
 }
 
 void FindValueTests::testFindValueResponse6() {
-#if 0
     auto id = Id::random();
+    int txid = Utils::getRandomValue();
     auto pk = Id::random();
     auto recipient = Id::random();
-    int txid = Utils::getRandomValue();
-
+    auto nonce = CryptoBox::Nonce::random();
     int cas = Utils::getRandomInteger(62);
     int seq = cas + 1;
-
-    std::vector<uint8_t> sig {};
-    sig.resize(64);
+    std::vector<uint8_t> sig(64);
     Utils::setRandomBytes(sig.data(), sig.size());
-
     int token = Utils::getRandomValue();
+    std::vector<uint8_t> data(1056);
+    Utils::setRandomBytes(data.data(), data.size());
 
-    std::vector<uint8_t> value {};
-    value.resize(1056);
-    Utils::setRandomBytes(value.data(), value.size());
+    Value value = Value::of(pk, recipient, nonce.blob(), seq, sig, data);
 
     std::list<std::shared_ptr<NodeInfo>> nodes6 {};
     nodes6.push_back(std::make_shared<NodeInfo>(Id::random(), "2001:0db8:85a3:8070:6543:8a2e:0370:7334", 65535));
@@ -343,14 +310,8 @@ void FindValueTests::testFindValueResponse6() {
     msg.setId(id);
     msg.setVersion(VERSION);
     msg.setNodes6(nodes6);
-    msg.setPublicKey(pk);
-    msg.setRecipient(recipient);
-    auto n = CryptoBox::Nonce().random();
-    msg.setNonce(n);
-    msg.setSequenceNumber(seq);
-    msg.setSignature(sig);
     msg.setToken(token);
-    msg.setData(value);
+    msg.setValue(value);
 
     auto serialized = msg.serialize();
     CPPUNIT_ASSERT(serialized.size() <= msg.estimateSize());
@@ -366,38 +327,29 @@ void FindValueTests::testFindValueResponse6() {
     CPPUNIT_ASSERT_EQUAL(VERSION_STR, _msg->getReadableVersion());
     CPPUNIT_ASSERT(_msg->getNodes4().empty());
     CPPUNIT_ASSERT(false == _msg->getNodes6().empty());
-    CPPUNIT_ASSERT_EQUAL(pk, _msg->getPublicKey());
-    CPPUNIT_ASSERT_EQUAL(recipient, _msg->getRecipient());
-    //assertArrayEquals(nonce, m->getNonce());
-    CPPUNIT_ASSERT_EQUAL(seq, _msg->getSequenceNumber());
-    CPPUNIT_ASSERT(sig == _msg->getSignature());
     CPPUNIT_ASSERT_EQUAL(token, _msg->getToken());
-    CPPUNIT_ASSERT(value == _msg->getData());
+
+    CPPUNIT_ASSERT(value == _msg->getValue());
 
     auto nodes = _msg->getNodes6();
     CPPUNIT_ASSERT(Utils::arrayEquals(nodes6, nodes));
-#endif
 }
 
 void FindValueTests::testFindValueResponse46() {
-#if 0
     auto id = Id::random();
+    int txid = Utils::getRandomValue();
     auto pk = Id::random();
     auto recipient = Id::random();
-    int txid = Utils::getRandomValue();
-
+    auto nonce = CryptoBox::Nonce::random();
     int cas = Utils::getRandomInteger(62);
     int seq = cas + 1;
-
-    std::vector<uint8_t> sig {};
-    sig.resize(64);
+    std::vector<uint8_t> sig(64);
     Utils::setRandomBytes(sig.data(), sig.size());
-
     int token = Utils::getRandomValue();
+    std::vector<uint8_t> data(1056);
+    Utils::setRandomBytes(data.data(), data.size());
 
-    std::vector<uint8_t> value {};
-    value.resize(1056);
-    Utils::setRandomBytes(value.data(), value.size());
+    Value value = Value::of(pk, recipient, nonce.blob(), seq, sig, data);
 
     std::list<std::shared_ptr<NodeInfo>> nodes4 {};
     nodes4.push_back(std::make_shared<NodeInfo>(Id::random(), "251.251.251.251", 65535));
@@ -417,14 +369,8 @@ void FindValueTests::testFindValueResponse46() {
     msg.setId(id);
     msg.setNodes4(nodes4);
     msg.setNodes6(nodes6);
-    msg.setPublicKey(pk);
-    msg.setRecipient(recipient);
-    auto n = CryptoBox::Nonce().random();
-    msg.setNonce(n);
-    msg.setSequenceNumber(seq);
-    msg.setSignature(sig);
     msg.setToken(token);
-    msg.setData(value);
+    msg.setValue(value);
 
     auto serialized = msg.serialize();
     CPPUNIT_ASSERT(serialized.size() <= msg.estimateSize());
@@ -440,20 +386,15 @@ void FindValueTests::testFindValueResponse46() {
     CPPUNIT_ASSERT_EQUAL(0, _msg->getVersion());
     CPPUNIT_ASSERT(!_msg->getNodes4().empty());
     CPPUNIT_ASSERT(!_msg->getNodes6().empty());
-    CPPUNIT_ASSERT_EQUAL(pk, _msg->getPublicKey());
-    CPPUNIT_ASSERT_EQUAL(recipient, _msg->getRecipient());
-    //assertArrayEquals(nonce, m->getNonce());
-    CPPUNIT_ASSERT_EQUAL(seq, _msg->getSequenceNumber());
-    CPPUNIT_ASSERT(sig == _msg->getSignature());
     CPPUNIT_ASSERT_EQUAL(token, _msg->getToken());
-    CPPUNIT_ASSERT(value == _msg->getData());
+
+    CPPUNIT_ASSERT(value == _msg->getValue());
 
     auto nodes = _msg->getNodes4();
     CPPUNIT_ASSERT(Utils::arrayEquals(nodes4, nodes));
 
     nodes = _msg->getNodes6();
     CPPUNIT_ASSERT(Utils::arrayEquals(nodes6, nodes));
-#endif
 }
 
 void FindValueTests::tearDown() {

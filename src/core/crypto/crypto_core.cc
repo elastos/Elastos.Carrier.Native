@@ -118,13 +118,13 @@ Signature::PublicKey::operator std::string() const noexcept
     return to_hex_string(key.data(), key.size());
 }
 
-bool Signature::PublicKey::verify(const Blob& sig, const Blob& data) const
+bool Signature::PublicKey::verify(const std::vector<uint8_t>& data, const std::vector<uint8_t>& sig) const
 {
     assert(sig.size() == Signature::BYTES);
     if (sig.size() != Signature::BYTES)
         throw std::invalid_argument("Invalid signature length.");
 
-    return crypto_sign_verify_detached(sig.ptr(), data.ptr(), data.size(), bytes()) == 0;
+    return crypto_sign_verify_detached(sig.data(), data.data(), data.size(), bytes()) == 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -136,7 +136,7 @@ Signature::KeyPair::KeyPair() noexcept
     crypto_sign_keypair(pk.key.data(), sk.key.data()); // Always success
 }
 
-Signature::KeyPair::KeyPair(PrivateKey& sk) noexcept : sk(sk)
+Signature::KeyPair::KeyPair(const PrivateKey& sk) noexcept : sk(sk)
 {
     crypto_sign_ed25519_sk_to_pk(pk.key.data(), sk.bytes()); // Always success
 }
@@ -166,6 +166,13 @@ Signature::KeyPair Signature::KeyPair::fromSeed(const Blob& seed)
 
     Signature::KeyPair keypair;
     crypto_sign_seed_keypair(keypair.pk.key.data(), keypair.sk.key.data(), seed.ptr()); // Always success
+    return keypair;
+}
+
+Signature::KeyPair Signature::KeyPair::random()
+{
+    //Maybe later will improve the random
+    Signature::KeyPair keypair {};
     return keypair;
 }
 
@@ -280,10 +287,11 @@ CryptoBox::Nonce& CryptoBox::Nonce::increment() noexcept
     return *this;
 }
 
-CryptoBox::Nonce& CryptoBox::Nonce::random() noexcept
+CryptoBox::Nonce CryptoBox::Nonce::random()
 {
-    randombytes_buf(nonce.data(), BYTES);
-    return *this;
+    Nonce nonce {};
+    Random::buffer(nonce.blob());
+    return nonce;
 }
 
 CryptoBox::Nonce::operator std::string() const noexcept
@@ -300,7 +308,7 @@ CryptoBox::KeyPair::KeyPair() noexcept
     crypto_box_keypair(pk.key.data(), sk.key.data()); // Always success
 }
 
-CryptoBox::KeyPair::KeyPair(PrivateKey& sk) noexcept : sk(sk)
+CryptoBox::KeyPair::KeyPair(const PrivateKey& sk) noexcept : sk(sk)
 {
     crypto_scalarmult_base(pk.key.data(), sk.bytes()); // Always success
 }
@@ -381,7 +389,7 @@ void CryptoBox::decrypt(Blob& plain, const Blob& cipher, const Nonce &nonce) con
         throw CryptoError(std::string("Decrypt data failed."));
 }
 
-void CryptoBox::decrypt(Blob& plain, const Blob& cipher, const Nonce& nonce, 
+void CryptoBox::decrypt(Blob& plain, const Blob& cipher, const Nonce& nonce,
         const PublicKey& pk, const PrivateKey& sk)
 {
     assert(plain.size() >= cipher.size() - crypto_box_MACBYTES);
@@ -477,6 +485,16 @@ uint64_t Random::uint64(uint64_t upbound)
 void Random::buffer(void* buf, size_t length)
 {
     randombytes_buf(buf, length);
+}
+
+void Random::buffer(Blob blob)
+{
+    randombytes_buf(blob.ptr(), blob.size());
+}
+
+void Random::buffer(std::vector<uint8_t> bytes)
+{
+    randombytes_buf(bytes.data(), bytes.size());
 }
 
 }

@@ -38,7 +38,6 @@ public:
 
 protected:
     void setupOptions() override {
-        add_option("NAME", name, "The peer name to be announce.");
         add_option("PORT", port, "The peer port to be announce.");
         add_option("ALT", alt, "The peer alt to be announce.");
         require_option(3, 3);
@@ -52,25 +51,18 @@ protected:
             return;
         }
 
-        std::transform(name.cbegin(), name.cend(), name.begin(), // write to the same location
-                [](unsigned char c) { return std::tolower(c); });
-
-        const char* nname = (const char *)utf8proc_NFC((unsigned char *)(name.c_str()));
-        std::vector<uint8_t> data;
-        data.resize(strlen(nname));
-        std::memcpy((void*)data.data(), nname, strlen(nname));
-        auto d = SHA256::digest(data);
-        auto id = Id(d);
 
         const char* alternative = (const char *)utf8proc_NFC((unsigned char *)(alt.c_str()));
 
-        auto future = node->announcePeer(id, port, alternative);
+        PeerInfo peer = PeerInfo::create(Command::node->getId(), port, alternative);
+
+        auto future = node->announcePeer(peer);
         auto result = future.get();
         std::cout << "----------------------------------------------" << std::endl;
         if (result)
-            std::cout << "Peer [" << id.toBase58String() << "] announced." << std::endl;
+            std::cout << "Peer [" << peer.getId().toBase58String() << "] announced." << std::endl;
         else
-            std::cout << "Peer [" << id.toBase58String() << "] announce failed." << std::endl;
+            std::cout << "Peer [" << peer.getId().toBase58String() << "] announce failed." << std::endl;
         std::cout << "----------------------------------------------" << port << std::endl;
     };
 

@@ -70,14 +70,9 @@ void PeerLookup::callResponsed(RPCCall* call, Sp<Message> message) {
     auto response = std::static_pointer_cast<FindPeerResponse>(message);
     bool hasPeers {false };
 
-    auto peers4 = response->getPeers4();
-    if (!peers4.empty()) {
-        resultHandler(peers4, this);    // peers4 is spliced in this call.
-        hasPeers = true;
-    }
-    auto peers6 = response->getPeers6();
-    if (!peers6.empty()) {
-        resultHandler(peers6, this);    // peers6 is spliced in this call.
+    auto peers = response->getPeers();
+    if (!peers.empty()) {
+        resultHandler(peers, this);    // peers is spliced in this call.
         hasPeers = true;
     }
 

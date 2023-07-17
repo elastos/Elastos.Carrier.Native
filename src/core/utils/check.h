@@ -1,3 +1,4 @@
+
 /*
  * Copyright (c) 2022 - 2023 trinity-tech.io
  *
@@ -22,37 +23,37 @@
 
 #pragma once
 
-#include <cppunit/TestFixture.h>
-#include <cppunit/extensions/HelperMacros.h>
+#include <string>
 
-#include "message_tests.h"
+namespace elastos {
+namespace carrier {
 
-namespace test {
-class FindPeerTests : public MessageTests, public CppUnit::TestFixture {
-    CPPUNIT_TEST_SUITE(FindPeerTests);
-    CPPUNIT_TEST(testFindPeerRequestSize);
-    CPPUNIT_TEST(testFindPeerRequest4);
-    CPPUNIT_TEST(testFindPeerRequest6);
-    CPPUNIT_TEST(testFindPeerRequest46);
-    CPPUNIT_TEST(testFindPeerResponseSize);
-    CPPUNIT_TEST(testFindPeerResponseSize2);
-    CPPUNIT_TEST(testFindPeerResponse4);
-    CPPUNIT_TEST(testFindPeerResponse6);
-    CPPUNIT_TEST(testFindPeerResponse46);
-    CPPUNIT_TEST_SUITE_END();
-
+class _LIBCPP_EXCEPTION_ABI illegal_state
+    : public std::runtime_error
+{
 public:
-    void setUp();
-    void tearDown();
+    _LIBCPP_INLINE_VISIBILITY explicit illegal_state(const std::string& __s) : runtime_error(__s) {}
+    _LIBCPP_INLINE_VISIBILITY explicit illegal_state(const char* __s)   : runtime_error(__s) {}
 
-    void testFindPeerRequestSize();
-    void testFindPeerRequest4();
-    void testFindPeerRequest6();
-    void testFindPeerRequest46();
-    void testFindPeerResponseSize();
-    void testFindPeerResponseSize2();
-    void testFindPeerResponse4();
-    void testFindPeerResponse6();
-    void testFindPeerResponse46();
+#ifndef _LIBCPP_ABI_VCRUNTIME
+    illegal_state(const illegal_state&) _NOEXCEPT = default;
+    ~illegal_state() _NOEXCEPT = default;
+#endif
 };
+
+
+
+inline void checkArgument(bool expression, const std::string& errorMessage) {
+    if (!expression) {
+        throw std::invalid_argument(errorMessage);
+    }
 }
+
+inline void checkState(bool expression, const std::string& errorMessage) {
+    if (!expression) {
+        throw illegal_state(errorMessage);
+    }
+}
+
+} // namespace carrier
+} // namespace elastos

@@ -43,32 +43,33 @@ protected:
     };
 
     void execute() override {
-        std::shared_ptr<Value> value {};
+        Value value {};
 
         std::vector<uint8_t> data(text.begin(), text.end());
         if (target.empty()) {
             if (bMutable) {
                 if (recipient.empty()) {
-                    value = node->createSignedValue(data);
+                    value = Value::createSignedValue(data);
                 } else {
                     auto recipientId = Id(recipient);
-                    value = node->createEncryptedValue(recipientId, data);
+                    value = Value::createEncryptedValue(recipientId, data);
                 }
             } else {
-                value = node->createValue(data);
+                value = Value::createValue(data);
             }
         } else {
             auto id = Id(target);
-            value = node->updateValue(id, data);
+            value = *(node->getValue(id));
+            value = value.update(data);
         }
 
         auto future = node->storeValue(value);
         auto result = future.get();
         std::cout << "----------------------------------------------" << std::endl;
         if (result)
-            std::cout << "Value [" << value->getId().toBase58String() << "] stored." << std::endl;
+            std::cout << "Value [" << value.getId().toBase58String() << "] stored." << std::endl;
         else
-            std::cout << "Value [" << value->getId().toBase58String() << "] store failed." << std::endl;
+            std::cout << "Value [" << value.getId().toBase58String() << "] store failed." << std::endl;
 
         std::cout << "----------------------------------------------" << std::endl;
     };

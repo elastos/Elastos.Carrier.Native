@@ -105,9 +105,11 @@ list(APPEND CARRIER_DEPENDS
     spdlog
     spdlog-setup
     nlohmann
+    libutf8proc
 )
 
 set(LIBS
+    utf8proc
     sqlite3)
 
 if(WIN32)

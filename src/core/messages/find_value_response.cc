@@ -30,51 +30,75 @@
 namespace elastos {
 namespace carrier {
 
+void FindValueResponse::setValue(const Value& value) {
+    this->publicKey = value.getPublicKey();
+    this->recipient = value.getRecipient();
+    this->nonce = value.getNonce();
+    this->signature = value.getSignature();;
+    this->sequenceNumber = value.getSequenceNumber();
+    this->value = value.getData();
+}
+
+Value FindValueResponse::getValue() const {
+    return Value::of(publicKey, recipient, nonce, sequenceNumber, signature, value);
+}
+
 void FindValueResponse::_serialize(nlohmann::json& object) const {
-    if (value->isMutable())
-        object[Message::KEY_RES_PUBLICKEY] = value->getPublicKey();
-    if (value->isEncrypted())
-        object[Message::KEY_RES_RECIPIENT] = value->getRecipient();
-    if (value->isMutable())
-        object[Message::KEY_RES_NONCE] = nlohmann::json::binary_t {{value->getNonce().cbegin(), value->getNonce().cend()}};
-    if (value->isSigned())
-        object[Message::KEY_RES_SIGNATURE] = nlohmann::json::binary_t {value->getSignature()};
-    if (value->getSequenceNumber() >= 0)
-        object[Message::KEY_RES_SEQ] = value->getSequenceNumber();
-    object[Message::KEY_RES_VALUE] = nlohmann::json::binary_t {value->getData()};
+    if (publicKey != Id::zero())
+        object[Message::KEY_RES_PUBLICKEY] = publicKey;
+
+    if (recipient != Id::zero())
+        object[Message::KEY_RES_RECIPIENT] = recipient;
+
+    if (nonce.size() > 0)
+        object[Message::KEY_RES_NONCE] = nlohmann::json::binary_t {{nonce.cbegin(), nonce.cend()}};
+
+    if (sequenceNumber >= 0)
+        object[Message::KEY_RES_SEQ] = sequenceNumber;
+
+    if (!signature.empty())
+        object[Message::KEY_RES_SIGNATURE] = nlohmann::json::binary_t {signature};
+
+    if (!value.empty())
+        object[Message::KEY_RES_VALUE] = nlohmann::json::binary_t {value};
 }
 
 void FindValueResponse::_parse(const std::string& fieldName, nlohmann::json& object) {
     if (fieldName == Message::KEY_RES_PUBLICKEY) {
-        value->publicKey = object.get<Id>();
+        publicKey = object.get<Id>();
     } else if (fieldName == Message::KEY_RES_RECIPIENT) {
-        value->recipient = object.get<Id>();
+        recipient = object.get<Id>();
     } else if (fieldName == Message::KEY_RES_NONCE) {
-        auto _nonce = object.get_binary();
-        value->nonce = CryptoBox::Nonce(_nonce);
-    } else if (fieldName == Message::KEY_RES_SIGNATURE) {
-        value->signature = object.get_binary();
+        nonce = object.get_binary();
     } else if (fieldName == Message::KEY_RES_SEQ) {
-        value->sequenceNumber = object.get<uint16_t>();
+        sequenceNumber = object.get<int>();
+    } else if (fieldName == Message::KEY_RES_SIGNATURE) {
+        signature = object.get_binary();
     } else if (fieldName == Message::KEY_RES_VALUE) {
-        value->data = object.get_binary();
+        value = object.get_binary();
     } else {
         throw std::invalid_argument("Unknown field: " + fieldName);
     }
 }
 
 void FindValueResponse::_toString(std::stringstream& ss) const {
-    if (value->isMutable())
-        ss << ",k:" << value->getPublicKey();
-    if (value->isEncrypted())
-        ss << ",rec:" << value->getRecipient();
-    if (value->isMutable())
-        ss << ",n:" << Hex::encode(value->getNonce().bytes(), value->getNonce().size());
-    if (value->isSigned())
-        ss << ",sig:" << Hex::encode(value->getSignature());
-    if (value->getSequenceNumber() >= 0)
-        ss << ",seq:" << std::to_string(value->getSequenceNumber());
-    ss << ",v:" << Hex::encode(value->getData());
+    if (publicKey != Id::zero())
+        ss << ",k:" << publicKey;
+
+    if (recipient != Id::zero())
+        ss << ",rec:" << recipient;
+
+    if (nonce.size() > 0)
+        ss << ",n:" << Hex::encode(nonce);
+
+    if (sequenceNumber >= 0)
+        ss << ",seq:" << std::to_string(sequenceNumber);
+
+    if (!signature.empty())
+        ss << ",sig:" << Hex::encode(signature);
+
+    if (!value.empty())
+        ss << ",v:" << Hex::encode(value);
 }
 
 }

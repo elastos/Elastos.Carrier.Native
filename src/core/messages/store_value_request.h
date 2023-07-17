@@ -30,10 +30,13 @@ namespace carrier {
 
 class StoreValueRequest : public Message {
 public:
-    StoreValueRequest(const Sp<Value> _value)
-        : Message(Message::Type::REQUEST, Message::Method::STORE_VALUE), value(_value) {}
+    StoreValueRequest()
+        : Message(Message::Type::REQUEST, Message::Method::STORE_VALUE) {}
 
-    StoreValueRequest(): StoreValueRequest(std::make_shared<Value>()) {}
+    StoreValueRequest(const Value& value, int _token)
+            : Message(Message::Type::REQUEST, Message::Method::STORE_VALUE), token(_token) {
+        setValue(value);
+    }
 
     int getToken() const noexcept {
         return token;
@@ -47,12 +50,27 @@ public:
         return expectedSequenceNumber;
     }
 
-    const Sp<Value> getValue() const noexcept {
-        return value;
-    }
+    void setExpectedSequenceNumber(int expectedSequenceNumber) {
+		this->expectedSequenceNumber = expectedSequenceNumber;
+	}
+
+    void setValue(const Value& value);
+    Value getValue() const;
+
+    bool isMutable() const {
+		return static_cast<bool>(publicKey);
+	}
+
+    bool isEncrypted() const {
+		return static_cast<bool>(recipient);
+	}
+
+	Id getValueId() {
+		return Value::calculateId(publicKey, nonce, value);
+	}
 
     int estimateSize() const override {
-        return Message::estimateSize() + 208 + value->getData().size();
+        return Message::estimateSize() + 208 + value.size();
     }
 
 protected:
@@ -62,8 +80,13 @@ protected:
 
 private:
     int token {0};
-    int expectedSequenceNumber {-1};
-    Sp<Value> value;
+    Id publicKey {};
+	Id recipient {};
+	Blob nonce {};
+    int sequenceNumber {-1};
+	int expectedSequenceNumber {-1};
+    std::vector<uint8_t> signature {};
+	std::vector<uint8_t> value;
 };
 
 } // namespace carrier

@@ -79,24 +79,32 @@ void NodeAutomationTester::testAutomaticNode() {
 
     std::cout << "----------" << std::endl;
     std::vector<uint8_t> data({0,1,2,3,4});
-    Sp<Value> value = node->createValue(data);
-    std::cout << "Trying to Sotre Value: " << value->getId() << std::endl;
+    auto value = Value::of(data);
+    std::cout << "Trying to Sotre Value: " << value.getId() << std::endl;
     auto future1 = node->storeValue(value);
     auto result = future1.get();
     CPPUNIT_ASSERT(result);
     std::cout << "Store value succeeeed." << std::endl;
 
     std::cout << "----------" << std::endl;
-    std::cout << "Trying to find Value with Id: " << value->getId() << std::endl;
-    auto future2 = node->findValue(value->getId());
+    std::cout << "Trying to find Value with Id: " << value.getId() << std::endl;
+    auto future2 = node->findValue(value.getId());
     auto val = future2.get();
-    CPPUNIT_ASSERT(*value == *val);
+    CPPUNIT_ASSERT(value == *val);
     std::cout << "Find value: " << static_cast<std::string>(*val) << std::endl;
 
     std::cout << "----------" << std::endl;
     std::cout << "Trying to announce peer " << std::endl;
+
     auto peerId = Id::random();
-    auto future3 = node->announcePeer(peerId, 42244, "automation");
+    auto nodeId = Id::random();
+    auto origin = Id::random();
+    std::vector<uint8_t> sig(64);
+    Random::buffer(sig.data(), sig.size());
+
+    PeerInfo peer = PeerInfo::of(peerId, nodeId, origin, 42244, "automation", sig);
+
+    auto future3 = node->announcePeer(peer);
     auto result2 = future3.get();
     CPPUNIT_ASSERT(result2);
     std::cout << "Announce peer succeeeed." << std::endl;

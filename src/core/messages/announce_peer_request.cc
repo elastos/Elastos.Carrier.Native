@@ -32,13 +32,20 @@ namespace carrier {
 
 void AnnouncePeerRequest::serializeInternal(nlohmann::json& root) const {
     nlohmann::json object = {
+        {Message::KEY_REQ_TOKEN, token},
         {Message::KEY_REQ_TARGET, peerId},
-        {Message::KEY_REQ_PROXY_ID, proxyId},
         {Message::KEY_REQ_PORT, port},
-        {Message::KEY_REQ_ALT, alt},
-        {Message::KEY_REQ_SIGNATURE, nlohmann::json::binary_t {signature}},
-        {Message::KEY_REQ_TOKEN, token}
+        {Message::KEY_REQ_SIGNATURE, nlohmann::json::binary_t {signature}}
     };
+
+    if (nodeId != getId()) {
+			object[Message::KEY_REQ_PROXY_ID] = nodeId;
+	}
+
+    if (!alternativeURL.empty()) {
+        object[Message::KEY_REQ_ALT] = alternativeURL;
+    }
+
     Message::serializeInternal(root);
     root[getKeyString()] = object;
 }
@@ -51,11 +58,11 @@ void AnnouncePeerRequest::parse(const std::string& fieldName, nlohmann::json& ob
         if (key == Message::KEY_REQ_TARGET)
             value.get_to(peerId);
         else if(key == Message::KEY_REQ_PROXY_ID)
-            value.get_to(proxyId);
+            value.get_to(nodeId);
         else if(key == Message::KEY_REQ_PORT)
             value.get_to(port);
         else if(key == Message::KEY_REQ_ALT)
-            value.get_to(alt);
+            value.get_to(alternativeURL);
         else if(key == Message::KEY_REQ_SIGNATURE)
             signature = value.get_binary();
         else if(key == Message::KEY_REQ_TOKEN)
@@ -65,14 +72,21 @@ void AnnouncePeerRequest::parse(const std::string& fieldName, nlohmann::json& ob
     }
 }
 
+int AnnouncePeerRequest::estimateSize() const {
+    int size = 4 + 9 + 36 + 5 + 6 + Signature::BYTES;
+        size += nodeId == getId() ? 0 : 4 + Id::BYTES;
+        size += alternativeURL.empty() ? 0 : 6 + strlen(alternativeURL.c_str());
+        return Message::estimateSize() + size;
+}
+
 void AnnouncePeerRequest::toString(std::stringstream& ss) const {
     ss << ",q:{"
         << "t:" << peerId;
-        if (proxied)
-            ss << ",x:" << proxyId;
+        if (nodeId != getId())
+            ss << ",n:" << nodeId;
         ss << ",p:" << std::to_string(port);
-        if (!alt.empty())
-            ss << ",alt:" << alt;
+        if (!alternativeURL.empty())
+            ss << ",alt:" << alternativeURL;
         ss << ",sig:" << Hex::encode(signature)
         << ",tok:" << std::to_string(token)
         << "}";

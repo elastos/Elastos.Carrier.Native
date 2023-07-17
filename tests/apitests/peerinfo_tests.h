@@ -29,16 +29,14 @@ namespace test {
 
 class PeerInfoTests : public CppUnit::TestFixture {
     CPPUNIT_TEST_SUITE(PeerInfoTests);
-    CPPUNIT_TEST(testPeerInfo4);
-    CPPUNIT_TEST(testPeerInfo6);
+    CPPUNIT_TEST(testPeerInfo);
     CPPUNIT_TEST_SUITE_END();
 
  public:
     void setUp();
     void tearDown();
 
-    void testPeerInfo4();
-    void testPeerInfo6();
+    void testPeerInfo();
 };
 
 }  // namespace test

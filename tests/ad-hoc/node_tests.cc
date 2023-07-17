@@ -83,7 +83,7 @@ void NodeTester::testNode() {
 #if 1
     std::cout << "----------" << std::endl;
     std::vector<uint8_t> blob({0,1,2,3,4});
-    Sp<Value> value = node1->createValue(blob);
+    auto value = Value::of(blob);
     std::cout << "Trying to Sotre Value " << std::endl;
     auto future1 = node1->storeValue(value);
     auto result = future1.get();
@@ -93,8 +93,8 @@ void NodeTester::testNode() {
 
 #if 1
     std::cout << "----------" << std::endl;
-    std::cout << "Trying to find Value with Id: " << value->getId().toBase58String() << std::endl;
-    auto future2 = node1->findValue(value->getId());
+    std::cout << "Trying to find Value with Id: " << value.getId().toBase58String() << std::endl;
+    auto future2 = node1->findValue(value.getId());
     auto val = future2.get();
     CPPUNIT_ASSERT_MESSAGE("Value not found!", val != nullptr);
     std::cout << "Value: " << static_cast<std::string>(*val) << std::endl;
@@ -104,7 +104,10 @@ void NodeTester::testNode() {
     std::cout << "----------" << std::endl;
     std::cout << "Trying to announce peer " << std::endl;
     auto peerId = Id::random();
-    auto future3 = node1->announcePeer(peerId, 42244, "testNode");
+
+    auto peer = PeerInfo::create(node1->getId(), 42244);
+
+    auto future3 = node1->announcePeer(peer);
     auto result2 = future3.get();
     CPPUNIT_ASSERT_MESSAGE("Announce peer failed!", result2);
     std::cout << "Announce peer succeeeed." << std::endl;
@@ -127,12 +130,12 @@ void NodeTester::testNode() {
     node3->start();
     node3->bootstrap(nij);
 
-    auto future4 = node3->findPeer(peerId, 1);
+    auto future4 = node1->findPeer(peerId, 1);
     auto peers = future4.get();
     CPPUNIT_ASSERT_MESSAGE("Peer not found!", !peers.empty());
     for (auto& peer: peers) {
-        CPPUNIT_ASSERT(peer->isValid());
-        std::cout << "Peer: " << static_cast<std::string>(*peer) << std::endl;
+        std::cout << "Peer: " << static_cast<std::string>(peer) << std::endl;
+        CPPUNIT_ASSERT_MESSAGE("peer is invalid!", peer.isValid());
     }
 
     node3->stop();

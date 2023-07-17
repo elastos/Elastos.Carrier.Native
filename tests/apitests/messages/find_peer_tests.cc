@@ -151,14 +151,14 @@ void FindPeerTests::testFindPeerResponseSize() {
     nodes6.push_back(std::make_shared<NodeInfo>(Id::random(), "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff", 65529));
     nodes6.push_back(std::make_shared<NodeInfo>(Id::random(), "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff", 65528));
 
-    std::vector<uint8_t> sig(64, 'S');
-    std::list<std::shared_ptr<PeerInfo>> peers4 {};
-    for (int i = 0; i < 32; i++)
-        peers4.push_back(std::make_shared<PeerInfo>(Id::random(), Id::random(), 65535 - i, "test response, size", sig));
 
-    std::list<std::shared_ptr<PeerInfo>> peers6 {};
-    for (int i = 0; i < 16; i++)
-        peers6.push_back(std::make_shared<PeerInfo>(Id::random(), Id(), 65535 - i, "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff", sig, AF_INET6));
+    std::list<PeerInfo> peers {};
+    std::vector<uint8_t> sig(64);
+    Id pid = Id::random();
+    for (int i = 0; i < 8; i++) {
+        Random::buffer(sig.data(), sig.size());
+        peers.push_back(PeerInfo::of(pid, Id::random(), 65535 - i, sig));
+    }
 
     auto msg = FindPeerResponse(0xF7654321);
     msg.setId(Id::random());
@@ -166,21 +166,54 @@ void FindPeerTests::testFindPeerResponseSize() {
     msg.setNodes4(nodes4);
     msg.setNodes6(nodes6);
     msg.setToken(0x87654321);
-    msg.setPeers4(peers4);
+    msg.setPeers(peers);
 
     auto serialized = msg.serialize();
+    printMessage(msg, serialized);
     CPPUNIT_ASSERT(serialized.size() <= msg.estimateSize());
+}
 
-    auto _msg = FindPeerResponse(0xF7654321);
-    _msg.setId(Id::random());
-    _msg.setVersion(VERSION);
-    _msg.setNodes4(nodes4);
-    _msg.setNodes6(nodes6);
-    _msg.setToken(0x87654321);
-    _msg.setPeers6(peers6);
+void FindPeerTests::testFindPeerResponseSize2() {
+    std::list<std::shared_ptr<NodeInfo>> nodes4 {};
+    nodes4.push_back(std::make_shared<NodeInfo>(Id::random(), "251.251.251.251", 65535));
+    nodes4.push_back(std::make_shared<NodeInfo>(Id::random(), "251.251.251.251", 65534));
+    nodes4.push_back(std::make_shared<NodeInfo>(Id::random(), "251.251.251.251", 65533));
+    nodes4.push_back(std::make_shared<NodeInfo>(Id::random(), "251.251.251.251", 65532));
+    nodes4.push_back(std::make_shared<NodeInfo>(Id::random(), "251.251.251.251", 65531));
+    nodes4.push_back(std::make_shared<NodeInfo>(Id::random(), "251.251.251.251", 65530));
+    nodes4.push_back(std::make_shared<NodeInfo>(Id::random(), "251.251.251.251", 65529));
+    nodes4.push_back(std::make_shared<NodeInfo>(Id::random(), "251.251.251.251", 65528));
 
-    auto _serialized = _msg.serialize();
-    CPPUNIT_ASSERT(_serialized.size() <= _msg.estimateSize());
+    std::list<std::shared_ptr<NodeInfo>> nodes6 {};
+    nodes6.push_back(std::make_shared<NodeInfo>(Id::random(), "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff", 65535));
+    nodes6.push_back(std::make_shared<NodeInfo>(Id::random(), "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff", 65534));
+    nodes6.push_back(std::make_shared<NodeInfo>(Id::random(), "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff", 65533));
+    nodes6.push_back(std::make_shared<NodeInfo>(Id::random(), "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff", 65532));
+    nodes6.push_back(std::make_shared<NodeInfo>(Id::random(), "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff", 65531));
+    nodes6.push_back(std::make_shared<NodeInfo>(Id::random(), "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff", 65530));
+    nodes6.push_back(std::make_shared<NodeInfo>(Id::random(), "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff", 65529));
+    nodes6.push_back(std::make_shared<NodeInfo>(Id::random(), "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff", 65528));
+
+
+    std::list<PeerInfo> peers {};
+    std::vector<uint8_t> sig(64);
+    Id pid = Id::random();
+    for (int i = 0; i < 8; i++) {
+        Random::buffer(sig.data(), sig.size());
+        peers.push_back(PeerInfo::of(pid, Id::random(), Id::random(), 65535 - i, "http://abc.pc2.net", sig));
+    }
+
+    auto msg = FindPeerResponse(0xF7654321);
+    msg.setId(Id::random());
+    msg.setVersion(VERSION);
+    msg.setNodes4(nodes4);
+    msg.setNodes6(nodes6);
+    msg.setToken(0x87654321);
+    msg.setPeers(peers);
+
+    auto serialized = msg.serialize();
+    printMessage(msg, serialized);
+    CPPUNIT_ASSERT(serialized.size() <= msg.estimateSize());
 }
 
 void FindPeerTests::testFindPeerResponse4() {
@@ -195,17 +228,20 @@ void FindPeerTests::testFindPeerResponse4() {
     nodes4.push_back(std::make_shared<NodeInfo>(Id::random(), "192.168.1.4", 1234));
     nodes4.push_back(std::make_shared<NodeInfo>(Id::random(), "192.168.1.5", 1235));
 
-    std::vector<uint8_t> sig(64, 4);
-    std::list<std::shared_ptr<PeerInfo>> peers4 {};
-    for (int i = 0; i < Utils::getRandom(8, 48); i++)
-        peers4.push_back(std::make_shared<PeerInfo>(Id::random(), Id::random(), 65535 - i, "test peer4", sig));
+    std::list<PeerInfo> peers {};
+    std::vector<uint8_t> sig(64);
+    Id pid = Id::random();
+    for (int i = 0; i < 8; i++) {
+        Random::buffer(sig.data(), sig.size());
+        peers.push_back(PeerInfo::of(pid, Id::random(), Id::random(), 65535 - i, sig));
+    }
 
     auto msg = FindPeerResponse(txid);
     msg.setId(id);
     msg.setVersion(VERSION);
     msg.setNodes4(nodes4);
     msg.setToken(token);
-    msg.setPeers4(peers4);
+    msg.setPeers(peers);
 
     auto serialized = msg.serialize();
     CPPUNIT_ASSERT(serialized.size() <= msg.estimateSize());
@@ -222,13 +258,12 @@ void FindPeerTests::testFindPeerResponse4() {
    CPPUNIT_ASSERT_EQUAL(token, _msg->getToken());
    CPPUNIT_ASSERT(_msg->getNodes6().empty());
    CPPUNIT_ASSERT(!_msg->getNodes4().empty());
-   CPPUNIT_ASSERT(!_msg->getPeers4().empty());
+   CPPUNIT_ASSERT(!_msg->getPeers().empty());
 
    auto nodes = _msg->getNodes4();
    CPPUNIT_ASSERT(Utils::arrayEquals(nodes4, nodes));
 
-   auto peers = _msg->getPeers4();
-   CPPUNIT_ASSERT(Utils::arrayEquals(peers4, peers));
+   CPPUNIT_ASSERT(peers == _msg->getPeers());
 }
 
 void FindPeerTests::testFindPeerResponse6() {
@@ -243,17 +278,20 @@ void FindPeerTests::testFindPeerResponse6() {
     nodes6.push_back(std::make_shared<NodeInfo>(Id::random(), "2001:0db8:85a3:0000:0000:8a2e:0370:7334", 1234));
     nodes6.push_back(std::make_shared<NodeInfo>(Id::random(), "2001:0db8:85a3:0000:0000:8a2e:0370:7335", 1235));
 
-    std::vector<uint8_t> sig(64, 6);
-    std::list<std::shared_ptr<PeerInfo>> peers6 {};
-    for (int i = 0; i < Utils::getRandom(8, 48); i++)
-        peers6.push_back(std::make_shared<PeerInfo>(Id::random(), Id::random(), 65535 - i, "test peer6", sig, AF_INET6));
+    std::list<PeerInfo> peers {};
+    std::vector<uint8_t> sig(64);
+    Id pid = Id::random();
+    for (int i = 0; i < 8; i++) {
+        Random::buffer(sig.data(), sig.size());
+        peers.push_back(PeerInfo::of(pid, Id::random(), Id::random(), 65535 - i, "http://abc.pc2.net", sig));
+    }
 
     auto msg = FindPeerResponse(txid);
     msg.setId(id);
     msg.setVersion(VERSION);
     msg.setNodes6(nodes6);
     msg.setToken(token);
-    msg.setPeers6(peers6);
+    msg.setPeers(peers);
 
     auto serialized = msg.serialize();
     CPPUNIT_ASSERT(serialized.size() <= msg.estimateSize());
@@ -270,13 +308,12 @@ void FindPeerTests::testFindPeerResponse6() {
     CPPUNIT_ASSERT_EQUAL(token, _msg->getToken());
     CPPUNIT_ASSERT(_msg->getNodes4().empty());
     CPPUNIT_ASSERT(!_msg->getNodes6().empty());
-    CPPUNIT_ASSERT(!_msg->getPeers6().empty());
+    CPPUNIT_ASSERT(!_msg->getPeers().empty());
 
     auto nodes = _msg->getNodes6();
     CPPUNIT_ASSERT(Utils::arrayEquals(nodes6, nodes));
 
-    auto peers = _msg->getPeers6();
-    CPPUNIT_ASSERT(Utils::arrayEquals(peers6, peers));
+    CPPUNIT_ASSERT(peers == _msg->getPeers());
 }
 
 void FindPeerTests::testFindPeerResponse46() {
@@ -298,15 +335,18 @@ void FindPeerTests::testFindPeerResponse46() {
     nodes6.push_back(std::make_shared<NodeInfo>(Id::random(), "2001:0db8:85a3:0000:0000:8a2e:0370:7334", 1234));
     nodes6.push_back(std::make_shared<NodeInfo>(Id::random(), "2001:0db8:85a3:0000:0000:8a2e:0370:7335", 1235));
 
-    std::vector<uint8_t> sig(64, 46);
-    std::list<std::shared_ptr<PeerInfo>> peers4 = {};
-    for (int i = 0; i < Utils::getRandom(8, 48); i++) {
-        peers4.push_back(std::make_shared<PeerInfo>(Id::random(), Id::random(), 65535 - i, "192.168.1.2", sig));
+    std::list<PeerInfo> peers {};
+    std::vector<uint8_t> sig(64);
+    Id pid = Id::random();
+
+    for (int i = 0; i < 4; i++) {
+        Random::buffer(sig.data(), sig.size());
+        peers.push_back(PeerInfo::of(pid, Id::random(), Id::random(), 65535 - i, sig));
     }
 
-    std::list<std::shared_ptr<PeerInfo>> peers6 = {};
-    for (int i = 0; i < Utils::getRandom(8, 48); i++) {
-        peers6.push_back(std::make_shared<PeerInfo>(Id::random(), Id::random(), 65535 - i, "2001:0db8:85a3:0000:0000:8a2e:0370:7335", sig, AF_INET6));
+    for (int i = 0; i < 4; i++) {
+        Random::buffer(sig.data(), sig.size());
+        peers.push_back(PeerInfo::of(pid, Id::random(), Id::random(), 65535 - i, "http://abc.pc2.net", sig));
     }
 
     auto msg = FindPeerResponse(txid);
@@ -314,8 +354,7 @@ void FindPeerTests::testFindPeerResponse46() {
     msg.setNodes4(nodes4);
     msg.setNodes6(nodes6);
     msg.setToken(token);
-    msg.setPeers4(peers4);
-    msg.setPeers6(peers6);
+    msg.setPeers(peers);
 
     auto serialized = msg.serialize();
     CPPUNIT_ASSERT(serialized.size() <= msg.estimateSize());
@@ -332,8 +371,7 @@ void FindPeerTests::testFindPeerResponse46() {
     CPPUNIT_ASSERT_EQUAL(token, _msg->getToken());
     CPPUNIT_ASSERT(!_msg->getNodes4().empty());
     CPPUNIT_ASSERT(!_msg->getNodes6().empty());
-    CPPUNIT_ASSERT(!_msg->getPeers4().empty());
-    CPPUNIT_ASSERT(!_msg->getPeers6().empty());
+    CPPUNIT_ASSERT(!_msg->getPeers().empty());
 
     auto nodes = _msg->getNodes4();
     CPPUNIT_ASSERT(Utils::arrayEquals(nodes4, nodes));
@@ -341,11 +379,7 @@ void FindPeerTests::testFindPeerResponse46() {
     nodes = _msg->getNodes6();
     CPPUNIT_ASSERT(Utils::arrayEquals(nodes6, nodes));
 
-    auto peers = _msg->getPeers4();
-    CPPUNIT_ASSERT(Utils::arrayEquals(peers4, peers));
-
-    peers = _msg->getPeers6();
-    CPPUNIT_ASSERT(Utils::arrayEquals(peers6, peers));
+    CPPUNIT_ASSERT(peers == _msg->getPeers());
 }
 
 void FindPeerTests::tearDown() {

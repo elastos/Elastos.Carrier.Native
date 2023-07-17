@@ -25,6 +25,7 @@
 #include <deque>
 
 #include "carrier/id.h"
+#include "carrier/peer_info.h"
 #include "task.h"
 #include "closest_set.h"
 
@@ -36,8 +37,7 @@ class CandidateNode;
 
 class PeerAnnounce: public Task {
 public:
-    PeerAnnounce(DHT* dht, const ClosestSet& closest, const Id& _peerId, const Id& proxyId, int _port,
-        const std::string& alt, const std::vector<uint8_t>& signature);
+    PeerAnnounce(DHT* dht, const ClosestSet& closest, const PeerInfo& _peer);
 
 protected:
     void update() override;
@@ -47,11 +47,7 @@ protected:
 
 private:
     std::list<Sp<CandidateNode>> todo {};
-    Id peerId {};
-    Id proxyId {};
-    uint16_t port {0};
-    std::vector<uint8_t> signature {};
-    std::string alt {};
+    PeerInfo peer;
 };
 
 } /* namespace carrier */

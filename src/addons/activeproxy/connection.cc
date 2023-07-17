@@ -981,7 +981,8 @@ void ProxyConnection::onSignature(const uint8_t* packet, size_t size) noexcept {
 
     log->info("announcePeer Id: {}, server: {}, port: {}, domain: {} ",
             proxy.getPeerId().toBase58String(), proxy.getServerHost(), port, (char*)domainName);
-    proxy.getNode()->announcePeer(proxy.getPeerId(), proxy.getServerId(), port, domainName, sig);
+    //TODO::modify
+    // proxy.getNode()->announcePeer(proxy.getPeerId(), proxy.getServerId(), port, domainName, sig);
 
     log->info("announcePeer.");
 }
