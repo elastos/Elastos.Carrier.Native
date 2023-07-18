@@ -22,6 +22,9 @@
 
 #pragma once
 
+#include <string>
+#include <vector>
+
 #include "carrier/id.h"
 #include "carrier/peer_info.h"
 #include "message.h"
@@ -83,8 +86,6 @@ private:
     uint16_t port;
     std::string alternativeURL {};
     std::vector<uint8_t> signature {};
-
-    bool proxied {false};
 };
 
 }

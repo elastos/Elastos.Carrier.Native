@@ -39,7 +39,7 @@ void AnnouncePeerRequest::serializeInternal(nlohmann::json& root) const {
     };
 
     if (nodeId != getId()) {
-			object[Message::KEY_REQ_PROXY_ID] = nodeId;
+		object[Message::KEY_REQ_PROXY_ID] = nodeId;
 	}
 
     if (!alternativeURL.empty()) {
@@ -74,20 +74,20 @@ void AnnouncePeerRequest::parse(const std::string& fieldName, nlohmann::json& ob
 
 int AnnouncePeerRequest::estimateSize() const {
     int size = 4 + 9 + 36 + 5 + 6 + Signature::BYTES;
-        size += nodeId == getId() ? 0 : 4 + Id::BYTES;
-        size += alternativeURL.empty() ? 0 : 6 + strlen(alternativeURL.c_str());
-        return Message::estimateSize() + size;
+    size += nodeId == getId() ? 0 : 4 + Id::BYTES;
+    size += alternativeURL.empty() ? 0 : 6 + strlen(alternativeURL.c_str());
+    return Message::estimateSize() + size;
 }
 
 void AnnouncePeerRequest::toString(std::stringstream& ss) const {
     ss << ",q:{"
         << "t:" << peerId;
-        if (nodeId != getId())
-            ss << ",n:" << nodeId;
-        ss << ",p:" << std::to_string(port);
-        if (!alternativeURL.empty())
-            ss << ",alt:" << alternativeURL;
-        ss << ",sig:" << Hex::encode(signature)
+    if (nodeId != getId())
+        ss << ",n:" << nodeId;
+    ss << ",p:" << std::to_string(port);
+    if (!alternativeURL.empty())
+        ss << ",alt:" << alternativeURL;
+    ss << ",sig:" << Hex::encode(signature)
         << ",tok:" << std::to_string(token)
         << "}";
 }
