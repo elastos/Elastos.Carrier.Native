@@ -22,8 +22,12 @@
 
 #pragma once
 
-#include "message.h"
+#include <vector>
+
+#include "carrier/blob.h"
 #include "carrier/value.h"
+
+#include "message.h"
 
 namespace elastos {
 namespace carrier {
