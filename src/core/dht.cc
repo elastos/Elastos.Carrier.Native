@@ -634,14 +634,13 @@ Sp<Task> DHT::findValue(const Id& id, LookupOption option, std::function<void(Sp
 }
 
 Sp<Task> DHT::storeValue(const Value& value, std::function<void(std::list<Sp<NodeInfo>>)> completeHandler) {
-    auto _value = std::make_shared<Value>(value);
     auto task = std::make_shared<NodeLookup>(this, value.getId());
     task->setWantToken(true);
     task->addListener([=](Task* t) {
         if (t->getState() != Task::State::FINISHED)
             return;
 
-        auto closestSet = ((NodeLookup*)t)->getClosestSet();
+        auto closestSet = (static_cast<NodeLookup*>(t))->getClosestSet();
         if (closestSet.size() == 0) {
             // this should never happen
             log->warn("!!! Value announce task not started because the node lookup task got the empty closest nodes.");
@@ -649,7 +648,7 @@ Sp<Task> DHT::storeValue(const Value& value, std::function<void(std::list<Sp<Nod
             return;
         }
 
-        auto announce = std::make_shared<ValueAnnounce>(this, closestSet, *_value);
+        auto announce = std::make_shared<ValueAnnounce>(this, closestSet, value);
         announce->addListener([=](Task*) {
             std::list<Sp<NodeInfo>> result{};
             for(const auto& item: closestSet.getEntries()) {
@@ -657,12 +656,12 @@ Sp<Task> DHT::storeValue(const Value& value, std::function<void(std::list<Sp<Nod
             }
             completeHandler(result);
         });
-        announce->setName("Nested value announce");
+        announce->setName("Nested value Store");
         t->setNestedTask(announce);
         taskMan.add(announce);
     });
-    task->setName("NodeLookup: preTask to value announce");
 
+    task->setName("StoreValue task");
     taskMan.add(task);
     return task;
 }
@@ -725,7 +724,7 @@ Sp<Task> DHT::announcePeer(const PeerInfo& peer, const std::function<void(std::l
         taskMan.add(announce);
     });
 
-    task->setName("NodeLookup: PreTask to peer announce");
+    task->setName("AnoouncePeer Task");
     taskMan.add(task);
     return task;
 }
