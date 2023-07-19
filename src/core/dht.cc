@@ -697,14 +697,13 @@ Sp<Task> DHT::findPeer(const Id& id, int expected, LookupOption option, std::fun
 }
 
 Sp<Task> DHT::announcePeer(const PeerInfo& peer, const std::function<void(std::list<Sp<NodeInfo>>)> completeHandler) {
-    auto pi = std::make_shared<PeerInfo>(peer);
     auto task = std::make_shared<NodeLookup>(this, peer.getId());
     task->setWantToken(true);
     task->addListener([=](Task* t) {
         if (t->getState() != Task::State::FINISHED)
 			return;
 
-	    auto closestSet = ((NodeLookup*)t)->getClosestSet();
+	    auto closestSet = (static_cast<NodeLookup*>(t))->getClosestSet();
         if (closestSet.size() == 0) {
             // this should never happen
             log->warn("!!! Peer announce task not started because the node lookup task got the empty closest nodes.");
@@ -712,7 +711,7 @@ Sp<Task> DHT::announcePeer(const PeerInfo& peer, const std::function<void(std::l
             return;
         }
 
-        auto announce = std::make_shared<PeerAnnounce>(this, closestSet, *pi);
+        auto announce = std::make_shared<PeerAnnounce>(this, closestSet, peer);
         announce->addListener([=](Task* t) {
             std::list<Sp<NodeInfo>> result{};
             for(const auto& item: closestSet.getEntries()) {
