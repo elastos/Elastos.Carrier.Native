@@ -31,7 +31,7 @@ namespace carrier {
 int FindPeerResponse::estimateSize() const {
     int size = LookupResponse::estimateSize();
 
-    if (peers.empty()) {
+    if (!peers.empty()) {
         size += (2 + 2 + 2 + Id::BYTES);
         for (const auto&  pi : peers) {
             size += (2 + 2 + Id::BYTES + 1 + sizeof(uint16_t) + 2 + Signature::BYTES);

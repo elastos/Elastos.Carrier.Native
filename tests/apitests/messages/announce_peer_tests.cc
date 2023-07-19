@@ -116,7 +116,7 @@ void AnnouncePeerTests::testAnnouncePeerRequest2() {
     PeerInfo peer = PeerInfo::of(peerId, nodeId, origin, port, "http://abc.pc2.net/", sig);
 
     auto msg = AnnouncePeerRequest();
-    msg.setId(nodeId);
+    msg.setId(origin);
     msg.setTxid(txid);
     msg.setToken(token);
     msg.setVersion(VERSION);
@@ -126,7 +126,7 @@ void AnnouncePeerTests::testAnnouncePeerRequest2() {
     printMessage(msg, serialized);
 
     auto parsed = Message::parse(serialized.data(), serialized.size());
-    parsed->setId(nodeId);
+    parsed->setId(origin);
     auto _msg = std::static_pointer_cast<AnnouncePeerRequest>(parsed);
 
     CPPUNIT_ASSERT_EQUAL(Message::Type::REQUEST, _msg->getType());
@@ -136,10 +136,8 @@ void AnnouncePeerTests::testAnnouncePeerRequest2() {
     CPPUNIT_ASSERT_EQUAL(VERSION_STR, _msg->getReadableVersion());
     CPPUNIT_ASSERT_EQUAL(token,  _msg->getToken());
 
-    CPPUNIT_ASSERT(peer == _msg->getPeer());
+    CPPUNIT_ASSERT_EQUAL(peer, _msg->getPeer());
 }
-
-
 
 void AnnouncePeerTests::testAnnouncePeerResponseSize() {
     auto msg = AnnouncePeerResponse(0xf7654321);

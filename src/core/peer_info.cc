@@ -35,7 +35,7 @@ PeerInfo::PeerInfo(const Id& peerId, const Blob& privateKey, const Id& nodeId, c
     if (peerId == Id::zero())
 		throw std::invalid_argument("Invalid peer id");
 
-    if (privateKey.size() != Signature::PrivateKey::BYTES)
+    if (privateKey && privateKey.size() != Signature::PrivateKey::BYTES)
         throw std::invalid_argument("Invalid private key");
 
     if (nodeId == Id::zero())
@@ -77,14 +77,6 @@ PeerInfo::PeerInfo(const Signature::KeyPair& keypair, const Id& nodeId, const Id
         this->alternativeURL = (char *)utf8proc_NFC((unsigned char *)(alternativeURL.c_str()));
     this->signature = Signature::sign(getSignData(), keypair.privateKey());
 }
-
-// PeerInfo::PeerInfo(const PeerInfo& pi) noexcept
-//     : publicKey(pi.publicKey), nodeId(pi.nodeId), origin(pi.origin), port(pi.port),
-//         alternativeURL(pi.alternativeURL), signature(pi.signature), delegated(pi.delegated) {}
-
-// PeerInfo::PeerInfo(PeerInfo&& pi) noexcept
-//     : publicKey(std::move(pi.publicKey)), nodeId(std::move(pi.nodeId)), origin(std::move(pi.origin)), port(std::move(pi.port)),
-//         alternativeURL(std::move(pi.alternativeURL)), signature(std::move(pi.signature)), delegated(std::move(pi.delegated)) {}
 
 bool PeerInfo::operator==(const PeerInfo& other) const {
     return publicKey == other.publicKey && nodeId == other.nodeId && origin == other.origin
