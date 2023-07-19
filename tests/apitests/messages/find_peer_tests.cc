@@ -233,7 +233,7 @@ void FindPeerTests::testFindPeerResponse4() {
     Id pid = Id::random();
     for (int i = 0; i < 8; i++) {
         Random::buffer(sig.data(), sig.size());
-        peers.push_back(PeerInfo::of(pid, Id::random(), Id::random(), 65535 - i, sig));
+        peers.push_back(PeerInfo::of(pid, Id::random(), 65535 - i, sig));
     }
 
     auto msg = FindPeerResponse(txid);
@@ -247,23 +247,23 @@ void FindPeerTests::testFindPeerResponse4() {
     CPPUNIT_ASSERT(serialized.size() <= msg.estimateSize());
 
     auto parsed = Message::parse(serialized.data(), serialized.size());
-   parsed->setId(id);
-   auto _msg = std::static_pointer_cast<FindPeerResponse>(parsed);
+    parsed->setId(id);
+    auto _msg = std::static_pointer_cast<FindPeerResponse>(parsed);
 
-   CPPUNIT_ASSERT_EQUAL(Message::Type::RESPONSE, _msg->getType());
-   CPPUNIT_ASSERT_EQUAL(Message::Method::FIND_PEER, _msg->getMethod());
-   CPPUNIT_ASSERT_EQUAL(id, _msg->getId());
-   CPPUNIT_ASSERT_EQUAL(txid, _msg->getTxid());
-   CPPUNIT_ASSERT_EQUAL(VERSION_STR, _msg->getReadableVersion());
-   CPPUNIT_ASSERT_EQUAL(token, _msg->getToken());
-   CPPUNIT_ASSERT(_msg->getNodes6().empty());
-   CPPUNIT_ASSERT(!_msg->getNodes4().empty());
-   CPPUNIT_ASSERT(!_msg->getPeers().empty());
+    CPPUNIT_ASSERT_EQUAL(Message::Type::RESPONSE, _msg->getType());
+    CPPUNIT_ASSERT_EQUAL(Message::Method::FIND_PEER, _msg->getMethod());
+    CPPUNIT_ASSERT_EQUAL(id, _msg->getId());
+    CPPUNIT_ASSERT_EQUAL(txid, _msg->getTxid());
+    CPPUNIT_ASSERT_EQUAL(VERSION_STR, _msg->getReadableVersion());
+    CPPUNIT_ASSERT_EQUAL(token, _msg->getToken());
+    CPPUNIT_ASSERT(_msg->getNodes6().empty());
+    CPPUNIT_ASSERT(!_msg->getNodes4().empty());
+    CPPUNIT_ASSERT(!_msg->getPeers().empty());
 
-   auto nodes = _msg->getNodes4();
-   CPPUNIT_ASSERT(Utils::arrayEquals(nodes4, nodes));
+    auto nodes = _msg->getNodes4();
+    CPPUNIT_ASSERT(Utils::arrayEquals(nodes4, nodes));
 
-   CPPUNIT_ASSERT(peers == _msg->getPeers());
+    CPPUNIT_ASSERT(peers == _msg->getPeers());
 }
 
 void FindPeerTests::testFindPeerResponse6() {

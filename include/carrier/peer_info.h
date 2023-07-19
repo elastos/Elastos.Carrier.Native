@@ -32,9 +32,6 @@ namespace carrier {
 struct CARRIER_PUBLIC PeerInfo {
     PeerInfo() = default;
 
-    // PeerInfo(const PeerInfo& pi) noexcept;
-    // PeerInfo(PeerInfo&& pi) noexcept;
-
     static PeerInfo of(const Id& peerId, const Id& nodeId, int port, const std::vector<uint8_t>& signature) {
 		return PeerInfo(peerId, {}, nodeId, {}, port, {}, signature);
 	}
@@ -139,7 +136,7 @@ struct CARRIER_PUBLIC PeerInfo {
 	}
 
 	bool hasAlternativeURL() const noexcept {
-		return alternativeURL.empty();
+		return !alternativeURL.empty();
 	}
 
     const std::vector<uint8_t>& getSignature() const noexcept {

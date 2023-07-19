@@ -73,7 +73,6 @@ public:
 
     int estimateSize() const override;
 
-
 protected:
     void serializeInternal(nlohmann::json& root) const override;
     void parse(const std::string& fieldName, nlohmann::json& object) override;
