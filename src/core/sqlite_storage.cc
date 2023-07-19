@@ -269,7 +269,7 @@ Sp<Value> SqliteStorage::putValue(const Value& value, int expectedSeq) {
     sqlite3_bind_blob(pStmt, 2, signer.ptr(), signer.size(), SQLITE_STATIC);
 
     auto sk = value.getPrivateKey();
-    sqlite3_bind_blob(pStmt, 3, sk.bytes(), sk.size(), SQLITE_STATIC);
+    sqlite3_bind_blob(pStmt, 3, sk.ptr(), sk.size(), SQLITE_STATIC);
 
     auto recipient = value.getRecipient().blob();
     sqlite3_bind_blob(pStmt, 4, recipient.ptr(), recipient.size(), SQLITE_STATIC);
@@ -452,7 +452,7 @@ void SqliteStorage::putPeer(const std::list<PeerInfo>& peers) {
     uint64_t now = currentTimeMillis();
     for (const auto& peer : peers) {
         sqlite3_bind_blob(pStmt, 1, peer.getId().data(), peer.getId().size(), SQLITE_STATIC);
-        sqlite3_bind_int(pStmt, 2, peer.getPrivateKey());
+        sqlite3_bind_blob(pStmt, 2, peer.getPrivateKey().ptr(), peer.getPrivateKey().size(), SQLITE_STATIC);
         sqlite3_bind_blob(pStmt, 3, peer.getNodeId().data(), peer.getNodeId().size(), SQLITE_STATIC);
         sqlite3_bind_blob(pStmt, 4, peer.getOrigin().data(), peer.getOrigin().size(), SQLITE_STATIC);
         sqlite3_bind_int(pStmt, 5, peer.getPort());
