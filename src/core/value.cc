@@ -34,7 +34,7 @@ namespace carrier {
 Value::Value(const Id& publicKey, const Blob& privateKey, const Id& recipient, const Blob& nonce,
         int sequenceNumber, const std::vector<uint8_t>& signature, const std::vector<uint8_t>& data) {
     if (publicKey != Id::zero()) {
-        if (privateKey.size() != Signature::PrivateKey::BYTES)
+        if (privateKey && privateKey.size() != Signature::PrivateKey::BYTES)
             throw std::invalid_argument("Invalid private key");
 
         if (nonce.size() != CryptoBox::Nonce::BYTES)
@@ -94,15 +94,6 @@ Value::Value(const Signature::KeyPair& keypair, const Id& recipient, const Blob&
     this->signature = Signature::sign(getSignData(), keypair.privateKey());
 }
 
-// Value::Value(const Value& val) noexcept
-//     : publicKey(val.publicKey), privateKey(val.privateKey), recipient(val.recipient), nonce(val.nonce),
-//         sequenceNumber(val.sequenceNumber), signature(val.signature), data(val.data) {}
-
-// Value::Value(Value&& val) noexcept
-//     : publicKey(std::move(val.publicKey)), privateKey(std::move(val.privateKey)),
-//         recipient(std::move(val.recipient)), nonce(std::move(val.nonce)),
-//         sequenceNumber(std::move(val.sequenceNumber)), signature(vstd::move(val.signature)), data(std::move(val.data)) {}
-
 Id Value::calculateId(const Id& publicKey, const Blob& nonce, const std::vector<uint8_t>& data) {
     auto sha = SHA256();
 
@@ -155,7 +146,7 @@ Value Value::update(const std::vector<uint8_t>& data) {
     if (!hasPrivateKey())
         throw illegal_state("Not the owner of the value " + getId().toBase58String());
 
-    Signature::KeyPair kp = Signature::KeyPair::fromPrivateKey(getPrivateKey());
+    Signature::KeyPair kp = Signature::KeyPair(getPrivateKey());
     return Value(kp, recipient, nonce, sequenceNumber + 1, data);
 }
 

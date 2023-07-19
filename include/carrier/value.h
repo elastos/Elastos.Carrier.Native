@@ -37,9 +37,6 @@ namespace carrier {
 class CARRIER_PUBLIC Value {
 public:
     Value() = default;
-    // Value(const Value& val) noexcept;
-    // Value(Value&& val) noexcept;
-    // Value& operator=(const Value&) = delete;
 
     static Value of(const std::vector<uint8_t>& data) {
 		return Value({}, {}, {}, {}, -1, {}, data);
@@ -117,7 +114,7 @@ public:
         return static_cast<bool>(privateKey);
     }
 
-    const Signature::PrivateKey& getPrivateKey() const {
+    const Blob& getPrivateKey() const {
         return privateKey;
     }
 
@@ -175,7 +172,7 @@ private: // internal methods used in friend class.
 
     Id publicKey {};
     Id recipient {};
-    Signature::PrivateKey privateKey {};
+    Blob privateKey {};
     Blob nonce {};
     std::vector<uint8_t> signature {};
     std::vector<uint8_t> data {};
