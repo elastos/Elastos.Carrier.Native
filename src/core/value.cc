@@ -23,6 +23,7 @@
 #include <sstream>
 
 #include "carrier/value.h"
+
 #include "utils/check.h"
 #include "utils/misc.h"
 #include "utils/hex.h"
@@ -31,10 +32,11 @@
 namespace elastos {
 namespace carrier {
 
-Value::Value(const Id& publicKey, const Blob& privateKey, const Id& recipient, const Blob& nonce,
-        int sequenceNumber, const std::vector<uint8_t>& signature, const std::vector<uint8_t>& data) {
-    if (publicKey != Id::MIN_ID) {
-        if (privateKey && privateKey.size() != Signature::PrivateKey::BYTES)
+Value::Value(const Blob& publicKey, const Blob& privateKey, const Blob& recipient, const Blob& nonce,
+        int sequenceNumber, const Blob& signature, const Blob& data) {
+
+    if (!publicKey.empty()) {
+        if (privateKey.size() != Signature::PrivateKey::BYTES)
             throw std::invalid_argument("Invalid private key");
 
         if (nonce.size() != CryptoBox::Nonce::BYTES)
@@ -45,27 +47,23 @@ Value::Value(const Id& publicKey, const Blob& privateKey, const Id& recipient, c
 
         if (signature.size() != Signature::BYTES)
             throw std::invalid_argument("Invalid signature");
-    }
 
-    if (data.empty())
-        throw std::invalid_argument("Invalid data");
-
-    if (publicKey != Id::MIN_ID) {
         this->publicKey = publicKey;
         this->privateKey = privateKey;
         this->recipient = recipient;
         this->nonce = nonce;
         this->sequenceNumber = sequenceNumber;
-        this->signature = signature;
+        this->signature = std::vector<uint8_t>(signature.cbegin(), signature.cend());
     }
 
-    this->data = data;
+    if (data.empty())
+        throw std::invalid_argument("Invalid data");
+
+    this->data = std::vector<uint8_t>(data.cbegin(), data.cend());
 }
 
-Value::Value(const Signature::KeyPair& keypair, const Id& recipient, const Blob& nonce,
+Value::Value(const Signature::KeyPair& keypair, const Id& recipient, const CryptoBox::Nonce& nonce,
         int sequenceNumber, const std::vector<uint8_t>& data) {
-    // if (keypair == null)
-    // 	throw std::invalid_argument("Invalid keypair");
 
     if (nonce.size() != CryptoBox::Nonce::BYTES)
     	throw std::invalid_argument("Invalid nonce");
@@ -77,7 +75,7 @@ Value::Value(const Signature::KeyPair& keypair, const Id& recipient, const Blob&
         throw std::invalid_argument("Invalid data");
 
     this->publicKey = Id(keypair.publicKey());
-    this->privateKey = keypair.privateKey().blob();
+    this->privateKey = keypair.privateKey();
     this->recipient = recipient;
     this->nonce = nonce;
     this->sequenceNumber = sequenceNumber;
@@ -94,14 +92,14 @@ Value::Value(const Signature::KeyPair& keypair, const Id& recipient, const Blob&
     this->signature = Signature::sign(getSignData(), keypair.privateKey());
 }
 
-Id Value::calculateId(const Id& publicKey, const Blob& nonce, const std::vector<uint8_t>& data) {
+Id Value::calculateId(const Id& publicKey, const CryptoBox::Nonce& nonce, const std::vector<uint8_t>& data) {
     auto sha = SHA256();
 
     if (!static_cast<bool>(publicKey)) {
         sha.update(data);
     } else {
         sha.update(publicKey.blob());
-        sha.update(nonce);
+        sha.update(nonce.blob());
     }
 
     auto digest = sha.digest();
@@ -112,8 +110,7 @@ std::vector<uint8_t> Value::getSignData() const {
     auto size = (isEncrypted() ? Id::BYTES : 0)  + CryptoBox::Nonce::BYTES +
             sizeof(sequenceNumber) + data.size();
 
-    std::vector<uint8_t> toSign {};
-    toSign.reserve(size);
+    std::vector<uint8_t> toSign(size);
     if (isEncrypted())
         toSign.insert(toSign.end(), recipient.cbegin(), recipient.cend());
 
@@ -166,7 +163,7 @@ Value::operator std::string() const {
     ss << "id:" << getId();
     if (isMutable()) {
         ss << ",publicKey:" << static_cast<std::string>(publicKey);
-        ss << ",nonce: " << Hex::encode(nonce);
+        ss << ",nonce: " << Hex::encode(nonce.blob());
     }
     if (isEncrypted())
         ss << ",recipient:" << static_cast<std::string>(recipient);

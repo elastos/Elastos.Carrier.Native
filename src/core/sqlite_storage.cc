@@ -216,13 +216,13 @@ Sp<Value> SqliteStorage::getValue(const Id& valueId) {
     sqlite3_bind_int64(pStmt, 2, when);
 
     if (sqlite3_step(pStmt) == SQLITE_ROW) {
-        Id publicKey {};
+        Blob publicKey {};
         Blob privateKey {};
-        Id recipient {};
+        Blob recipient {};
         Blob nonce {};
+        Blob signature {};
+        Blob data {};
         int sequenceNumber {0};
-        std::vector<uint8_t>  signature {};
-        std::vector<uint8_t>  data {};
 
         int cNum = sqlite3_column_count(pStmt);
         for (int i = 0; i < cNum; i++) {
@@ -237,19 +237,19 @@ Sp<Value> SqliteStorage::getValue(const Id& valueId) {
             }
 
             if (std::strcmp(name, "publicKey") == 0 && len > 0) {
-                publicKey = Id(Blob(ptr, len));
+                publicKey = Blob(ptr, len);
             } else if (std::strcmp(name, "privateKey") == 0 && len > 0) {
                 privateKey = Blob(ptr, len);
             } else if (strcmp(name, "recipient") == 0 && len > 0) {
-                recipient = Id(Blob(ptr, len));
+                recipient = Blob(ptr, len);
             } else if (strcmp(name, "nonce") == 0 && len > 0 && len == CryptoBox::Nonce::BYTES) {
                 nonce = Blob(ptr, len);
             } else if (strcmp(name, "signature") == 0 && len > 0) {
-                signature = {Blob(ptr, len)};
+                signature = Blob(ptr, len);
             } else if (strcmp(name, "sequenceNumber") == 0 && cType == SQLITE_INTEGER) {
                 sequenceNumber = sqlite3_column_int(pStmt, i);
             } else if (strcmp(name, "data") == 0 && len > 0) {
-                data = {Blob(ptr, len)};
+                data = Blob(ptr, len);
             }
         }
 
@@ -292,14 +292,14 @@ Sp<Value> SqliteStorage::putValue(const Value& value, int expectedSeq, bool pers
     auto signer = value.getPublicKey().blob();
     sqlite3_bind_blob(pStmt, 3, signer.ptr(), signer.size(), SQLITE_STATIC);
 
-    auto sk = value.getPrivateKey();
-    sqlite3_bind_blob(pStmt, 4, sk.ptr(), sk.size(), SQLITE_STATIC);
+    auto sk = value.getPrivateKey().blob();
+    sqlite3_bind_blob(pStmt, 3, sk.ptr(), sk.size(), SQLITE_STATIC);
 
     auto recipient = value.getRecipient().blob();
     sqlite3_bind_blob(pStmt, 5, recipient.ptr(), recipient.size(), SQLITE_STATIC);
 
-    auto nonce = value.getNonce();
-    sqlite3_bind_blob(pStmt, 6, nonce.ptr(), nonce.size(), SQLITE_STATIC);
+    auto nonce = value.getNonce().blob();
+    sqlite3_bind_blob(pStmt, 5, nonce.ptr(), nonce.size(), SQLITE_STATIC);
 
     auto sig = Blob(value.getSignature());
     sqlite3_bind_blob(pStmt, 7, sig.ptr(), sig.size(), SQLITE_STATIC);
@@ -375,13 +375,13 @@ std::list<Value> SqliteStorage::getPersistentValues(uint64_t lastAnnounceBefore)
     sqlite3_bind_int64(pStmt, 1, lastAnnounceBefore);
 
     while (sqlite3_step(pStmt) == SQLITE_ROW) {
-        Id publicKey {};
+        Blob publicKey {};
         Blob privateKey {};
-        Id recipient {};
+        Blob recipient {};
         Blob nonce {};
+        Blob  signature {};
+        Blob data {};
         int sequenceNumber {0};
-        std::vector<uint8_t>  signature {};
-        std::vector<uint8_t>  data {};
 
         int cNum = sqlite3_column_count(pStmt);
         for (int i = 0; i < cNum; i++) {
@@ -396,19 +396,19 @@ std::list<Value> SqliteStorage::getPersistentValues(uint64_t lastAnnounceBefore)
             }
 
             if (std::strcmp(name, "publicKey") == 0 && len > 0) {
-                publicKey = Id(Blob(ptr, len));
+                publicKey = Blob(ptr, len);
             } else if (std::strcmp(name, "privateKey") == 0 && len > 0) {
                 privateKey = Blob(ptr, len);
             } else if (strcmp(name, "recipient") == 0 && len > 0) {
-                recipient = Id(Blob(ptr, len));
+                recipient = Blob(ptr, len);
             } else if (strcmp(name, "nonce") == 0 && len > 0 && len == CryptoBox::Nonce::BYTES) {
                 nonce = Blob(ptr, len);
             } else if (strcmp(name, "signature") == 0 && len > 0) {
-                signature = {Blob(ptr, len)};
+                signature = Blob(ptr, len);
             } else if (strcmp(name, "sequenceNumber") == 0 && cType == SQLITE_INTEGER) {
                 sequenceNumber = sqlite3_column_int(pStmt, i);
             } else if (strcmp(name, "data") == 0 && len > 0) {
-                data = {Blob(ptr, len)};
+                data = Blob(ptr, len);
             }
         }
 

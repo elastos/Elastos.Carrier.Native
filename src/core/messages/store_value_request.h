@@ -24,8 +24,8 @@
 
 #include <vector>
 
-#include "carrier/blob.h"
 #include "carrier/value.h"
+#include "carrier/crypto_core.h"
 
 #include "message.h"
 
@@ -85,8 +85,8 @@ protected:
 private:
     int token {0};
     Id publicKey {};
-	Id recipient {};
-	Blob nonce {};
+    Id recipient {};
+    CryptoBox::Nonce nonce {};
     int sequenceNumber {-1};
 	int expectedSequenceNumber {-1};
     std::vector<uint8_t> signature {};

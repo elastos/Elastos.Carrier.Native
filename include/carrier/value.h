@@ -38,65 +38,52 @@ class CARRIER_PUBLIC Value {
 public:
     Value() = default;
 
-    static Value of(const std::vector<uint8_t>& data) {
-		return Value({}, {}, {}, {}, -1, {}, data);
-	}
-
-	static Value of(const Id& publicKey, const Blob& nonce, int sequenceNumber, const std::vector<uint8_t>& signature,
-            const std::vector<uint8_t>& data) {
-		return Value(publicKey, {}, {}, nonce, sequenceNumber, signature, data);
-	}
-
-	static Value of(const Id& publicKey, const Id& recipient, const Blob& nonce, int sequenceNumber,
-			const std::vector<uint8_t>& signature, const std::vector<uint8_t>& data) {
-		return Value(publicKey, {}, recipient, nonce, sequenceNumber, signature, data);
-	}
-
-	static Value of(const Id& publicKey, const Blob& privateKey, const Id& recipient, const Blob& nonce,
-			int sequenceNumber, const std::vector<uint8_t>& signature, const std::vector<uint8_t>& data) {
-		return Value(publicKey, privateKey, recipient, nonce, sequenceNumber, signature, data);
-	}
+    static Value of(Blob publicKey, Blob privateKey, Blob recipient, Blob nonce,
+            int sequenceNumber, Blob signature, Blob value) {
+        return Value(publicKey, privateKey, recipient, nonce, sequenceNumber, signature, value);
+    }
 
 	static Value createValue(const std::vector<uint8_t>& data) {
-		return Value({}, {}, {}, {}, -1, {}, data);
+        auto empty = Blob();
+        auto _data = Blob(data);
+        return Value(empty, empty, empty, empty, -1, _data, empty);
 	}
 
 	static Value createSignedValue(const std::vector<uint8_t>& data) {
-		auto keypair = Signature::KeyPair::random();
+		auto keyPair = Signature::KeyPair::random();
 		auto nonce = CryptoBox::Nonce::random();
-
-		return  createSignedValue(keypair, nonce.blob(), 0, data);
+        return  createSignedValue(keyPair, nonce, data);
 	}
 
-	static Value createSignedValue(Signature::KeyPair keypair, const Blob& nonce,
-			const std::vector<uint8_t>& data) {
-		return createSignedValue(keypair, nonce, 0, data);
-	}
+    static Value createSignedValue(const Signature::KeyPair& keyPair, const CryptoBox::Nonce& nonce,
+        const std::vector<uint8_t>& data) {
+        return Value(keyPair, {}, nonce, 0, data);
+    }
 
-	static Value createSignedValue(Signature::KeyPair keypair, const Blob& nonce,
-			int sequenceNumber, const std::vector<uint8_t>& data) {
-		return Value(keypair, {}, nonce, sequenceNumber, data);
-	}
+	static Value createSignedValue(const Signature::KeyPair& keyPair, const CryptoBox::Nonce& nonce,
+        int sequenceNumber, const std::vector<uint8_t>& data) {
+        return Value(keyPair, {}, nonce, sequenceNumber, data);
+    }
 
 	static Value createEncryptedValue(const Id& recipient, const std::vector<uint8_t>& data) {
-		auto keypair = Signature::KeyPair::random();
+		auto keyPair = Signature::KeyPair::random();
 		auto nonce = CryptoBox::Nonce::random();
-
-		return createEncryptedValue(keypair, recipient, nonce.blob(), 0, data);
+		return createEncryptedValue(keyPair, recipient, nonce, data);
 	}
 
-	static Value createEncryptedValue(Signature::KeyPair keypair, const Id& recipient, const Blob& nonce, const std::vector<uint8_t>& data) {
-		return createEncryptedValue(keypair, recipient, nonce, 0, data);
-	}
+    static Value createEncryptedValue(const Signature::KeyPair& keyPair, const Id& recipient,
+        const CryptoBox::Nonce& nonce, const std::vector<uint8_t>& data) {
+        return Value(keyPair, recipient, nonce, 0, data);
+    }
 
-	static Value createEncryptedValue(Signature::KeyPair keypair, const Id& recipient, const Blob& nonce, int sequenceNumber, const std::vector<uint8_t>& data) {
-		if (recipient == Id::MIN_ID)
-			throw std::invalid_argument("Invalid recipient");
+    static Value createEncryptedValue(const Signature::KeyPair& keyPair, const Id& recipient,
+        const CryptoBox::Nonce& nonce, int sequenceNumber, const std::vector<uint8_t>& data) {
+        if (recipient == Id::MIN_ID)
+            throw std::invalid_argument("Invalid recipient");
+        return Value(keyPair, recipient, nonce, sequenceNumber, data);
+    }
 
-		return Value(keypair, recipient, nonce, sequenceNumber, data);
-	}
-
-    static Id calculateId(const Id& publicKey, const Blob& nonce, const std::vector<uint8_t>& data);
+    static Id calculateId(const Id& publicKey, const CryptoBox::Nonce& nonce, const std::vector<uint8_t>& data);
 
     Id getId() const {
         return Value::calculateId(publicKey, nonce, data);
@@ -114,7 +101,7 @@ public:
         return static_cast<bool>(privateKey);
     }
 
-    const Blob& getPrivateKey() const {
+    const Signature::PrivateKey& getPrivateKey() const noexcept {
         return privateKey;
     }
 
@@ -122,7 +109,7 @@ public:
         return sequenceNumber;
     }
 
-    const Blob& getNonce() const  noexcept{
+    const CryptoBox::Nonce& getNonce() const noexcept {
         return nonce;
     }
 
@@ -158,22 +145,19 @@ public:
     operator std::string() const;
 
 private: // internal methods used in friend class.
-    // friend class SqliteStorage;
-    // friend class FindValueResponse;
-    // friend class StoreValueRequest;
-    // friend class Node;
+    Value(const Blob& publicKey, const Blob& privateKey, const Blob& recipient,
+        const Blob& nonce, int sequenceNumber, const Blob& data, const Blob& signature);
 
-    Value(const Id& publicKey, const Blob& privateKey, const Id& recipient, const Blob& nonce,
-        int sequenceNumber, const std::vector<uint8_t>& signature, const std::vector<uint8_t>& data);
-    Value(const Signature::KeyPair& keypair, const Id& recipient, const Blob& nonce,
+    Value(const Signature::KeyPair& keyPair, const Id& recipient, const CryptoBox::Nonce& nonce,
         int sequenceNumber, const std::vector<uint8_t>& data);
 
     std::vector<uint8_t> getSignData() const;
 
     Id publicKey {};
     Id recipient {};
-    Blob privateKey {};
-    Blob nonce {};
+
+    Signature::PrivateKey privateKey {};
+    CryptoBox::Nonce nonce {};
     std::vector<uint8_t> signature {};
     std::vector<uint8_t> data {};
     int32_t sequenceNumber {0};

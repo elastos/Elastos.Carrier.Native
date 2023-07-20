@@ -39,7 +39,7 @@ void StoreValueRequest::setValue(const Value& value) {
 }
 
 Value StoreValueRequest::getValue() const {
-    return Value::of(publicKey, recipient, nonce, sequenceNumber, signature, value);
+    return Value::of(publicKey.blob(), {}, recipient.blob(), nonce.blob(), sequenceNumber, signature, value);
 }
 
 void StoreValueRequest::serializeInternal(nlohmann::json& root) const {
@@ -76,7 +76,7 @@ void StoreValueRequest::parse(const std::string& fieldName, nlohmann::json& obje
         } else if (key == Message::KEY_REQ_RECIPIENT) {
             recipient = object.get<Id>();
         } else if (key == Message::KEY_REQ_NONCE) {
-            nonce = object.get_binary();
+            nonce = Blob(object.get_binary());
         } else if (key == Message::KEY_REQ_SIGNATURE) {
            signature = object.get_binary();
         } else if (key == Message::KEY_REQ_SEQ) {
@@ -102,7 +102,7 @@ void StoreValueRequest::toString(std::stringstream& ss) const {
         if (isEncrypted())
             ss << "\n    Recipient: " << static_cast<std::string>(recipient);
         if (nonce.size() > 0)
-            ss << "\n    Nonce:" << Hex::encode(nonce);
+            ss << "\n    Nonce:" << Hex::encode(nonce.blob());
         if (sequenceNumber >= 0)
             ss << "\n    SequenceNumber: " << std::to_string(sequenceNumber);
         if (!signature.empty())
@@ -123,7 +123,7 @@ void StoreValueRequest::toString(std::stringstream& ss) const {
         if (isEncrypted())
             ss << ",rec:" << static_cast<std::string>(recipient);
         if (nonce.size() > 0)
-            ss << ",n:" << Hex::encode(nonce);
+            ss << ",n:" << Hex::encode(nonce.blob());
         if (sequenceNumber >= 0)
             ss << ",seq:" << std::to_string(sequenceNumber);
         if (!signature.empty())

@@ -41,8 +41,6 @@ public:
 #endif
 };
 
-
-
 inline void checkArgument(bool expression, const std::string& errorMessage) {
     if (!expression) {
         throw std::invalid_argument(errorMessage);
