@@ -79,7 +79,7 @@ void NodeAutomationTester::testAutomaticNode() {
 
     std::cout << "----------" << std::endl;
     std::vector<uint8_t> data({0,1,2,3,4});
-    auto value = Value::of(data);
+    auto value = Value::createValue(data);
     std::cout << "Trying to Sotre Value: " << value.getId() << std::endl;
     auto future1 = node->storeValue(value);
     future1.get();

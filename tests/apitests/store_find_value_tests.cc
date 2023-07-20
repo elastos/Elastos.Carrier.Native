@@ -79,7 +79,7 @@ StoreFindValueTests::setUp() {
 void
 StoreFindValueTests::testValue() {
     auto data = Utils::getRandomData(32);
-    auto val = Value::of(data);
+    auto val = Value::createValue(data);
 
     //node1 to find value: no value
     auto future1 = node1->findValue(val.getId());

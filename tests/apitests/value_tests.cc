@@ -65,7 +65,7 @@ ValueTests::setUp() {
 void
 ValueTests::testValue() {
     auto data = Utils::getRandomData(32);
-    auto val = Value::of(data);
+    auto val = Value::createValue(data);
 
     CPPUNIT_ASSERT(val.isValid());
     CPPUNIT_ASSERT_EQUAL(static_cast<bool>(val.getPublicKey()), false);

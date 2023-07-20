@@ -508,7 +508,6 @@ public:
             clear();
         }
 
-
         static Nonce fromBytes(const Blob& bytes) {
             return Nonce(bytes);
         }

@@ -40,7 +40,7 @@ void FindValueResponse::setValue(const Value& value) {
 }
 
 Value FindValueResponse::getValue() const {
-    return Value::of(publicKey, recipient, nonce, sequenceNumber, signature, value);
+    return Value::of(publicKey.blob(), {}, recipient.blob(), nonce.blob(), sequenceNumber, Blob(signature), Blob(value));
 }
 
 void FindValueResponse::_serialize(nlohmann::json& object) const {
@@ -69,7 +69,7 @@ void FindValueResponse::_parse(const std::string& fieldName, nlohmann::json& obj
     } else if (fieldName == Message::KEY_RES_RECIPIENT) {
         recipient = object.get<Id>();
     } else if (fieldName == Message::KEY_RES_NONCE) {
-        nonce = object.get_binary();
+        nonce = Blob(object.get_binary());
     } else if (fieldName == Message::KEY_RES_SEQ) {
         sequenceNumber = object.get<int>();
     } else if (fieldName == Message::KEY_RES_SIGNATURE) {
@@ -89,7 +89,7 @@ void FindValueResponse::_toString(std::stringstream& ss) const {
         ss << ",rec:" << recipient;
 
     if (nonce.size() > 0)
-        ss << ",n:" << Hex::encode(nonce);
+        ss << ",n:" << Hex::encode(nonce.blob());
 
     if (sequenceNumber >= 0)
         ss << ",seq:" << std::to_string(sequenceNumber);

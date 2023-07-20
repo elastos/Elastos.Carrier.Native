@@ -100,9 +100,10 @@ void DataStorageTests::testPutAndGetValue() {
 
     std::cout << "Writing values...";
     for (int i = 1; i <= 256; i++) {
-        Random::buffer(data);
-        data[0] = (uint8_t)(i % (126 - 32) + 33);
-        auto v = Value::of(data);
+        std::vector<uint8_t> data;
+        data.resize(1024);
+        std::fill(data.begin(), data.end(), (uint8_t)(i % (126 - 32) + 33));
+        auto v = Value::createValue(data);
 
         ids.push_back(v.getId());
         ds->putValue(v);
@@ -151,7 +152,7 @@ void DataStorageTests::testPutAndGetPersistentValue() {
     for (int i = 1; i <= 256; i++) {
         Random::buffer(data);
         data[0] = (uint8_t)(i % (126 - 32) + 33);
-        auto v = Value::of(data);
+        auto v = Value::createValue(data);
 
         ids.push_back(v.getId());
         ds->putValue(v, i % 2 == 0);

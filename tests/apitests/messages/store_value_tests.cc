@@ -33,11 +33,10 @@ CPPUNIT_TEST_SUITE_REGISTRATION(StoreValueTests);
 void StoreValueTests::setUp() {
 }
 
-
 void StoreValueTests::testStoreValueRequestSize() {
     std::vector<uint8_t> data(1025, 'D');
 
-    Value value = Value::of(data);
+    Value value = Value::of({}, {}, {}, {}, 0, {}, {});
 
     auto msg = StoreValueRequest();
     msg.setId(Id::random());
@@ -55,9 +54,10 @@ void StoreValueTests::testStoreSignedValueRequestSize() {
     std::vector<uint8_t> nonce(24, 'N');
     std::vector<uint8_t> sig(64, 'S');
     std::vector<uint8_t> data(1025, 'D');
+    Id pk = Id::random();
     int seq = 0x77654321;
 
-    Value value = Value::of(Id::random(), nonce, seq, sig, data);
+    Value value = Value::of(pk.blob(), {}, {}, nonce, seq, sig, data);
     StoreValueRequest msg = StoreValueRequest();
     msg.setId(Id::random());
     msg.setTxid(0x87654321);
@@ -77,7 +77,8 @@ void StoreValueTests::testStoreEncryptedValueRequestSize() {
     std::vector<uint8_t> data(1025, 'D');
     int seq = 0x77654321;
 
-    Value value = Value::of(Id::random(), Id::random(), nonce, seq, sig, data);
+
+    Value value = Value::of(Id::random().blob(), {}, Id::random().blob(), nonce, seq, sig, data);
     StoreValueRequest msg = StoreValueRequest();
     msg.setId(Id::random());
     msg.setTxid(0x87654321);
@@ -98,7 +99,7 @@ void StoreValueTests::testStoreValueRequest() {
     std::vector<uint8_t> data(1025);
     Random::buffer(data);
 
-    Value value = Value::of(data);
+    Value value = Value::of({}, {}, {}, {}, 0, {}, data);
 
     auto msg = StoreValueRequest();
     msg.setId(nodeId);
@@ -137,7 +138,7 @@ void StoreValueTests::testStoreSignedValueRequest() {
     std::vector<uint8_t> data(1025);
     Random::buffer(data);
 
-    Value value = Value::of(pk, nonce.blob(), seq, sig, data);
+    Value value = Value::of(pk.blob(), {}, {}, nonce.blob(), seq, sig, data);
     auto msg = StoreValueRequest();
     msg.setId(nodeId);
     msg.setTxid(txid);
@@ -177,7 +178,7 @@ void StoreValueTests::testStoreEncryptedValueRequest() {
     std::vector<uint8_t> data(1025);
     Random::buffer(data);
 
-    Value value = Value::of(pk, recipient, nonce.blob(), seq, sig, data);
+    Value value = Value::of(pk.blob(), {}, recipient.blob(), nonce.blob(), seq, sig, data);
     auto msg = StoreValueRequest();
     msg.setId(nodeId);
     msg.setTxid(txid);
