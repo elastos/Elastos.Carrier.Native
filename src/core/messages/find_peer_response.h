@@ -42,6 +42,10 @@ public:
         return peers;
     }
 
+    bool hasPeers() {
+		return !peers.empty();
+	}
+
     int estimateSize() const override;
 
 protected:

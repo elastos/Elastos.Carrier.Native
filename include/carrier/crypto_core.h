@@ -218,6 +218,10 @@ public:
             return KeyPair(key);
         }
 
+        static KeyPair fromPrivateKey(const std::vector<uint8_t>& key) {
+            return KeyPair(key);
+        }
+
         static KeyPair fromSeed(const Blob& seed);
         static KeyPair random();
 

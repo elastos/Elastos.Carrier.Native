@@ -110,9 +110,9 @@ public:
 
     std::future<std::list<Sp<NodeInfo>>> findNode(const Id& id, LookupOption option) const;
     std::future<Sp<Value>> findValue(const Id& id, LookupOption option) const;
-    std::future<bool> storeValue(const Value& value) const;
+    std::future<void> storeValue(const Value& value, bool persistent = false) const;
     std::future<std::list<PeerInfo>> findPeer(const Id &id, int expectedNum, LookupOption option) const;
-    std::future<bool> announcePeer(const PeerInfo& peer) const;
+    std::future<void> announcePeer(const PeerInfo& peer, bool persistent = false) const;
 
     Sp<DataStorage> getStorage() const {
 		return storage;
@@ -132,7 +132,9 @@ public:
     bool verify(const std::vector<uint8_t>& data, const std::vector<uint8_t>& signature) const;
 
     Sp<Value> getValue(const Id& valueId);
-    Sp<PeerInfo> getPeerInfo(const Id& peerId);
+    bool removeValue(const Id& valueId);
+    Sp<PeerInfo> getPeer(const Id& peerId);
+    bool removePeer(const Id& peerId);
 
     std::string toString() const;
 private:
@@ -142,6 +144,10 @@ private:
     void writeIdFile(const std::string&);
     void setStatus(NodeStatus expected, NodeStatus newStatus);
     void setupCryptoBoxesCache();
+
+    void persistentAnnounce();
+    std::future<void> doStoreValue(const Value& value) const;
+    std::future<void> doAnnouncePeer(const PeerInfo& peer) const;
 
     Signature::KeyPair keyPair {};
     CryptoBox::KeyPair encryptionKeyPair {};
@@ -165,6 +171,9 @@ private:
     Sp<RPCServer> server {};
     Sp<CryptoCache> cryptoContexts {};
     Sp<Logger> log {};
+
+    std::list<std::any> scheduledActions {};
+
 };
 
 }

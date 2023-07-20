@@ -31,6 +31,7 @@
 #include <utf8proc.h>
 
 #include "command.h"
+#include "utils/hex.h"
 
 class AnnouncePeerCommand : public Command {
 public:
@@ -38,36 +39,40 @@ public:
 
 protected:
     void setupOptions() override {
+        add_option("-p, --persistent", persistent, "Persistent peer, default is false.");
+        add_option("-k, --private-key", privateKey, "The private key.");
+        add_option("-n, --node-id", nodeId, "The node id.");
+        add_option("-a, --alternative-url", alt, "The alternative URL.");
         add_option("PORT", port, "The peer port to be announce.");
-        add_option("ALT", alt, "The peer alt to be announce.");
-        require_option(3, 3);
+        require_option(1, 5);
     };
 
     void execute() override {
+        Signature::KeyPair keypair {};
+        if (!privateKey.empty())
+			keypair = Signature::KeyPair::fromPrivateKey(Hex::decode(privateKey));
+
+        Id peerNodeId = Command::node->getId();
+        if (!nodeId.empty())
+            peerNodeId = Id(nodeId);
+
         if (port <= 0) {
-            std::cout << "----------------------------------------------" << std::endl
-                      << "Invalid port: " << port << std::endl
-                      << "----------------------------------------------" << std::endl;
-            return;
-        }
+			std::cout << "Invalid port: " << std::to_string(port) << std::endl;
+			return;
+		}
 
+        PeerInfo peer = PeerInfo::create(keypair, peerNodeId, Command::node->getId(), port, alt);
 
-        const char* alternative = (const char *)utf8proc_NFC((unsigned char *)(alt.c_str()));
-
-        PeerInfo peer = PeerInfo::create(Command::node->getId(), port, alternative);
-
-        auto future = node->announcePeer(peer);
-        auto result = future.get();
-        std::cout << "----------------------------------------------" << std::endl;
-        if (result)
-            std::cout << "Peer [" << peer.getId().toBase58String() << "] announced." << std::endl;
-        else
-            std::cout << "Peer [" << peer.getId().toBase58String() << "] announce failed." << std::endl;
-        std::cout << "----------------------------------------------" << port << std::endl;
+        auto future = node->announcePeer(peer, persistent);
+        future.get();
+        std::cout << "Peer " + peer.getId().toBase58String() << " announced with private key " <<
+				Hex::encode(peer.getPrivateKey());
     };
 
 private:
-    std::string name {};
-    uint16_t port {0};
+    bool persistent {false};
+    std::string privateKey {};
+    std::string nodeId {};
     std::string alt {};
+    uint16_t port {0};
 };

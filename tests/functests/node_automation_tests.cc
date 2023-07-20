@@ -82,8 +82,7 @@ void NodeAutomationTester::testAutomaticNode() {
     auto value = Value::of(data);
     std::cout << "Trying to Sotre Value: " << value.getId() << std::endl;
     auto future1 = node->storeValue(value);
-    auto result = future1.get();
-    CPPUNIT_ASSERT(result);
+    future1.get();
     std::cout << "Store value succeeeed." << std::endl;
 
     std::cout << "----------" << std::endl;
@@ -105,8 +104,7 @@ void NodeAutomationTester::testAutomaticNode() {
     PeerInfo peer = PeerInfo::of(peerId, nodeId, origin, 42244, "automation", sig);
 
     auto future3 = node->announcePeer(peer);
-    auto result2 = future3.get();
-    CPPUNIT_ASSERT(result2);
+    future3.get();
     std::cout << "Announce peer succeeeed." << std::endl;
 
     std::cout << "----------" << std::endl;

@@ -83,6 +83,7 @@ struct Constants {
     static const int        TOKEN_TIMEOUT;
     static const int        MAX_PEER_AGE;
     static const int        MAX_VALUE_AGE;
+    static const int        RE_ANNOUNCE_INTERVAL;
 
     ///////////////////////////////////////////////////////////////////////////
     // Node software name and version

@@ -21,6 +21,7 @@ include_directories(
     ../common
     ../../include
     ../../src
+    ../../src/core
     ${CARRIER_INT_DIST_DIR}/include)
 
 list(APPEND SHELL_SOURCES

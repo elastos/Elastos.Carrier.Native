@@ -34,7 +34,7 @@ public:
 protected:
     void execute() override {
         auto storage = node->getStorage();
-        auto peerIds = storage->listPeerId();
+        auto peerIds = storage->getAllPeers();
         std::cout << "----------------------------------------------" << std::endl;
         if (!peerIds.empty()) {
             for (auto& id : peerIds)

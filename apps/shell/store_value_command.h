@@ -35,15 +35,19 @@ public:
 
 protected:
     void setupOptions() override {
+        add_flag("-p, --persistent", persistent, "Persistent value, default is false.");
         add_flag("-m, --mutable", bMutable, "Mutable value, default is immutable value, no effect on update mode.");
-        add_option("-r, --recipient", recipient, "The recipient id, no effect on imuutable values or update mode.");
         add_option("-u, --update-value", target, "Existing value id to be update.");
+        add_option("-r, --recipient", recipient, "The recipient id, no effect on immutable values or update mode");
         add_option("VALUES", text, "The value text.");
-        require_option(1, 4);
+        require_option(1, 5);
     };
 
     void execute() override {
         Value value {};
+
+        if (!recipient.empty())
+			bMutable = true;
 
         std::vector<uint8_t> data(text.begin(), text.end());
         if (target.empty()) {
@@ -63,19 +67,14 @@ protected:
             value = value.update(data);
         }
 
-        auto future = node->storeValue(value);
-        auto result = future.get();
-        std::cout << "----------------------------------------------" << std::endl;
-        if (result)
-            std::cout << "Value [" << value.getId().toBase58String() << "] stored." << std::endl;
-        else
-            std::cout << "Value [" << value.getId().toBase58String() << "] store failed." << std::endl;
-
-        std::cout << "----------------------------------------------" << std::endl;
+        auto future = node->storeValue(value, persistent);
+        future.get();
+        std::cout << "Value " << value.getId().toBase58String() << " stored.";
     };
 
 private:
-    bool bMutable = false;
+    bool persistent {false};
+    bool bMutable {false};
     std::string recipient {};
     std::string target {};
     std::string text {};

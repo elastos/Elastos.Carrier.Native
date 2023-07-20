@@ -92,8 +92,7 @@ void NodeApiTester::testSelfNodes() {
     auto value = Value::of(blob);
     std::cout << "Trying to Sotre Value " << std::endl;
     auto future1 = node1->storeValue(value);
-    auto result = future1.get();
-    CPPUNIT_ASSERT_MESSAGE("Store value failed!", result);
+    future1.get();
     std::cout << "Store value succeeeed." << std::endl;
 #endif
 
@@ -115,8 +114,7 @@ void NodeApiTester::testSelfNodes() {
     auto peer = PeerInfo::create(node1->getId(), 42244);
 
     auto future3 = node1->announcePeer(peer);
-    auto result2 = future3.get();
-    CPPUNIT_ASSERT_MESSAGE("Announce peer failed!", result2);
+    future3.get();
     std::cout << "Announce peer succeeeed." << std::endl;
 #endif
 

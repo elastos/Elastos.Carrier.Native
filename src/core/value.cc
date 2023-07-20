@@ -143,6 +143,9 @@ bool Value::isValid() const {
 }
 
 Value Value::update(const std::vector<uint8_t>& data) {
+    if (!isMutable())
+		throw  illegal_state("Immutable value " + getId().toBase58String());
+
     if (!hasPrivateKey())
         throw illegal_state("Not the owner of the value " + getId().toBase58String());
 

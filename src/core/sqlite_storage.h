@@ -43,15 +43,20 @@ public:
     void close() override;
 
     Sp<Value> getValue(const Id& valueId) override;
-    Sp<Value> putValue(const Value& value, int expectedSeq) override;
-    Sp<Value> putValue(const Value& value) override;
-    std::list<Id> listValueId() override;
+    bool removeValue(const Id& valueId) override;
+    Sp<Value> putValue(const Value& value, int expectedSeq = -1, bool persistent = false, bool updateLastAnnounce = false) override;
+    void updateValueLastAnnounce(const Id& valueId) override;
+    std::list<Value> getPersistentValues(uint64_t lastAnnounceBefore) override;
+    std::list<Id> getAllValues() override;
 
     std::list<PeerInfo> getPeer(const Id& peerId, int maxPeers) override;
     Sp<PeerInfo> getPeer(const Id& peerId, const Id& origin) override;
+    bool removePeer(const Id& peerId, const Id& origin) override;
     void putPeer(const std::list<PeerInfo>& peers) override;
-    void putPeer(const PeerInfo& peer) override;
-    std::list<Id> listPeerId() override;
+    void putPeer(const PeerInfo& peer, bool persistent = false, bool updateLastAnnounce = false) override;
+    void updatePeerLastAnnounce(const Id& peerId, const Id& origin) override;
+    std::list<PeerInfo> getPersistentPeers(uint64_t lastAnnounceBefore) override;
+    std::list<Id> getAllPeers() override;
 
 private:
     void init(const std::string& path, Scheduler& scheduler);
