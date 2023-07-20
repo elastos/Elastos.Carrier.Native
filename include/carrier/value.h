@@ -90,7 +90,7 @@ public:
 	}
 
 	static Value createEncryptedValue(Signature::KeyPair keypair, const Id& recipient, const Blob& nonce, int sequenceNumber, const std::vector<uint8_t>& data) {
-		if (recipient == Id::zero())
+		if (recipient == Id::MIN_I)
 			throw std::invalid_argument("Invalid recipient");
 
 		return Value(keypair, recipient, nonce, sequenceNumber, data);

@@ -44,10 +44,10 @@ Value FindValueResponse::getValue() const {
 }
 
 void FindValueResponse::_serialize(nlohmann::json& object) const {
-    if (publicKey != Id::zero())
+    if (publicKey != Id::MIN_ID)
         object[Message::KEY_RES_PUBLICKEY] = publicKey;
 
-    if (recipient != Id::zero())
+    if (recipient != Id::MIN_ID)
         object[Message::KEY_RES_RECIPIENT] = recipient;
 
     if (nonce.size() > 0)
@@ -82,10 +82,10 @@ void FindValueResponse::_parse(const std::string& fieldName, nlohmann::json& obj
 }
 
 void FindValueResponse::_toString(std::stringstream& ss) const {
-    if (publicKey != Id::zero())
+    if (publicKey != Id::MIN_ID)
         ss << ",k:" << publicKey;
 
-    if (recipient != Id::zero())
+    if (recipient != Id::MIN_ID)
         ss << ",rec:" << recipient;
 
     if (nonce.size() > 0)

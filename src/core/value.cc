@@ -33,7 +33,7 @@ namespace carrier {
 
 Value::Value(const Id& publicKey, const Blob& privateKey, const Id& recipient, const Blob& nonce,
         int sequenceNumber, const std::vector<uint8_t>& signature, const std::vector<uint8_t>& data) {
-    if (publicKey != Id::zero()) {
+    if (publicKey != Id::MIN_ID) {
         if (privateKey && privateKey.size() != Signature::PrivateKey::BYTES)
             throw std::invalid_argument("Invalid private key");
 
@@ -50,7 +50,7 @@ Value::Value(const Id& publicKey, const Blob& privateKey, const Id& recipient, c
     if (data.empty())
         throw std::invalid_argument("Invalid data");
 
-    if (publicKey != Id::zero()) {
+    if (publicKey != Id::MIN_ID) {
         this->publicKey = publicKey;
         this->privateKey = privateKey;
         this->recipient = recipient;

@@ -61,7 +61,7 @@ public:
 	}
 
 	PeerInfo getPeer() {
-		if (nodeId == Id::zero())
+		if (nodeId == Id::MIN_ID)
 			nodeId = getId();
 
 		return PeerInfo::of(peerId, nodeId, getId(), port, alternativeURL, signature);

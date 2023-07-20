@@ -310,7 +310,7 @@ void Node::getNodes(const Id& id, Sp<NodeInfo> node, std::function<void(std::lis
 
 std::future<std::list<Sp<NodeInfo>>> Node::findNode(const Id& id, LookupOption option) const {
     checkState(isRunning(), "Node not running");
-	checkArgument(id != Id::zero(), "Invalid peer id");
+	checkArgument(id != Id::MIN_ID, "Invalid peer id");
 
     auto promise = std::make_shared<std::promise<std::list<Sp<NodeInfo>>>>();
     auto results = std::make_shared<std::list<Sp<NodeInfo>>>();
@@ -354,7 +354,7 @@ std::future<std::list<Sp<NodeInfo>>> Node::findNode(const Id& id, LookupOption o
 
 std::future<Sp<Value>> Node::findValue(const Id& id, LookupOption option) const {
     checkState(isRunning(), "Node not running");
-	checkArgument(id != Id::zero(), "Invalid peer id");
+	checkArgument(id != Id::MIN_ID, "Invalid peer id");
 
     auto promise = std::make_shared<std::promise<Sp<Value>>>();
     auto valuePtr = std::make_shared<Sp<Value>>();
@@ -431,7 +431,7 @@ std::future<bool> Node::storeValue(const Value& value) const {
 
 std::future<std::list<PeerInfo>> Node::findPeer(const Id& id, int expected, LookupOption option) const {
     checkState(isRunning(), "Node not running");
-	checkArgument(id != Id::zero(), "Invalid peer id");
+	checkArgument(id != Id::MIN_ID, "Invalid peer id");
 
     auto promise = std::make_shared<std::promise<std::list<PeerInfo>>>();
     auto dedup_result = std::make_shared<std::set<PeerInfo>>();
@@ -515,13 +515,13 @@ std::future<bool> Node::announcePeer(const PeerInfo& peer) const {
 }
 
 Sp<Value> Node::getValue(const Id& valueId) {
-    checkArgument(valueId != Id::zero(), "Invalid value id");
+    checkArgument(valueId != Id::MIN_ID, "Invalid value id");
 
 	return getStorage()->getValue(valueId);
 }
 
 Sp<PeerInfo> Node::getPeerInfo(const Id& peerId) {
-    checkArgument(peerId != Id::zero(), "Invalid peer id");
+    checkArgument(peerId != Id::MIN_ID, "Invalid peer id");
 
 	return getStorage()->getPeer(peerId, this->getId());
 }
