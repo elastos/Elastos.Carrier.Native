@@ -68,15 +68,20 @@ void PeerLookup::callResponsed(RPCCall* call, Sp<Message> message) {
     LookupTask::callResponsed(call, message);
 
     auto response = std::static_pointer_cast<FindPeerResponse>(message);
-    bool hasPeers {false };
 
-    auto peers = response->getPeers();
-    if (!peers.empty()) {
-        resultHandler(peers, this);    // peers is spliced in this call.
-        hasPeers = true;
+    if (response->hasPeers()) {
+        auto peers = response->getPeers();
+        for (auto peer : peers) {
+            if (!peer.isValid()) {
+                log->error("Response include invalid peer, signature mismatch");
+                return; // Ignore
+            }
+        }
+
+        resultHandler(peers, this);
+
     }
-
-    if (!hasPeers) {
+    else {
         const auto& nodes = response->getNodes(getDHT().getType());
         if (!nodes.empty())
             addCandidates(nodes);

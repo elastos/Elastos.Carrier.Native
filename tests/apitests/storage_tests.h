@@ -30,9 +30,11 @@ namespace test {
 class DataStorageTests : public CppUnit::TestFixture {
     CPPUNIT_TEST_SUITE(DataStorageTests);
     CPPUNIT_TEST(testPutAndGetValue);
+    CPPUNIT_TEST(testPutAndGetPersistentValue);
     CPPUNIT_TEST(testUpdateSignedValue);
     CPPUNIT_TEST(testUpdateEncryptedValue);
     CPPUNIT_TEST(testPutAndGetPeer);
+    CPPUNIT_TEST(testPutAndGetPersistentPeer);
     CPPUNIT_TEST_SUITE_END();
 
  public:
@@ -40,9 +42,11 @@ class DataStorageTests : public CppUnit::TestFixture {
     void tearDown();
 
     void testPutAndGetValue();
+    void testPutAndGetPersistentValue();
     void testUpdateSignedValue();
     void testUpdateEncryptedValue();
     void testPutAndGetPeer();
+    void testPutAndGetPersistentPeer();
 
 private:
     elastos::carrier::Scheduler scheduler {};

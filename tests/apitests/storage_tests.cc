@@ -29,6 +29,7 @@
 #include <condition_variable>
 
 #include <carrier.h>
+#include "utils/list.h"
 
 #include "sqlite_storage.h"
 #include "data_storage.h"
@@ -95,16 +96,16 @@ void DataStorageTests::testPutAndGetValue() {
     auto ds = SqliteStorage::open(path3, scheduler);
 
     std::list<Id> ids {};
+    std::vector<uint8_t> data(1024);
 
     std::cout << "Writing values...";
     for (int i = 1; i <= 256; i++) {
-        std::vector<uint8_t> data;
-        data.resize(1024);
-        std::fill(data.begin(), data.end(), (uint8_t)(i % (126 - 32) + 33));
+        Random::buffer(data);
+        data[0] = (uint8_t)(i % (126 - 32) + 33);
         auto v = Value::of(data);
 
         ids.push_back(v.getId());
-        ds->putValue(v, -1);
+        ds->putValue(v);
 
         std::cout << ".";
         if (i % 16 == 0)
@@ -120,6 +121,80 @@ void DataStorageTests::testPutAndGetValue() {
 
         CPPUNIT_ASSERT(1024 == v->getData().size());
         CPPUNIT_ASSERT((uint8_t)(i % (126 - 32) + 33) == v->getData()[0]);
+
+        auto removed = ds->removeValue(id);
+		CPPUNIT_ASSERT(removed);
+
+        v = ds->getValue(id);
+        CPPUNIT_ASSERT(v);
+
+        removed = ds->removeValue(id);
+        CPPUNIT_ASSERT(!removed);
+
+        std::cout << ".";
+        if (i % 16 == 0)
+            std::cout << std::endl;
+
+        ids.pop_front();
+    }
+
+    ds->close();
+}
+
+void DataStorageTests::testPutAndGetPersistentValue() {
+    auto ds = SqliteStorage::open(path3, scheduler);
+
+    std::list<Id> ids {};
+    std::vector<uint8_t> data(1024);
+
+    std::cout << "Writing values...";
+    for (int i = 1; i <= 256; i++) {
+        Random::buffer(data);
+        data[0] = (uint8_t)(i % (126 - 32) + 33);
+        auto v = Value::of(data);
+
+        ids.push_back(v.getId());
+        ds->putValue(v, i % 2 == 0);
+
+        std::cout << ".";
+        if (i % 16 == 0)
+            std::cout << std::endl;
+    }
+
+    auto ts = currentTimeMillis();
+    auto values = ds->getPersistentValues(ts);
+    CPPUNIT_ASSERT_EQUAL((size_t)128, values.size());
+
+	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+	std::cout << "\nUpdate the last announced for values..." << std::endl;
+    for (int i = 1; i <= 128; i++) {
+        Id id = list_get(values, i - 1).getId();
+
+        if (i % 2 == 0)
+            ds->updateValueLastAnnounce(id);
+    }
+
+    values = ds->getPersistentValues(ts);
+    CPPUNIT_ASSERT_EQUAL((size_t)64, values.size());
+
+    std::cout << "\nReading values...";
+    for (int i = 1; i <= 256; i++) {
+        auto id = ids.front();
+        auto v = ds->getValue(id);
+        CPPUNIT_ASSERT(v != nullptr);
+
+        CPPUNIT_ASSERT(1024 == v->getData().size());
+        CPPUNIT_ASSERT((uint8_t)(i % (126 - 32) + 33) == v->getData()[0]);
+
+        auto removed = ds->removeValue(id);
+		CPPUNIT_ASSERT(removed);
+
+        v = ds->getValue(id);
+        CPPUNIT_ASSERT(v);
+
+        removed = ds->removeValue(id);
+        CPPUNIT_ASSERT(!removed);
 
         std::cout << ".";
         if (i % 16 == 0)
@@ -140,8 +215,7 @@ void DataStorageTests::testUpdateSignedValue() {
 
     auto signedValue = Value::createSignedValue(data1);
     auto p1 = node1->storeValue(signedValue);
-    auto result1 = p1.get();
-    CPPUNIT_ASSERT_EQUAL(true, result1);
+    p1.get();
 
     auto valueId = signedValue.getId();
     std::cout << valueId << std::endl;
@@ -233,8 +307,9 @@ void DataStorageTests::testUpdateEncryptedValue() {
 void DataStorageTests::testPutAndGetPeer() {
     auto ds = SqliteStorage::open(path3, scheduler);
 
-    std::list<Id> ids {};
+    std::map<Id, std::list<PeerInfo>> allPeers {};
 
+    std::list<Id> ids {};
     int basePort = 8000;
 
     std::cout << "Writing peers...";
@@ -248,6 +323,9 @@ void DataStorageTests::testPutAndGetPeer() {
             auto pi = PeerInfo::of(Id::random(), Id::random(), basePort + i, "alt:" + std::to_string(i), sig);
             peers.push_back(pi);
         }
+
+        allPeers.emplace(id, peers);
+
         ds->putPeer(peers);
         std::cout << ".";
         if (i % 16 == 0)
@@ -255,20 +333,115 @@ void DataStorageTests::testPutAndGetPeer() {
     }
 
     std::cout << std::endl << "Reading peers...";
-    for (int i = 1; i <= 64; i++) {
-        auto id = ids.front();
+    int total = 0;
+    for (auto entry : allPeers) {
+        total++;
+        auto id = entry.first;
+        auto peers = entry.second;
 
-        // all
-        auto ps = ds->getPeer(id, 2 * i + 16);
-        CPPUNIT_ASSERT(2 * i == ps.size());
-        for (auto pi: ps)
-            CPPUNIT_ASSERT(basePort + i == pi.getPort());
+        //all
+        auto ps = ds->getPeer(id, peers.size() + 8);
+        CPPUNIT_ASSERT_EQUAL(peers.size(), ps.size());
+
+        auto c = [&](const PeerInfo& a, const PeerInfo& b) {
+            int r = a.getNodeId().compareTo(b.getNodeId());
+            if (r != 0)
+                return r;
+
+            return a.getOrigin().compareTo(b.getOrigin());
+        };
+
+        peers.sort(c);
+        ps.sort(c);
+        for (int i = 0; i < peers.size(); i++) {
+            CPPUNIT_ASSERT_EQUAL(list_get(peers, i), list_get(ps, i));
+        }
 
         // limited
-        ps = ds->getPeer(id, 32);
-        CPPUNIT_ASSERT(std::min(2 * i, 64) == ps.size());
-        for (auto pi : ps)
-            CPPUNIT_ASSERT(basePort + i == pi.getPort());
+        ps = ds->getPeer(id, 16);
+		CPPUNIT_ASSERT_EQUAL(std::min<size_t>(16, peers.size()), ps.size());
+        for (PeerInfo pi : ps)
+            CPPUNIT_ASSERT_EQUAL(list_get(peers, 0).getPort(), pi.getPort());
+
+        for (auto p : peers) {
+            auto pi = ds->getPeer(p.getId(), p.getOrigin());
+            CPPUNIT_ASSERT(pi != nullptr);
+            CPPUNIT_ASSERT_EQUAL(p, *pi);
+
+            auto removed = ds->removePeer(p.getId(), p.getOrigin());
+            CPPUNIT_ASSERT(removed);
+
+            pi = ds->getPeer(p.getId(), p.getOrigin());
+            CPPUNIT_ASSERT(pi);
+
+            removed = ds->removePeer(p.getId(), p.getOrigin());
+            CPPUNIT_ASSERT(!removed);
+        }
+
+        std::cout << ".";
+        if (total % 16 == 0)
+            std::cout << std::endl;
+
+        ids.pop_front();
+    }
+
+    ds->close();
+}
+
+void DataStorageTests::testPutAndGetPersistentPeer() {
+	auto ds = SqliteStorage::open(path3, scheduler);
+
+    std::list<Id> ids {};
+    auto nodeId = Id::random();
+    uint16_t basePort = 8000;
+	std::vector<uint8_t> sig(64);
+
+    std::cout << "Writing peers...";
+    for (int i = 1; i <= 256; i++) {
+        Random::buffer(sig);
+        auto pi = PeerInfo::of(Id::random(), nodeId, basePort + i, sig);
+
+        ids.push_back(pi.getId());
+        ds->putPeer(pi, i % 2 == 0);
+
+        std::cout << ".";
+        if (i % 16 == 0)
+            std::cout << std::endl;
+    }
+
+    auto ts = currentTimeMillis();
+    std::list<PeerInfo> peers = ds->getPersistentPeers(ts);
+    CPPUNIT_ASSERT_EQUAL((size_t)128, peers.size());
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+    std::cout << "\nUpdate the last announced for peers...";
+    for (int i = 1; i <= 128; i++) {
+        Id id = list_get(peers, i - 1).getId();
+
+        if (i % 2 == 0)
+            ds->updatePeerLastAnnounce(id, nodeId);
+    }
+
+    peers = ds->getPersistentPeers(ts);
+    CPPUNIT_ASSERT_EQUAL((size_t)64, peers.size());
+
+    std::cout << "\nReading values...";
+    for (int i = 1; i <= 256; i++) {
+        auto id = ids.front();
+        auto p = ds->getPeer(id, nodeId);
+        CPPUNIT_ASSERT(p != nullptr);
+
+        CPPUNIT_ASSERT_EQUAL(basePort,  p->getPort());
+
+        auto removed = ds->removePeer(id, nodeId);
+		CPPUNIT_ASSERT(removed);
+
+        p = ds->getPeer(id, nodeId);
+        CPPUNIT_ASSERT(p);
+
+        removed = ds->removePeer(id, nodeId);
+        CPPUNIT_ASSERT(!removed);
 
         std::cout << ".";
         if (i % 16 == 0)
@@ -279,4 +452,5 @@ void DataStorageTests::testPutAndGetPeer() {
 
     ds->close();
 }
+
 }  // namespace test

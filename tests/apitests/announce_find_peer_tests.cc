@@ -114,20 +114,17 @@ AnnounceFindPeerTests::testPeer() {
         int val = 3 * i;
         auto peer = PeerInfo::of(peerId1, node1->getId(), ports1[val], std::to_string(val), std::vector<uint8_t>(64, val));
         auto future1 = node1->announcePeer(peer);
-        auto result1 = future1.get();
-        CPPUNIT_ASSERT(result1);
+        future1.get();
 
         val++;
         peer = PeerInfo::of(peerId1, node2->getId(), ports1[val], std::to_string(val), std::vector<uint8_t>(64, val));
         auto future2 = node2->announcePeer(peer);
-        auto result2 = future2.get();
-        CPPUNIT_ASSERT(result2);
+        future2.get();
 
         val++;
         peer = PeerInfo::of(peerId1, node3->getId(), ports1[val], std::to_string(val), std::vector<uint8_t>(64, val));
         auto future3 = node3->announcePeer(peer);
-        auto result3 = future3.get();
-        CPPUNIT_ASSERT(result3);
+        future3.get();
 #if 0
         val = 3 * i;
         auto data1 = Utils::getSignData(node1->getId(), proxyId, ports2[val], std::to_string(val));

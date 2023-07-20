@@ -41,6 +41,10 @@ public:
 
     void setValue(const Value& value);
 
+    bool hasValue() {
+		return !value.empty();
+	}
+
     Value getValue() const;
 
     int estimateSize() const override {

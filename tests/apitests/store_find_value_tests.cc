@@ -93,8 +93,7 @@ StoreFindValueTests::testValue() {
 
     //node1 to store value: success
     auto future3 = node1->storeValue(val);
-    auto result = future3.get();
-    CPPUNIT_ASSERT(result);
+    future3.get();
 
     //node1 to find value: has value
     auto future4 = node1->findValue(val.getId());
@@ -130,8 +129,7 @@ StoreFindValueTests::testSignedValue() {
 
     //node1 to store value: success
     auto future3 = node1->storeValue(val);
-    auto result = future3.get();
-    CPPUNIT_ASSERT(result);
+    future3.get();
 
     //node2 to find value with default mode: has value
     auto future4 = node2->findValue(val.getId());
@@ -145,8 +143,7 @@ StoreFindValueTests::testSignedValue() {
     auto val5 = val.update(data2);
 
     auto future6 = node1->storeValue(val5);
-    auto result2 = future6.get();
-    CPPUNIT_ASSERT_EQUAL(true, result2);
+    future6.get();
 
     //node2 to find new value
     auto future7 = node2->findValue(valueId);
@@ -167,8 +164,7 @@ StoreFindValueTests::testEncryptedValue() {
 
     //node1 store value: success
     auto future1 = node1->storeValue(val);
-    auto result1 = future1.get();
-    CPPUNIT_ASSERT_EQUAL(true, result1);
+    future1.get();
 
     //node1 to find value: has value
     auto future2 = node1->findValue(valueId);
@@ -194,8 +190,7 @@ StoreFindValueTests::testEncryptedValue() {
     CPPUNIT_ASSERT(val5.isValid());
 
     auto future6 = node1->storeValue(val5);
-    auto result2 = future6.get();
-    CPPUNIT_ASSERT_EQUAL(true, result2);
+    future6.get();
 
     //node1 to find new value
     auto future7 = node1->findValue(valueId);

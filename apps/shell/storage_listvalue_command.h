@@ -34,7 +34,7 @@ public:
 protected:
     void execute() override {
         auto storage = node->getStorage();
-        auto valueIds = storage->listValueId();
+        auto valueIds = storage->getAllValues();
 
         std::cout << "----------------------------------------------" << std::endl;
         if (!valueIds.empty()) {

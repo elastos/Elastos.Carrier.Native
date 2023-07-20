@@ -31,22 +31,33 @@
 namespace elastos {
 namespace carrier {
 
+
 class DataStorage {
 public:
     virtual Sp<Value> getValue(const Id& valueId) = 0;
-
-    virtual Sp<Value> putValue(const Value& value, int expectedSeq) = 0;
-    virtual Sp<Value> putValue(const Value& value) = 0;
-
-    virtual std::list<Id> listValueId() = 0;
+    virtual bool removeValue(const Id& valueId) = 0;
+    virtual Sp<Value> putValue(const Value& value, int expectedSeq = -1, bool persistent = false, bool updateLastAnnounce = false) = 0;
+    Sp<Value> putValue(const Value& value, bool persistent) {
+        return putValue(value, -1, persistent, true);
+    }
+    virtual void updateValueLastAnnounce(const Id& valueId) = 0;
+    virtual std::list<Value> getPersistentValues(uint64_t lastAnnounceBefore) = 0;
+    virtual std::list<Id> getAllValues() = 0;
 
     virtual std::list<PeerInfo> getPeer(const Id& peerId, int maxPeers) = 0;
     virtual Sp<PeerInfo> getPeer(const Id& peerId, const Id& origin) = 0;
-
+    virtual bool removePeer(const Id& peerId, const Id& origin) = 0;
     virtual void putPeer(const std::list<PeerInfo>& peers) = 0;
-    virtual void putPeer(const PeerInfo& peer) = 0;
-
-    virtual std::list<Id> listPeerId() = 0;
+    virtual void putPeer(const PeerInfo& peer, bool persistent, bool updateLastAnnounce) = 0;
+    void putPeer(const PeerInfo& peer, bool persistent) {
+        return putPeer(peer, persistent, true);
+    }
+    void putPeer(const PeerInfo& peer) {
+        return putPeer(peer, false, false);
+    }
+    virtual void updatePeerLastAnnounce(const Id& peerId, const Id& origin) = 0;
+    virtual std::list<PeerInfo> getPersistentPeers(uint64_t lastAnnounceBefore) = 0;
+    virtual std::list<Id> getAllPeers() = 0;
 
     virtual void close() = 0;
 };

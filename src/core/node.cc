@@ -252,6 +252,10 @@ void Node::start() {
         numDHTs++;
     }
 
+    auto job = scheduler.add([&]() {
+        persistentAnnounce();
+    }, 60000, Constants::RE_ANNOUNCE_INTERVAL);
+    scheduledActions.emplace_back(job);
 }
 
 void Node::stop() {
@@ -259,6 +263,12 @@ void Node::stop() {
         return;
 
     log->info("Carrier Kademlia node {} is stopping...", static_cast<std::string>(id));
+
+    for (auto any : scheduledActions) {
+        auto job = std::any_cast<Sp<Scheduler::Job>>(any);
+        job->cancel();
+    }
+    scheduledActions.clear();
 
     if (server != nullptr) {
         server->stop();
@@ -285,6 +295,35 @@ void Node::stop() {
 
     setStatus(NodeStatus::Running, NodeStatus::Stopped);
     log->info("Carrier Kademlia node {} stopped", static_cast<std::string>(id));
+}
+
+void Node::persistentAnnounce() {
+    log->info("Re-announce the persistent values and peers...");
+
+    std::list<std::future<void>> futures {};
+
+    auto ts = currentTimeMillis() - Constants::MAX_VALUE_AGE +
+            Constants::RE_ANNOUNCE_INTERVAL * 2;
+    std::list<Value> vs = storage->getPersistentValues(ts);
+    for (auto v : vs) {
+        log->debug("Re-announce the value: {}", v.getId());
+        storage->updateValueLastAnnounce(v.getId());
+        futures.emplace_back(doStoreValue(v));
+    }
+
+    ts = currentTimeMillis() - Constants::MAX_PEER_AGE +
+            Constants::RE_ANNOUNCE_INTERVAL * 2;
+
+    std::list<PeerInfo> ps = storage->getPersistentPeers(ts);
+    for (auto p : ps) {
+        log->debug("Re-announce the peer: {}", p.getId());
+        storage->updatePeerLastAnnounce(p.getId(), p.getOrigin());
+        futures.emplace_back(doAnnouncePeer(p));
+    }
+
+    for (std::list<std::future<void>>::iterator it = futures.begin(); it != futures.end(); it++) {
+        (*it).get();
+    }
 }
 
 #ifdef CARRIER_CRAWLER
@@ -396,7 +435,7 @@ std::future<Sp<Value>> Node::findValue(const Id& id, LookupOption option) const 
     return promise->get_future();
 }
 
-std::future<bool> Node::storeValue(const Value& value) const {
+std::future<void> Node::storeValue(const Value& value, bool persistent) const {
     checkState(isRunning(), "Node not running");
     // checkArgument(value != nullptr, "Invalid value: null");
     checkArgument(value.isValid(), "Invalid value");
@@ -404,21 +443,25 @@ std::future<bool> Node::storeValue(const Value& value) const {
     if (!isRunning())
         throw std::runtime_error("Node is not running");
 
-    auto promise = std::make_shared<std::promise<bool>>();
-
+    auto promise = std::promise<void>();
     try {
-        getStorage()->putValue(value);
+        getStorage()->putValue(value, persistent);
     } catch (std::exception& ex) {
         log->error("Perisist value in local storage failed {}", ex.what());
-        promise->set_exception(std::current_exception());
-        return promise->get_future();
+        promise.set_exception(std::current_exception());
+        return promise.get_future();
     }
 
+    return doStoreValue(value);
+}
+
+std::future<void> Node::doStoreValue(const Value& value) const {
+    auto promise = std::make_shared<std::promise<void>>();
     auto completion = std::make_shared<std::atomic<int>>(0);
     auto completeHandler = [=](std::list<Sp<NodeInfo>> nl) {
         (*completion)++;
         if (*completion >= numDHTs)
-            promise->set_value(true);
+            promise->set_value();
     };
 
     if (dht4 != nullptr)
@@ -483,27 +526,33 @@ std::future<std::list<PeerInfo>> Node::findPeer(const Id& id, int expected, Look
     return promise->get_future();
 }
 
-std::future<bool> Node::announcePeer(const PeerInfo& peer) const {
+std::future<void> Node::announcePeer(const PeerInfo& peer, bool persistent) const {
     checkState(isRunning(), "Node not running");
     // checkArgument(peer != nullptr, "Invalid peer: null");
     checkArgument(!peer.getOrigin() == getId(), "Invaid peer: not belongs to current node");
     checkArgument(peer.isValid(), "Invalid peer");
 
-    auto promise = std::make_shared<std::promise<bool>>();
+    auto promise = std::promise<void>();
 
     try {
-        getStorage()->putPeer(peer);
+        getStorage()->putPeer(peer, persistent);
     } catch (std::exception& ex) {
         log->error("Perisist peer in local storage failed {}", ex.what());
-        promise->set_exception(std::current_exception());
-        return promise->get_future();
+        promise.set_exception(std::current_exception());
+        return promise.get_future();
     }
+
+    return doAnnouncePeer(peer);
+}
+
+std::future<void> Node::doAnnouncePeer(const PeerInfo& peer) const {
+    auto promise = std::make_shared<std::promise<void>>();
 
     auto completion = std::make_shared<std::atomic<int>>(0);
     auto completeHandler = [=](std::list<Sp<NodeInfo>> nl) {
         (*completion)++;
         if (*completion >= numDHTs)
-            promise->set_value(true);
+            promise->set_value();
     };
 
     if (dht4 != nullptr)
@@ -520,10 +569,22 @@ Sp<Value> Node::getValue(const Id& valueId) {
 	return getStorage()->getValue(valueId);
 }
 
-Sp<PeerInfo> Node::getPeerInfo(const Id& peerId) {
+bool Node::removeValue(const Id& valueId) {
+    checkArgument(valueId != Id::MIN_ID, "Invalid value id");
+
+	return getStorage()->removeValue(valueId);
+}
+
+Sp<PeerInfo> Node::getPeer(const Id& peerId) {
     checkArgument(peerId != Id::MIN_ID, "Invalid peer id");
 
 	return getStorage()->getPeer(peerId, this->getId());
+}
+
+bool Node::removePeer(const Id& peerId) {
+    checkArgument(peerId != Id::zero(), "Invalid peer id");
+
+	return getStorage()->removePeer(peerId, this->getId());
 }
 
 void Node::setupCryptoBoxesCache() {

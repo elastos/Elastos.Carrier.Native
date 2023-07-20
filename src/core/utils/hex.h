@@ -66,6 +66,10 @@ public:
         return out;
     }
 
+    static std::vector<uint8_t> decode(const std::string& str) {
+        return decode(str.c_str(), strlen(str.c_str()));
+    }
+
     template <size_t S>
     static std::array<uint8_t, S> decode(const char* data, size_t size) {
         std::array<uint8_t, S> out;

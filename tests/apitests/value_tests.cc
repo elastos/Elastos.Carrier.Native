@@ -100,8 +100,7 @@ ValueTests::testSignedValue() {
     auto valueId = val1.getId();
 
     auto p1 = node1->storeValue(val1);
-    auto result1 = p1.get();
-    CPPUNIT_ASSERT_EQUAL(true, result1);
+    p1.get();
 
     auto p2 = node1->findValue(valueId, LookupOption::ARBITRARY);
     auto val2 = p2.get();
@@ -127,8 +126,7 @@ ValueTests::testSignedValue() {
     CPPUNIT_ASSERT_EQUAL(true, val3.isMutable());
 
     auto p3 = node1->storeValue(val3);
-    result1 = p3.get();
-    CPPUNIT_ASSERT_EQUAL(true, result1);
+    p3.get();
 
     auto p4 = node1->findValue(valueId, LookupOption::ARBITRARY);
     auto val4 = p4.get();
@@ -157,8 +155,7 @@ ValueTests::testEncryptedValue() {
     auto valueId = val1.getId();
 
     auto p1 = node1->storeValue(val1);
-    auto result1 = p1.get();
-    CPPUNIT_ASSERT_EQUAL(true, result1);
+    p1.get();
 
     auto p2 = node1->findValue(valueId, LookupOption::ARBITRARY);
     auto val2 = p2.get();
@@ -182,8 +179,7 @@ ValueTests::testEncryptedValue() {
     CPPUNIT_ASSERT_EQUAL(true, val3.isMutable());
 
     auto p3 = node1->storeValue(val3);
-    result1 = p3.get();
-    CPPUNIT_ASSERT_EQUAL(true, result1);
+    p3.get();
 
     auto p4 = node1->findValue(valueId, LookupOption::ARBITRARY);
     auto val4 = p4.get();
