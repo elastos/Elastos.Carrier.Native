@@ -231,7 +231,7 @@ std::string Utils::getLocalIpAddresses() {
 std::vector<uint8_t> Utils::getSignData(const Id& nodeId, const Id& proxyId, uint16_t port, const std::string& alt)
 {
     bool proxied = false;
-    if (proxyId != Id::zero()) {
+    if (proxyId != Id::MIN_ID) {
         proxied = true;
     }
     auto size = nodeId.size() + sizeof(port) + alt.size();

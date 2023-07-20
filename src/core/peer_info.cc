@@ -32,13 +32,13 @@ namespace carrier {
 PeerInfo::PeerInfo(const Id& peerId, const Blob& privateKey, const Id& nodeId, const Id& origin, uint16_t port,
 			const std::string& alternativeURL, const std::vector<uint8_t>& signature) {
 
-    if (peerId == Id::zero())
+    if (peerId == Id::MIN_ID)
 		throw std::invalid_argument("Invalid peer id");
 
     if (privateKey && privateKey.size() != Signature::PrivateKey::BYTES)
         throw std::invalid_argument("Invalid private key");
 
-    if (nodeId == Id::zero())
+    if (nodeId == Id::MIN_ID)
         throw std::invalid_argument("Invalid node id");
 
     if (port <= 0 || port > 65535)
@@ -50,7 +50,7 @@ PeerInfo::PeerInfo(const Id& peerId, const Blob& privateKey, const Id& nodeId, c
     this->publicKey = peerId;
     this->privateKey = privateKey;
     this->nodeId = nodeId;
-    this->delegated = origin != Id::zero();
+    this->delegated = origin != Id::MIN_ID;
     this->origin = this->delegated ? origin : nodeId;
     this->port = port;
     if (!alternativeURL.empty())
@@ -60,8 +60,7 @@ PeerInfo::PeerInfo(const Id& peerId, const Blob& privateKey, const Id& nodeId, c
 
 PeerInfo::PeerInfo(const Signature::KeyPair& keypair, const Id& nodeId, const Id& origin, uint16_t port,
 			const std::string& alternativeURL) {
-
-    if (nodeId == Id::zero())
+    if (nodeId == Id::MIN_ID)
         throw std::invalid_argument("Invalid node id");
 
     if (port <= 0 || port > 65535)
@@ -70,7 +69,7 @@ PeerInfo::PeerInfo(const Signature::KeyPair& keypair, const Id& nodeId, const Id
     this->publicKey = Id(keypair.publicKey());
     this->privateKey = keypair.privateKey().blob();
     this->nodeId = nodeId;
-    this->delegated = origin != Id::zero();
+    this->delegated = origin != Id::MIN_ID;
     this->origin = this->delegated ? origin : nodeId;
     this->port = port;
     if (!alternativeURL.empty())
