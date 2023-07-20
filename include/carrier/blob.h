@@ -64,6 +64,10 @@ public:
         return _ptr != nullptr && _size != 0;
     }
 
+    bool empty() const noexcept {
+        return _size == 0;
+    }
+
     uint8_t* ptr() noexcept {
         return const_cast<uint8_t*>(this->_ptr);
     }

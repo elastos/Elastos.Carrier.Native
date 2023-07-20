@@ -169,7 +169,7 @@ FindValueTests::testFindValueResponseSize() {
     std::vector<uint8_t> sig(64, 'S');
     std::vector<uint8_t> data(1056, 'D');
 
-    Value value = Value::of(Id::random(), Id::random(), nonce, 0x77654321, sig, data);
+    Value value = Value::of(Id::random().blob(), {}, Id::random().blob(), nonce, 0x77654321, sig, data);
 
     auto msg = FindValueResponse(0xF7654321);
     msg.setId(Id::random());
@@ -199,7 +199,7 @@ FindValueTests::testFindValueResponse4() {
     std::vector<uint8_t> data(1056);
     Utils::setRandomBytes(data.data(), data.size());
 
-    Value value = Value::of(pk, recipient, nonce.blob(), seq, sig, data);
+    Value value = Value::of(pk.blob(), {}, recipient.blob(), nonce.blob(), seq, sig, data);
 
     std::list<std::shared_ptr<NodeInfo>> nodes4 {};
     nodes4.push_back(std::make_shared<NodeInfo>(Id::random(), "251.251.251.251", 65535));
@@ -244,7 +244,7 @@ void FindValueTests::testFindValueResponse4Immutable() {
     std::vector<uint8_t> data(1056);
     Utils::setRandomBytes(data.data(), data.size());
 
-    Value value = Value::of(data);
+    Value value = Value::of({}, {}, {}, {}, 0, {}, data);
 
     std::list<std::shared_ptr<NodeInfo>> nodes4 {};
     nodes4.push_back(std::make_shared<NodeInfo>(Id::random(), "251.251.251.251", 65535));
@@ -297,7 +297,7 @@ void FindValueTests::testFindValueResponse6() {
     std::vector<uint8_t> data(1056);
     Utils::setRandomBytes(data.data(), data.size());
 
-    Value value = Value::of(pk, recipient, nonce.blob(), seq, sig, data);
+    Value value = Value::of(pk.blob(), {}, recipient.blob(), nonce.blob(), seq, sig, data);
 
     std::list<std::shared_ptr<NodeInfo>> nodes6 {};
     nodes6.push_back(std::make_shared<NodeInfo>(Id::random(), "2001:0db8:85a3:8070:6543:8a2e:0370:7334", 65535));
@@ -349,7 +349,7 @@ void FindValueTests::testFindValueResponse46() {
     std::vector<uint8_t> data(1056);
     Utils::setRandomBytes(data.data(), data.size());
 
-    Value value = Value::of(pk, recipient, nonce.blob(), seq, sig, data);
+    Value value = Value::of(pk.blob(),{}, recipient.blob(), nonce.blob(), seq, sig, data);
 
     std::list<std::shared_ptr<NodeInfo>> nodes4 {};
     nodes4.push_back(std::make_shared<NodeInfo>(Id::random(), "251.251.251.251", 65535));

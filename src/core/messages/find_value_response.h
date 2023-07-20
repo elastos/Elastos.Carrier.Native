@@ -23,7 +23,7 @@
 #pragma once
 
 #include "carrier/value.h"
-#include "carrier/types.h"
+#include "carrier/crypto_core.h"
 
 #include "lookup_response.h"
 #include "message.h"
@@ -58,8 +58,8 @@ protected:
 
 private:
     Id publicKey {};
-	Id recipient {};
-	Blob nonce {};
+    Id recipient {};
+    CryptoBox::Nonce nonce {};
     int sequenceNumber {-1};
 	std::vector<uint8_t> signature {};
 	std::vector<uint8_t> value;

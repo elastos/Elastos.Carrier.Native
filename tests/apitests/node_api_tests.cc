@@ -89,7 +89,7 @@ void NodeApiTester::testSelfNodes() {
 #if 1
     std::cout << "----------" << std::endl;
     std::vector<uint8_t> blob({0,1,2,3,4});
-    auto value = Value::of(blob);
+    auto value = Value::createValue(blob);
     std::cout << "Trying to Sotre Value " << std::endl;
     auto future1 = node1->storeValue(value);
     future1.get();
