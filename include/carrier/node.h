@@ -115,8 +115,8 @@ public:
     std::future<void> announcePeer(const PeerInfo& peer, bool persistent = false) const;
 
     Sp<DataStorage> getStorage() const {
-		return storage;
-	}
+        return storage;
+    }
 
     int getPort();
 
@@ -154,7 +154,7 @@ private:
     Id id;
 
     bool persistent { false };
-	std::string storagePath {};
+    std::string storagePath {};
 
     Sp<DHT> dht4 {};
     Sp<DHT> dht6 {};

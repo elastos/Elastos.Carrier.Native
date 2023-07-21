@@ -66,7 +66,7 @@ Value::Value(const Signature::KeyPair& keypair, const Id& recipient, const Crypt
         int sequenceNumber, const std::vector<uint8_t>& data) {
 
     if (nonce.size() != CryptoBox::Nonce::BYTES)
-    	throw std::invalid_argument("Invalid nonce");
+        throw std::invalid_argument("Invalid nonce");
 
     if (sequenceNumber < 0)
         throw std::invalid_argument("Invalid sequence number");
@@ -122,18 +122,18 @@ std::vector<uint8_t> Value::getSignData() const {
 
 bool Value::isValid() const {
     if (data.empty())
-		return false;
+        return false;
 
     if (isMutable()) {
         if (nonce.size() != CryptoBox::Nonce::BYTES)
-			return false;
+            return false;
 
         if (signature.size() != Signature::BYTES)
-			return false;
+            return false;
 
-		Signature::PublicKey pk = publicKey.toSignatureKey();
+        Signature::PublicKey pk = publicKey.toSignatureKey();
 
-		return Signature::verify(getSignData(), signature, pk);
+        return Signature::verify(getSignData(), signature, pk);
     }
 
     return true;
@@ -141,7 +141,7 @@ bool Value::isValid() const {
 
 Value Value::update(const std::vector<uint8_t>& data) {
     if (!isMutable())
-		throw  illegal_state("Immutable value " + getId().toBase58String());
+        throw  illegal_state("Immutable value " + getId().toBase58String());
 
     if (!hasPrivateKey())
         throw illegal_state("Not the owner of the value " + getId().toBase58String());

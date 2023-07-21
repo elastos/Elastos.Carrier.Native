@@ -49,12 +49,12 @@ public:
 
     void fill(bool includeSelf);
     void fill() {
-		fill(false);
-	}
+        fill(false);
+    }
 
     bool isFull() const noexcept {
-		return entries.size() >= maxEntries;
-	}
+        return entries.size() >= maxEntries;
+    }
 
     const std::list<Sp<KBucketEntry>>& getEntries() const noexcept {
         return entries;

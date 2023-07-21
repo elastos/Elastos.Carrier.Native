@@ -35,11 +35,11 @@ public:
 
     bool reachedCapacity() const {
         return closest.size() >= capacity;
-	}
+    }
 
-	int size() const {
+    int size() const {
         return closest.size();
-	}
+    }
 
     Sp<CandidateNode> get(const Id& id) {
         return closest[id];
@@ -73,7 +73,7 @@ public:
     void removeCandidate(const Id& id) {
         if (!closest.empty())
             closest.erase(id);
-	}
+    }
 
     const std::list<Sp<CandidateNode>> getEntries() const {
         std::list<Sp<CandidateNode>> entries {};
@@ -88,18 +88,18 @@ public:
             return target.distance(Id::MAX_ID);
 
         return (std::prev(closest.cend()))->first;
-	}
+    }
 
-	Id head() const {
+    Id head() const {
         if (closest.empty())
             return target.distance(Id::MAX_ID);
 
         return closest.cbegin()->first;
-	}
+    }
 
-	bool isEligible() const {
-		return reachedCapacity() && insertAttemptsSinceTailModification > capacity;
-	}
+    bool isEligible() const {
+        return reachedCapacity() && insertAttemptsSinceTailModification > capacity;
+    }
 
 private:
     const Id& target;
@@ -108,7 +108,7 @@ private:
     std::map<Id, Sp<CandidateNode>> closest {};
 
     int insertAttemptsSinceTailModification {0};
-	int insertAttemptsSinceHeadModification {0};
+    int insertAttemptsSinceHeadModification {0};
 };
 
 } // namespace carrier

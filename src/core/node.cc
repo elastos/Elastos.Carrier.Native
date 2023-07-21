@@ -349,7 +349,7 @@ void Node::getNodes(const Id& id, Sp<NodeInfo> node, std::function<void(std::lis
 
 std::future<std::list<Sp<NodeInfo>>> Node::findNode(const Id& id, LookupOption option) const {
     checkState(isRunning(), "Node not running");
-	checkArgument(id != Id::MIN_ID, "Invalid peer id");
+    checkArgument(id != Id::MIN_ID, "Invalid peer id");
 
     auto promise = std::make_shared<std::promise<std::list<Sp<NodeInfo>>>>();
     auto results = std::make_shared<std::list<Sp<NodeInfo>>>();
@@ -393,7 +393,7 @@ std::future<std::list<Sp<NodeInfo>>> Node::findNode(const Id& id, LookupOption o
 
 std::future<Sp<Value>> Node::findValue(const Id& id, LookupOption option) const {
     checkState(isRunning(), "Node not running");
-	checkArgument(id != Id::MIN_ID, "Invalid peer id");
+    checkArgument(id != Id::MIN_ID, "Invalid peer id");
 
     auto promise = std::make_shared<std::promise<Sp<Value>>>();
     auto valuePtr = std::make_shared<Sp<Value>>();
@@ -474,7 +474,7 @@ std::future<void> Node::doStoreValue(const Value& value) const {
 
 std::future<std::list<PeerInfo>> Node::findPeer(const Id& id, int expected, LookupOption option) const {
     checkState(isRunning(), "Node not running");
-	checkArgument(id != Id::MIN_ID, "Invalid peer id");
+    checkArgument(id != Id::MIN_ID, "Invalid peer id");
 
     auto promise = std::make_shared<std::promise<std::list<PeerInfo>>>();
     auto dedup_result = std::make_shared<std::set<PeerInfo>>();
@@ -560,31 +560,31 @@ std::future<void> Node::doAnnouncePeer(const PeerInfo& peer) const {
     if (dht6 != nullptr)
         dht6->announcePeer(peer, completeHandler);
 
-	return promise->get_future();
+    return promise->get_future();
 }
 
 Sp<Value> Node::getValue(const Id& valueId) {
     checkArgument(valueId != Id::MIN_ID, "Invalid value id");
 
-	return getStorage()->getValue(valueId);
+    return getStorage()->getValue(valueId);
 }
 
 bool Node::removeValue(const Id& valueId) {
     checkArgument(valueId != Id::MIN_ID, "Invalid value id");
 
-	return getStorage()->removeValue(valueId);
+    return getStorage()->removeValue(valueId);
 }
 
 Sp<PeerInfo> Node::getPeer(const Id& peerId) {
     checkArgument(peerId != Id::MIN_ID, "Invalid peer id");
 
-	return getStorage()->getPeer(peerId, this->getId());
+    return getStorage()->getPeer(peerId, this->getId());
 }
 
 bool Node::removePeer(const Id& peerId) {
     checkArgument(peerId != Id::zero(), "Invalid peer id");
 
-	return getStorage()->removePeer(peerId, this->getId());
+    return getStorage()->removePeer(peerId, this->getId());
 }
 
 void Node::setupCryptoBoxesCache() {

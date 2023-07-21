@@ -90,7 +90,7 @@ struct Constants {
     ///////////////////////////////////////////////////////////////////////////
     static const std::string    NODE_NAME;
     static const int            NODE_VERSION;
-    static const int            VERSION					= 1;
+    static const int            VERSION                    = 1;
 
     ///////////////////////////////////////////////////////////////////////////
     // Development environment

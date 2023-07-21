@@ -42,8 +42,8 @@ public:
     void setValue(const Value& value);
 
     bool hasValue() {
-		return !value.empty();
-	}
+        return !value.empty();
+    }
 
     Value getValue() const;
 
@@ -61,8 +61,8 @@ private:
     Id recipient {};
     CryptoBox::Nonce nonce {};
     int sequenceNumber {-1};
-	std::vector<uint8_t> signature {};
-	std::vector<uint8_t> value;
+    std::vector<uint8_t> signature {};
+    std::vector<uint8_t> value;
 };
 
 }

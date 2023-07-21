@@ -532,7 +532,7 @@ void DHT::onAnnouncePeer(const Sp<Message>& msg) {
 
     auto peer = request->getPeer();
     log->debug("Received an announce peer request from {}, saving peer {}", request->getOrigin().toString(),
-					request->getTarget());
+                    request->getTarget());
     node.getStorage()->putPeer(peer);
 
     auto response = std::make_shared<AnnouncePeerResponse>(request->getTxid());
@@ -700,9 +700,9 @@ Sp<Task> DHT::announcePeer(const PeerInfo& peer, const std::function<void(std::l
     task->setWantToken(true);
     task->addListener([=](Task* t) {
         if (t->getState() != Task::State::FINISHED)
-			return;
+            return;
 
-	    auto closestSet = (static_cast<NodeLookup*>(t))->getClosestSet();
+        auto closestSet = (static_cast<NodeLookup*>(t))->getClosestSet();
         if (closestSet.size() == 0) {
             // this should never happen
             log->warn("!!! Peer announce task not started because the node lookup task got the empty closest nodes.");

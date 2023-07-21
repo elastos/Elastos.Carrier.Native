@@ -31,7 +31,7 @@ const int Constants::RPC_SERVER_REACHABILITY_TIMEOUT        = 60 * 1000;
 const int Constants::MAX_ACTIVE_CALLS                       = 256;
 const int Constants::RPC_CALL_TIMEOUT_MAX                   = 10 * 1000;
 const int Constants::RPC_CALL_TIMEOUT_BASELINE_MIN          = 100; // ms
-const int Constants::RECEIVE_BUFFER_SIZE	                = 5 * 1024;
+const int Constants::RECEIVE_BUFFER_SIZE                    = 5 * 1024;
 
 const int Constants::MAX_CONCURRENT_TASK_REQUESTS           = 10;
 const int Constants::MAX_ACTIVE_TASKS                       = 16;
@@ -58,7 +58,7 @@ const int Constants::STORAGE_EXPIRE_INTERVAL                = 5 * 60 * 1000;
 const int Constants::TOKEN_TIMEOUT                          = 5 * 60 * 1000;
 const int Constants::MAX_PEER_AGE                           = 120 * 60 * 1000;
 const int Constants::MAX_VALUE_AGE                          = 60 * 60 * 1000;
-const int Constants::RE_ANNOUNCE_INTERVAL					= 5 * 60 * 1000;
+const int Constants::RE_ANNOUNCE_INTERVAL                    = 5 * 60 * 1000;
 
 const std::string Constants::NODE_NAME                      = "Meerkat";
 const int Constants::NODE_VERSION                           = 1;

@@ -60,8 +60,8 @@ public:
     explicit DHT(Type _type, const Node& _node, const SocketAddress& _addr);
 
     bool canUseSocketAddress(const SocketAddress& addr) const {
-		return addr.family() == (type == Type::IPV4 ? AF_INET : AF_INET6);
-	}
+        return addr.family() == (type == Type::IPV4 ? AF_INET : AF_INET6);
+    }
 
     Type getType() const noexcept {
         return type;
@@ -106,8 +106,8 @@ public:
     }
 
     TaskManager& getTaskManager() noexcept {
-		return taskMan;
-	}
+        return taskMan;
+    }
 
     void enablePersistence(const std::string& path) noexcept {
         persistFile = path;
@@ -123,7 +123,7 @@ public:
             ids.push_back(node->getId());
         }
         return ids;
-	}
+    }
 
     void bootstrap();
     void bootstrap(const NodeInfo&);

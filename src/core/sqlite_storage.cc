@@ -46,7 +46,7 @@ static std::string CREATE_VALUES_TABLE = "CREATE TABLE IF NOT EXISTS valores(\
         data BLOB, \
         timestamp INTEGER NOT NULL, \
         announced INTEGER NOT NULL DEFAULT 0\
-		) WITHOUT ROWID";
+        ) WITHOUT ROWID";
 
 static std::string CREATE_VALUES_INDEX =
     "CREATE INDEX IF NOT EXISTS idx_valores_timpstamp ON valores(timestamp)";
@@ -423,7 +423,7 @@ std::list<Value> SqliteStorage::getPersistentValues(uint64_t lastAnnounceBefore)
 
 bool SqliteStorage::removeValue(const Id& valueId){
     sqlite3_stmt* pStmt {nullptr};
-	if (sqlite3_prepare_v2(sqlite_store, REMOVE_VALUE.c_str(), strlen(REMOVE_VALUE.c_str()), &pStmt, 0) != SQLITE_OK) {
+    if (sqlite3_prepare_v2(sqlite_store, REMOVE_VALUE.c_str(), strlen(REMOVE_VALUE.c_str()), &pStmt, 0) != SQLITE_OK) {
         sqlite3_finalize(pStmt);
         throw std::runtime_error("Prepare sqlite failed.");;
     }
@@ -529,7 +529,7 @@ Sp<PeerInfo> SqliteStorage::getPeer(const Id& peerId, const Id& origin) {
                 ptr = sqlite3_column_blob(pStmt, i);
             }
 
-			if (std::strcmp(name, "privateKey") == 0 && len > 0) {
+            if (std::strcmp(name, "privateKey") == 0 && len > 0) {
                 privateKey = Blob(ptr, len);
             } else if (std::strcmp(name, "nodeId") == 0 && len > 0) {
                 nodeId = Id(Blob(ptr, len));
@@ -689,7 +689,7 @@ std::list<PeerInfo> SqliteStorage::getPersistentPeers(uint64_t lastAnnounceBefor
                 ptr = sqlite3_column_blob(pStmt, i);
             }
 
-			if (std::strcmp(name, "id") == 0 && len > 0) {
+            if (std::strcmp(name, "id") == 0 && len > 0) {
                 peerId = Id(Blob(ptr, len));
             } else if (std::strcmp(name, "privateKey") == 0 && len > 0) {
                 privateKey = Blob(ptr, len);
@@ -714,7 +714,7 @@ std::list<PeerInfo> SqliteStorage::getPersistentPeers(uint64_t lastAnnounceBefor
 
 bool SqliteStorage::removePeer(const Id& peerId, const Id& origin) {
     sqlite3_stmt* pStmt {nullptr};
-	if (sqlite3_prepare_v2(sqlite_store, REMOVE_PEER.c_str(), strlen(REMOVE_PEER.c_str()), &pStmt, 0) != SQLITE_OK) {
+    if (sqlite3_prepare_v2(sqlite_store, REMOVE_PEER.c_str(), strlen(REMOVE_PEER.c_str()), &pStmt, 0) != SQLITE_OK) {
         sqlite3_finalize(pStmt);
         throw std::runtime_error("Prepare sqlite failed.");;
     }

@@ -95,12 +95,12 @@ public:
     }
 
     Signature::PublicKey toSignatureKey() const {
-		return Signature::PublicKey(bytes);
-	}
+        return Signature::PublicKey(bytes);
+    }
 
-	CryptoBox::PublicKey toEncryptionKey() const {
-		return CryptoBox::PublicKey::fromSignatureKey(toSignatureKey());
-	}
+    CryptoBox::PublicKey toEncryptionKey() const {
+        return CryptoBox::PublicKey::fromSignatureKey(toSignatureKey());
+    }
 
     /**
      * Checks the distance between this and another Id

@@ -39,8 +39,8 @@ void AnnouncePeerRequest::serializeInternal(nlohmann::json& root) const {
     };
 
     if (nodeId != getId()) {
-		object[Message::KEY_REQ_PROXY_ID] = nodeId;
-	}
+        object[Message::KEY_REQ_PROXY_ID] = nodeId;
+    }
 
     if (!alternativeURL.empty()) {
         object[Message::KEY_REQ_ALT] = alternativeURL;
