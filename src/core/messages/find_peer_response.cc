@@ -73,28 +73,31 @@ void FindPeerResponse::_parse(const std::string& fieldName, nlohmann::json& obje
     if (!object.is_array())
         throw std::invalid_argument("Invalid response peers message");
 
-    if (fieldName == KEY_RES_PEERS) {
-        bool first {true};
-        Id peerId {};
-        for (const auto& elem : object) {
-            if (first) {
-                peerId = Id(elem[0].get_binary());
-            }
-            else {
-                auto nodeId = Id(elem[0].get_binary());
-                //TODO::check the nullptr
-                auto origin = Id(elem[1].get_binary());
-                auto port = elem[2].get<uint16_t>();
-                //TODO::check the nullptr
-                auto alt = elem[3].get<std::string>();
-                auto sig = elem[4].get_binary();
-
-                auto pi = PeerInfo::of(peerId, nodeId, origin, port, alt, sig);
-                peers.emplace_back(pi);
-            }
-        }
-    } else {
+    if (fieldName != KEY_RES_PEERS)
         throw std::invalid_argument("invalid find peer response message");
+
+    Id peerId {};
+    for (nlohmann::json::iterator it = object.begin(); it != object.end(); ++it) {
+        if (!it->is_array()) {
+            peerId = Id(it->get_binary());
+        } else {
+            auto id = Id(it->at(0).get_binary());
+
+            Id origin {};
+            if (!it->at(1).is_null())
+                origin = Id(it->at(1).get_binary());
+
+            auto port = it->at(2).get<uint16_t>();
+
+            std::string alt {};
+            if (!it->at(3).is_null())
+                alt = it->at(3).get<std::string>();
+
+            auto sig = it->at(4).get_binary();
+
+            auto pi = PeerInfo::of(peerId, id, origin, port, alt, sig);
+            peers.emplace_back(pi);
+        }
     }
 }
 
