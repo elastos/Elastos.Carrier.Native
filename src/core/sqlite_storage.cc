@@ -293,13 +293,13 @@ Sp<Value> SqliteStorage::putValue(const Value& value, int expectedSeq, bool pers
     sqlite3_bind_blob(pStmt, 3, signer.ptr(), signer.size(), SQLITE_STATIC);
 
     auto sk = value.getPrivateKey().blob();
-    sqlite3_bind_blob(pStmt, 3, sk.ptr(), sk.size(), SQLITE_STATIC);
+    sqlite3_bind_blob(pStmt, 4, sk.ptr(), sk.size(), SQLITE_STATIC);
 
     auto recipient = value.getRecipient().blob();
     sqlite3_bind_blob(pStmt, 5, recipient.ptr(), recipient.size(), SQLITE_STATIC);
 
     auto nonce = value.getNonce().blob();
-    sqlite3_bind_blob(pStmt, 5, nonce.ptr(), nonce.size(), SQLITE_STATIC);
+    sqlite3_bind_blob(pStmt, 6, nonce.ptr(), nonce.size(), SQLITE_STATIC);
 
     auto sig = Blob(value.getSignature());
     sqlite3_bind_blob(pStmt, 7, sig.ptr(), sig.size(), SQLITE_STATIC);
