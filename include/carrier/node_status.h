@@ -28,9 +28,9 @@ namespace elastos {
 namespace carrier {
 
 enum class CARRIER_PUBLIC NodeStatus {
-	Stopped,
-	Initializing,
-	Running
+    Stopped,
+    Initializing,
+    Running
 };
 
 inline std::string statusToString(NodeStatus status) noexcept {

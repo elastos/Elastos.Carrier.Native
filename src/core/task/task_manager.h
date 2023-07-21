@@ -43,17 +43,17 @@ public:
 
     void add(Sp<Task> task, bool prior);
 
-	inline void add(Sp<Task> task) {
-		add(task, false);
-	}
+    inline void add(Sp<Task> task) {
+        add(task, false);
+    }
 
-	void dequeue();
+    void dequeue();
 
-	inline bool canStartTask() {
-		return !canceling && (running.size() <= Constants::MAX_ACTIVE_TASKS);
-	}
+    inline bool canStartTask() {
+        return !canceling && (running.size() <= Constants::MAX_ACTIVE_TASKS);
+    }
 
-	void cancelAll();
+    void cancelAll();
     void removeTask(Task* t);
 
 private:

@@ -50,23 +50,23 @@ protected:
     void execute() override {
         Signature::KeyPair keypair {};
         if (!privateKey.empty())
-			keypair = Signature::KeyPair::fromPrivateKey(Hex::decode(privateKey));
+            keypair = Signature::KeyPair::fromPrivateKey(Hex::decode(privateKey));
 
         Id peerNodeId = Command::node->getId();
         if (!nodeId.empty())
             peerNodeId = Id(nodeId);
 
         if (port <= 0) {
-			std::cout << "Invalid port: " << std::to_string(port) << std::endl;
-			return;
-		}
+            std::cout << "Invalid port: " << std::to_string(port) << std::endl;
+            return;
+        }
 
         PeerInfo peer = PeerInfo::create(keypair, peerNodeId, Command::node->getId(), port, alt);
 
         auto future = node->announcePeer(peer, persistent);
         future.get();
         std::cout << "Peer " + peer.getId().toBase58String() << " announced with private key " <<
-				Hex::encode(peer.getPrivateKey());
+                Hex::encode(peer.getPrivateKey());
     };
 
 private:

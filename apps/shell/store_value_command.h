@@ -47,7 +47,7 @@ protected:
         Value value {};
 
         if (!recipient.empty())
-			bMutable = true;
+            bMutable = true;
 
         std::vector<uint8_t> data(text.begin(), text.end());
         if (target.empty()) {

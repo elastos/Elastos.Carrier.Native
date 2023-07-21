@@ -115,9 +115,9 @@ static Sp<Configuration> initConfigure(Options& options)
 
 static Sp<Node> initCarrierNode(Sp<Configuration> config)
 {
-	auto node = std::make_shared<Node>(config);
+    auto node = std::make_shared<Node>(config);
     try {
-	    node->start();
+        node->start();
     } catch(std::exception& e) {
         std::cout << e.what() << std::endl;
         return nullptr;
@@ -202,11 +202,11 @@ int main(int argc, char *argv[])
         std::exit(-1);
     }
 
-	g_node = initCarrierNode(config);
+    g_node = initCarrierNode(config);
     if (!g_node)
         return 0;
 
-	if (!loadAddons(g_node, config->getServices())) {
+    if (!loadAddons(g_node, config->getServices())) {
         stop();
         return 0;
     }

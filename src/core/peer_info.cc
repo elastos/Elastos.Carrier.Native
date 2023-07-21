@@ -30,10 +30,10 @@ namespace elastos {
 namespace carrier {
 
 PeerInfo::PeerInfo(const Id& peerId, const Blob& privateKey, const Id& nodeId, const Id& origin, uint16_t port,
-			const std::string& alternativeURL, const std::vector<uint8_t>& signature) {
+            const std::string& alternativeURL, const std::vector<uint8_t>& signature) {
 
     if (peerId == Id::MIN_ID)
-		throw std::invalid_argument("Invalid peer id");
+        throw std::invalid_argument("Invalid peer id");
 
     if (privateKey && privateKey.size() != Signature::PrivateKey::BYTES)
         throw std::invalid_argument("Invalid private key");
@@ -59,7 +59,7 @@ PeerInfo::PeerInfo(const Id& peerId, const Blob& privateKey, const Id& nodeId, c
 }
 
 PeerInfo::PeerInfo(const Signature::KeyPair& keypair, const Id& nodeId, const Id& origin, uint16_t port,
-			const std::string& alternativeURL) {
+            const std::string& alternativeURL) {
     if (nodeId == Id::MIN_ID)
         throw std::invalid_argument("Invalid node id");
 
@@ -117,7 +117,7 @@ std::vector<uint8_t> PeerInfo::getSignData() const {
 
 bool PeerInfo::isValid() const {
     if (signature.size() != Signature::BYTES)
-			return false;
+            return false;
 
     Signature::PublicKey pk = publicKey.toSignatureKey();
     return Signature::verify(getSignData(), signature, pk);

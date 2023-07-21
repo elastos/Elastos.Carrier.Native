@@ -43,33 +43,33 @@ public:
         return Value(publicKey, privateKey, recipient, nonce, sequenceNumber, signature, value);
     }
 
-	static Value createValue(const std::vector<uint8_t>& data) {
+    static Value createValue(const std::vector<uint8_t>& data) {
         auto empty = Blob();
         auto _data = Blob(data);
         return Value(empty, empty, empty, empty, -1, _data, empty);
-	}
+    }
 
-	static Value createSignedValue(const std::vector<uint8_t>& data) {
-		auto keyPair = Signature::KeyPair::random();
-		auto nonce = CryptoBox::Nonce::random();
+    static Value createSignedValue(const std::vector<uint8_t>& data) {
+        auto keyPair = Signature::KeyPair::random();
+        auto nonce = CryptoBox::Nonce::random();
         return  createSignedValue(keyPair, nonce, data);
-	}
+    }
 
     static Value createSignedValue(const Signature::KeyPair& keyPair, const CryptoBox::Nonce& nonce,
         const std::vector<uint8_t>& data) {
         return Value(keyPair, {}, nonce, 0, data);
     }
 
-	static Value createSignedValue(const Signature::KeyPair& keyPair, const CryptoBox::Nonce& nonce,
+    static Value createSignedValue(const Signature::KeyPair& keyPair, const CryptoBox::Nonce& nonce,
         int sequenceNumber, const std::vector<uint8_t>& data) {
         return Value(keyPair, {}, nonce, sequenceNumber, data);
     }
 
-	static Value createEncryptedValue(const Id& recipient, const std::vector<uint8_t>& data) {
-		auto keyPair = Signature::KeyPair::random();
-		auto nonce = CryptoBox::Nonce::random();
-		return createEncryptedValue(keyPair, recipient, nonce, data);
-	}
+    static Value createEncryptedValue(const Id& recipient, const std::vector<uint8_t>& data) {
+        auto keyPair = Signature::KeyPair::random();
+        auto nonce = CryptoBox::Nonce::random();
+        return createEncryptedValue(keyPair, recipient, nonce, data);
+    }
 
     static Value createEncryptedValue(const Signature::KeyPair& keyPair, const Id& recipient,
         const CryptoBox::Nonce& nonce, const std::vector<uint8_t>& data) {

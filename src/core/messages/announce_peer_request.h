@@ -39,8 +39,8 @@ public:
 
     AnnouncePeerRequest(const PeerInfo& peer, int token)
             : Message(Message::Type::REQUEST, Message::Method::ANNOUNCE_PEER){
-		setPeer(peer);
-		setToken(token);
+        setPeer(peer);
+        setToken(token);
     }
 
     int getToken() const {
@@ -52,20 +52,20 @@ public:
     }
 
     void setPeer(const PeerInfo& peer) {
-		peerId = peer.getId();
-		nodeId = peer.getNodeId();
-		port = peer.getPort();
-		if (peer.hasAlternativeURL())
-			alternativeURL = peer.getAlternativeURL();
-		signature = peer.getSignature();
-	}
+        peerId = peer.getId();
+        nodeId = peer.getNodeId();
+        port = peer.getPort();
+        if (peer.hasAlternativeURL())
+            alternativeURL = peer.getAlternativeURL();
+        signature = peer.getSignature();
+    }
 
-	PeerInfo getPeer() {
-		if (nodeId == Id::MIN_ID)
-			nodeId = getId();
+    PeerInfo getPeer() {
+        if (nodeId == Id::MIN_ID)
+            nodeId = getId();
 
-		return PeerInfo::of(peerId, nodeId, getId(), port, alternativeURL, signature);
-	}
+        return PeerInfo::of(peerId, nodeId, getId(), port, alternativeURL, signature);
+    }
 
     const Id& getTarget() const {
         return peerId;

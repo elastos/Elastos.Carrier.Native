@@ -55,23 +55,23 @@ public:
     }
 
     void setExpectedSequenceNumber(int expectedSequenceNumber) {
-		this->expectedSequenceNumber = expectedSequenceNumber;
-	}
+        this->expectedSequenceNumber = expectedSequenceNumber;
+    }
 
     void setValue(const Value& value);
     Value getValue() const;
 
     bool isMutable() const {
-		return static_cast<bool>(publicKey);
-	}
+        return static_cast<bool>(publicKey);
+    }
 
     bool isEncrypted() const {
-		return static_cast<bool>(recipient);
-	}
+        return static_cast<bool>(recipient);
+    }
 
-	Id getValueId() {
-		return Value::calculateId(publicKey, nonce, value);
-	}
+    Id getValueId() {
+        return Value::calculateId(publicKey, nonce, value);
+    }
 
     int estimateSize() const override {
         return Message::estimateSize() + 208 + value.size();
@@ -88,9 +88,9 @@ private:
     Id recipient {};
     CryptoBox::Nonce nonce {};
     int sequenceNumber {-1};
-	int expectedSequenceNumber {-1};
+    int expectedSequenceNumber {-1};
     std::vector<uint8_t> signature {};
-	std::vector<uint8_t> value;
+    std::vector<uint8_t> value;
 };
 
 } // namespace carrier

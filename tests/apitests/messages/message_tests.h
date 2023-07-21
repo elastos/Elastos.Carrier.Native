@@ -33,17 +33,17 @@ namespace test {
 
 class MessageTests {
 public:
-	int VERSION = 0x68690001;
+    int VERSION = 0x68690001;
     std::string VERSION_STR = "hi/1";
 
 protected:
     void printMessage(const Message& msg, std::vector<uint8_t> bin) {
-		std::cout << "======== " << msg.getTypeString() << ":" << msg.getMethodString() << std::endl;
-		std::cout << "String: " << static_cast<std::string>(msg);
-		std::cout << "   Hex: " << bin.size() << Utils::PATH_SEP << msg.estimateSize() << " : " << Hex::encode(bin);
+        std::cout << "======== " << msg.getTypeString() << ":" << msg.getMethodString() << std::endl;
+        std::cout << "String: " << static_cast<std::string>(msg);
+        std::cout << "   Hex: " << bin.size() << Utils::PATH_SEP << msg.estimateSize() << " : " << Hex::encode(bin);
         nlohmann::json j = nlohmann::json::from_cbor(bin);
-		std::cout << "  JSON: " << j.dump();
-	}
+        std::cout << "  JSON: " << j.dump();
+    }
 };
 
 }  // namespace test

@@ -72,7 +72,7 @@ void StoreValueTests::testStoreSignedValueRequestSize() {
 }
 
 void StoreValueTests::testStoreEncryptedValueRequestSize() {
-	std::vector<uint8_t> nonce(24, 'N');
+    std::vector<uint8_t> nonce(24, 'N');
     std::vector<uint8_t> sig(64, 'S');
     std::vector<uint8_t> data(1025, 'D');
     int seq = 0x77654321;

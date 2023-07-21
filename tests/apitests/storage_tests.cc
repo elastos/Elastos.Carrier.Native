@@ -124,7 +124,7 @@ void DataStorageTests::testPutAndGetValue() {
         CPPUNIT_ASSERT((uint8_t)(i % (126 - 32) + 33) == v->getData()[0]);
 
         auto removed = ds->removeValue(id);
-		CPPUNIT_ASSERT(removed);
+        CPPUNIT_ASSERT(removed);
 
         v = ds->getValue(id);
         CPPUNIT_ASSERT(v);
@@ -166,9 +166,9 @@ void DataStorageTests::testPutAndGetPersistentValue() {
     auto values = ds->getPersistentValues(ts);
     CPPUNIT_ASSERT_EQUAL((size_t)128, values.size());
 
-	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
-	std::cout << "\nUpdate the last announced for values..." << std::endl;
+    std::cout << "\nUpdate the last announced for values..." << std::endl;
     for (int i = 1; i <= 128; i++) {
         Id id = list_get(values, i - 1).getId();
 
@@ -189,7 +189,7 @@ void DataStorageTests::testPutAndGetPersistentValue() {
         CPPUNIT_ASSERT((uint8_t)(i % (126 - 32) + 33) == v->getData()[0]);
 
         auto removed = ds->removeValue(id);
-		CPPUNIT_ASSERT(removed);
+        CPPUNIT_ASSERT(removed);
 
         v = ds->getValue(id);
         CPPUNIT_ASSERT(v);
@@ -360,7 +360,7 @@ void DataStorageTests::testPutAndGetPeer() {
 
         // limited
         ps = ds->getPeer(id, 16);
-		CPPUNIT_ASSERT_EQUAL(std::min<size_t>(16, peers.size()), ps.size());
+        CPPUNIT_ASSERT_EQUAL(std::min<size_t>(16, peers.size()), ps.size());
         for (PeerInfo pi : ps)
             CPPUNIT_ASSERT_EQUAL(list_get(peers, 0).getPort(), pi.getPort());
 
@@ -390,12 +390,12 @@ void DataStorageTests::testPutAndGetPeer() {
 }
 
 void DataStorageTests::testPutAndGetPersistentPeer() {
-	auto ds = SqliteStorage::open(path3, scheduler);
+    auto ds = SqliteStorage::open(path3, scheduler);
 
     std::list<Id> ids {};
     auto nodeId = Id::random();
     uint16_t basePort = 8000;
-	std::vector<uint8_t> sig(64);
+    std::vector<uint8_t> sig(64);
 
     std::cout << "Writing peers...";
     for (int i = 1; i <= 256; i++) {
@@ -436,7 +436,7 @@ void DataStorageTests::testPutAndGetPersistentPeer() {
         CPPUNIT_ASSERT_EQUAL(basePort,  p->getPort());
 
         auto removed = ds->removePeer(id, nodeId);
-		CPPUNIT_ASSERT(removed);
+        CPPUNIT_ASSERT(removed);
 
         p = ds->getPeer(id, nodeId);
         CPPUNIT_ASSERT(p);

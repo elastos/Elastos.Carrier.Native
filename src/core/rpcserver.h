@@ -40,10 +40,10 @@ class Node;
 class RPCServer {
 public:
     enum class State {
-		INITIAL,
-		RUNNING,
-		STOPPED
-	};
+        INITIAL,
+        RUNNING,
+        STOPPED
+    };
 
     RPCServer(Node& _node, const Sp<DHT> _dht4, const Sp<DHT> _dht6);
     ~RPCServer();
@@ -73,12 +73,12 @@ public:
     }
 
     Scheduler& getScheduler() {
-		return scheduler;
-	}
+        return scheduler;
+    }
 
     int getNumberOfActiveRPCCalls() {
-		return calls.size();
-	}
+        return calls.size();
+    }
 
     SocketAddress& getAddress(sa_family_t af) {
         return (af == AF_INET) ? bound4: bound6;
