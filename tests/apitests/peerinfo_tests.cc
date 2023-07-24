@@ -52,7 +52,7 @@ PeerInfoTests::testPeerInfo() {
     CPPUNIT_ASSERT_EQUAL(port, peer1.getPort());
     CPPUNIT_ASSERT_EQUAL(address1, peer1.getAlternativeURL());
     CPPUNIT_ASSERT(sig1 == peer1.getSignature());
-    CPPUNIT_ASSERT(peer1.isDelegated());
+    CPPUNIT_ASSERT(!peer1.isDelegated());
 
     // nlohmann::json object1 = peer1;
     // PeerInfo peer2 = object1;

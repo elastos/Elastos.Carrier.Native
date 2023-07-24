@@ -88,7 +88,7 @@ void NodeApiTester::testSelfNodes() {
 
 #if 1
     std::cout << "----------" << std::endl;
-    std::vector<uint8_t> blob({0,1,2,3,4});
+    std::vector<uint8_t> blob({1,2,3,4,5});
     auto value = Value::createValue(blob);
     std::cout << "Trying to Sotre Value " << std::endl;
     auto future1 = node1->storeValue(value);
@@ -109,9 +109,9 @@ void NodeApiTester::testSelfNodes() {
 #if 1
     std::cout << "----------" << std::endl;
     std::cout << "Trying to announce peer " << std::endl;
-    auto peerId = Id::random();
 
     auto peer = PeerInfo::create(node1->getId(), 42244);
+    auto peerId = peer.getId();
 
     auto future3 = node1->announcePeer(peer);
     future3.get();

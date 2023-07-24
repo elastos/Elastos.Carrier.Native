@@ -493,7 +493,7 @@ void DHT::onFindPeers(const Sp<Message>& msg) {
     response->setToken(token);
 
     bool hasPeers {false};
-    auto peers = storage->getPeer(request->getTarget(), 8);
+    auto peers = storage->getPeer(target, 8);
     if (!peers.empty()) {
         response->setPeers(peers);
         hasPeers = true;

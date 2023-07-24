@@ -95,7 +95,7 @@ void FindPeerResponse::_parse(const std::string& fieldName, nlohmann::json& obje
 
             auto sig = it->at(4).get_binary();
 
-            auto pi = PeerInfo::of(peerId,{}, id, origin, port, alt, sig);
+            auto pi = PeerInfo::of(peerId, {}, id, origin, port, alt, sig);
             peers.emplace_back(pi);
         }
     }
