@@ -24,7 +24,6 @@ set(INCLUDE_DIR ../include)
 
 list(APPEND CARRIER_SOURCES
     core/utils/addr.cc
-    core/utils/blob.cc
     core/utils/log.cc
     core/utils/hex.cc
     core/utils/socket_address.cc

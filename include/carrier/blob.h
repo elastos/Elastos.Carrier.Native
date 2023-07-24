@@ -26,10 +26,12 @@
 #include <vector>
 #include <string>
 
+#include "def.h"
+
 namespace elastos {
 namespace carrier {
 
-class Blob {
+class CARRIER_PUBLIC Blob {
 public:
     Blob() {};
     Blob(const Blob& blob) noexcept: _ptr(blob._ptr), _size(blob._size) {}
@@ -95,8 +97,6 @@ public:
     const uint8_t* cend() const noexcept {
         return this->_ptr + this->_size;
     }
-
-    const std::string toHexString() const;
 
 private:
     const uint8_t* _ptr {};
