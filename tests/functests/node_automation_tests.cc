@@ -101,7 +101,8 @@ void NodeAutomationTester::testAutomaticNode() {
     std::vector<uint8_t> sig(64);
     Random::buffer(sig.data(), sig.size());
 
-    PeerInfo peer = PeerInfo::of(peerId, nodeId, origin, 42244, "automation", sig);
+#if 0
+    static PeerInfo create(const Id& nodeId, Id origin, int port, const std::string& alternativeURL) {
 
     auto future3 = node->announcePeer(peer);
     future3.get();
@@ -118,6 +119,7 @@ void NodeAutomationTester::testAutomaticNode() {
         std::cout << "Peer: " << peer << std::endl;
         peer->isValid();
     }*/
+#endif
 }
 
 

@@ -157,7 +157,7 @@ void FindPeerTests::testFindPeerResponseSize() {
     Id pid = Id::random();
     for (int i = 0; i < 8; i++) {
         Random::buffer(sig.data(), sig.size());
-        peers.push_back(PeerInfo::of(pid, Id::random(), 65535 - i, sig));
+        peers.push_back(PeerInfo::of(pid.blob(), {}, Id::random().blob(), {}, 65535 - i, {}, sig));
     }
 
     auto msg = FindPeerResponse(0xF7654321);
@@ -200,7 +200,7 @@ void FindPeerTests::testFindPeerResponseSize2() {
     Id pid = Id::random();
     for (int i = 0; i < 8; i++) {
         Random::buffer(sig.data(), sig.size());
-        peers.push_back(PeerInfo::of(pid, Id::random(), Id::random(), 65535 - i, "http://abc.pc2.net", sig));
+        peers.push_back(PeerInfo::of(pid.blob(), {}, Id::random().blob(), Id::random().blob(), 65535 - i, "http://abc.pc2.net", sig));
     }
 
     auto msg = FindPeerResponse(0xF7654321);
@@ -233,7 +233,7 @@ void FindPeerTests::testFindPeerResponse4() {
     Id pid = Id::random();
     for (int i = 0; i < 8; i++) {
         Random::buffer(sig.data(), sig.size());
-        peers.push_back(PeerInfo::of(pid, Id::random(), 65535 - i, sig));
+        peers.push_back(PeerInfo::of(pid.blob(), {}, Id::random().blob(), {}, 65535 - i, {}, sig));
     }
 
     auto msg = FindPeerResponse(txid);
@@ -283,7 +283,7 @@ void FindPeerTests::testFindPeerResponse6() {
     Id pid = Id::random();
     for (int i = 0; i < 8; i++) {
         Random::buffer(sig.data(), sig.size());
-        peers.push_back(PeerInfo::of(pid, Id::random(), Id::random(), 65535 - i, "http://abc.pc2.net", sig));
+        peers.push_back(PeerInfo::of(pid.blob(), {}, Id::random().blob(), Id::random().blob(), 65535 - i, "http://abc.pc2.net", sig));
     }
 
     auto msg = FindPeerResponse(txid);
@@ -341,12 +341,12 @@ void FindPeerTests::testFindPeerResponse46() {
 
     for (int i = 0; i < 4; i++) {
         Random::buffer(sig.data(), sig.size());
-        peers.push_back(PeerInfo::of(pid, Id::random(), Id::random(), 65535 - i, sig));
+        peers.push_back(PeerInfo::of(pid.blob(), {}, Id::random().blob(), Id::random().blob(), 65535 - i, {}, sig));
     }
 
     for (int i = 0; i < 4; i++) {
         Random::buffer(sig.data(), sig.size());
-        peers.push_back(PeerInfo::of(pid, Id::random(), Id::random(), 65535 - i, "http://abc.pc2.net", sig));
+        peers.push_back(PeerInfo::of(pid.blob(), {}, Id::random().blob(), Id::random().blob(), 65535 - i, "http://abc.pc2.net", sig));
     }
 
     auto msg = FindPeerResponse(txid);

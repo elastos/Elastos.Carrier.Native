@@ -66,7 +66,7 @@ protected:
         auto future = node->announcePeer(peer, persistent);
         future.get();
         std::cout << "Peer " + peer.getId().toBase58String() << " announced with private key " <<
-                Hex::encode(peer.getPrivateKey());
+                Hex::encode(peer.getPrivateKey().blob());
     };
 
 private:
