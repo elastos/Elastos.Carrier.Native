@@ -106,12 +106,12 @@ public:
             key.fill(0);
         }
 
-        void sign(Blob& sig, const Blob& data) const;
+        void sign(const Blob& data, Blob& sig) const;
 
         std::vector<uint8_t> sign(const Blob& data) const {
             std::vector<uint8_t> sig(Signature::BYTES);
             Blob _sig{ sig };
-            sign(_sig, data);
+            sign(data, _sig);
             return sig;
         }
 
@@ -190,7 +190,7 @@ public:
             key.fill(0);
         }
 
-        bool verify(const std::vector<uint8_t>& data, const std::vector<uint8_t>& signature) const;
+        bool verify(const Blob& data, const Blob& signature) const;
 
         operator std::string() const noexcept;
 
@@ -218,7 +218,7 @@ public:
             return KeyPair(key);
         }
 
-        static KeyPair fromPrivateKey(const std::vector<uint8_t>& key) {
+        static KeyPair fromPrivateKey(const Blob& key) {
             return KeyPair(key);
         }
 
@@ -319,14 +319,13 @@ public:
 
     bool verify(const Blob& sig, const PublicKey& pk) const;
 
-    static std::vector<uint8_t> sign(const std::vector<uint8_t>& data, const PrivateKey& sk) {
-        return sk.sign(data);
-    }
+    static std::vector<uint8_t> sign(const Blob& data, const PrivateKey& sk) {
+         return sk.sign(data);
+     }
 
-    static bool verify(const std::vector<uint8_t>& data, const std::vector<uint8_t>& sig, const PublicKey& pk) {
-        return pk.verify(data, sig);
-    }
-
+     static bool verify(const Blob& data, const Blob& signature, const PublicKey& pk) {
+         return pk.verify(data, signature);
+     }
 
 private:
     struct SignState { uint8_t __opaque__[256]; };
@@ -793,8 +792,8 @@ public:
     static uint64_t uint64(uint64_t upbound);
 
     static void buffer(void* buf, size_t length);
-    static void buffer(Blob blob);
-    static void buffer(std::vector<uint8_t> bytes);
+    static void buffer(Blob& blob);
+    static void buffer(std::vector<uint8_t>& bytes);
 };
 
 class CryptoError : public std::runtime_error

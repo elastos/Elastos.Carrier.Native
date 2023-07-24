@@ -67,7 +67,7 @@ PeerInfo::PeerInfo(const Signature::KeyPair& keypair, const Id& nodeId, const Id
         throw std::invalid_argument("Invalid port");
 
     this->publicKey = Id(keypair.publicKey());
-    this->privateKey = keypair.privateKey().blob();
+    this->privateKey = keypair.privateKey();
     this->nodeId = nodeId;
     this->origin = origin != Id::MIN_ID  ? origin : nodeId;
     this->port = port;
@@ -121,7 +121,6 @@ bool PeerInfo::isValid() const {
     Signature::PublicKey pk = publicKey.toSignatureKey();
     return Signature::verify(getSignData(), signature, pk);
 }
-
 
 }
 }

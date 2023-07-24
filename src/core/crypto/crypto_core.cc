@@ -92,13 +92,13 @@ Signature::PrivateKey::operator std::string() const noexcept
     return to_hex_string(key.data(), key.size());
 }
 
-void Signature::PrivateKey::sign(Blob& sig, const Blob& data) const
+void Signature::PrivateKey::sign(const Blob& data, Blob& signature) const
 {
-    assert(sig.size() == Signature::BYTES);
-    if (sig.size() != Signature::BYTES)
+    assert(signature.size() == Signature::BYTES);
+    if (signature.size() != Signature::BYTES)
         throw std::invalid_argument("Invalid signature length.");
 
-    crypto_sign_detached(sig.ptr(), nullptr, data.ptr(), data.size(), bytes()); // Always success
+    crypto_sign_detached(signature.ptr(), nullptr, data.ptr(), data.size(), bytes()); // Always success
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -118,13 +118,13 @@ Signature::PublicKey::operator std::string() const noexcept
     return to_hex_string(key.data(), key.size());
 }
 
-bool Signature::PublicKey::verify(const std::vector<uint8_t>& data, const std::vector<uint8_t>& sig) const
+bool Signature::PublicKey::verify(const Blob& data, const Blob& signature) const
 {
-    assert(sig.size() == Signature::BYTES);
-    if (sig.size() != Signature::BYTES)
+    assert(signature.size() == Signature::BYTES);
+    if (signature.size() != Signature::BYTES)
         throw std::invalid_argument("Invalid signature length.");
 
-    return crypto_sign_verify_detached(sig.data(), data.data(), data.size(), bytes()) == 0;
+    return crypto_sign_verify_detached(signature.ptr(), data.ptr(), data.size(), bytes()) == 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -290,7 +290,8 @@ CryptoBox::Nonce& CryptoBox::Nonce::increment() noexcept
 CryptoBox::Nonce CryptoBox::Nonce::random()
 {
     Nonce nonce {};
-    Random::buffer(nonce.blob());
+    Blob blob = nonce.blob();
+    Random::buffer(blob);
     return nonce;
 }
 
@@ -487,12 +488,12 @@ void Random::buffer(void* buf, size_t length)
     randombytes_buf(buf, length);
 }
 
-void Random::buffer(Blob blob)
+void Random::buffer(Blob& blob)
 {
-    randombytes_buf(blob.ptr(), blob.size());
+    randombytes_buf(blob.begin(), blob.size());
 }
 
-void Random::buffer(std::vector<uint8_t> bytes)
+void Random::buffer(std::vector<uint8_t>& bytes)
 {
     randombytes_buf(bytes.data(), bytes.size());
 }
