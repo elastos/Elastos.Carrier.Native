@@ -35,7 +35,7 @@ PeerInfo::PeerInfo(const Blob& peerId, const Blob& privateKey, const Blob& nodeI
     if (peerId.size() != Id::BYTES)
         throw std::invalid_argument("Invalid peer Id");
 
-    if (privateKey.size() != Signature::PrivateKey::BYTES)
+    if (privateKey && privateKey.size() != Signature::PrivateKey::BYTES)
         throw std::invalid_argument("Invalid private key");
 
     if (nodeId == Id::MIN_ID)
@@ -48,7 +48,8 @@ PeerInfo::PeerInfo(const Blob& peerId, const Blob& privateKey, const Blob& nodeI
         throw std::invalid_argument("Invalid signature");
 
     this->publicKey = Id(peerId);
-    this->privateKey = Signature::PrivateKey(privateKey);
+    if (privateKey)
+        this->privateKey = Signature::PrivateKey(privateKey);
     this->nodeId = Id(nodeId);
     this->origin = Id(origin);
     this->port = port;
