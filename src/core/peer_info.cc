@@ -51,7 +51,8 @@ PeerInfo::PeerInfo(const Blob& peerId, const Blob& privateKey, const Blob& nodeI
     if (privateKey)
         this->privateKey = Signature::PrivateKey(privateKey);
     this->nodeId = Id(nodeId);
-    this->origin = Id(origin);
+    if (origin)
+        this->origin = Id(origin);
     this->port = port;
     if (!alternativeURL.empty())
         this->alternativeURL = (char *)utf8proc_NFC((unsigned char *)(alternativeURL.c_str()));
