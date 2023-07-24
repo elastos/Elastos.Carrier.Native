@@ -430,7 +430,7 @@ bool SqliteStorage::removeValue(const Id& valueId){
     sqlite3_bind_blob(pStmt, 1, valueId.data(), valueId.size(), SQLITE_STATIC);
 
     bool ret = false;
-    if (sqlite3_step(pStmt) == SQLITE_ROW)
+    if (sqlite3_step(pStmt) == SQLITE_DONE)
         ret = true;
 
     sqlite3_finalize(pStmt);
@@ -541,8 +541,8 @@ Sp<PeerInfo> SqliteStorage::getPeer(const Id& peerId, const Id& origin) {
             }
         }
 
-        sqlite3_finalize(pStmt);
         auto peer = PeerInfo::of(peerId.blob(), privateKey, nodeId, origin, port, alt, signature);
+        sqlite3_finalize(pStmt);
         return std::make_shared<PeerInfo>(peer);
     }
 
@@ -719,10 +719,10 @@ bool SqliteStorage::removePeer(const Id& peerId, const Id& origin) {
     }
 
     sqlite3_bind_blob(pStmt, 1, peerId.data(), peerId.size(), SQLITE_STATIC);
-    sqlite3_bind_blob(pStmt, 1, origin.data(), origin.size(), SQLITE_STATIC);
+    sqlite3_bind_blob(pStmt, 2, origin.data(), origin.size(), SQLITE_STATIC);
 
     bool ret = false;
-    if (sqlite3_step(pStmt) == SQLITE_ROW)
+    if (sqlite3_step(pStmt) == SQLITE_DONE)
         ret = true;
 
     sqlite3_finalize(pStmt);
