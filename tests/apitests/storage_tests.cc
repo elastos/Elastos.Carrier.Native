@@ -321,7 +321,7 @@ void DataStorageTests::testPutAndGetPeer() {
 
         std::list<PeerInfo> peers = {};
         for (int j = 0; j < i; j++) {
-            auto pi = PeerInfo::of(Id::random(), Id::random(), basePort + i, "alt:" + std::to_string(i), sig);
+            auto pi = PeerInfo::of(Id::random().blob(), {}, Id::random().blob(), {}, basePort + i, "alt:" + std::to_string(i), sig);
             peers.push_back(pi);
         }
 
@@ -400,7 +400,7 @@ void DataStorageTests::testPutAndGetPersistentPeer() {
     std::cout << "Writing peers...";
     for (int i = 1; i <= 256; i++) {
         Random::buffer(sig);
-        auto pi = PeerInfo::of(Id::random(), nodeId, basePort + i, sig);
+        auto pi = PeerInfo::of(Id::random().blob(), {}, nodeId.blob(), {}, basePort + i, {}, sig);
 
         ids.push_back(pi.getId());
         ds->putPeer(pi, i % 2 == 0);

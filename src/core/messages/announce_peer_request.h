@@ -64,7 +64,7 @@ public:
         if (nodeId == Id::MIN_ID)
             nodeId = getId();
 
-        return PeerInfo::of(peerId, nodeId, getId(), port, alternativeURL, signature);
+        return PeerInfo::of(peerId.blob(), {}, nodeId.blob(), getId().blob(), port, alternativeURL, signature);
     }
 
     const Id& getTarget() const {

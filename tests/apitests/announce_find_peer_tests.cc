@@ -112,17 +112,17 @@ AnnounceFindPeerTests::testPeer() {
 
     for (int i = 0; i < 4; i++) {
         int val = 3 * i;
-        auto peer = PeerInfo::of(peerId1, node1->getId(), ports1[val], std::to_string(val), std::vector<uint8_t>(64, val));
+        auto peer = PeerInfo::of(peerId1.blob(), {}, node1->getId().blob(), {}, ports1[val], std::to_string(val), std::vector<uint8_t>(64, val));
         auto future1 = node1->announcePeer(peer);
         future1.get();
 
         val++;
-        peer = PeerInfo::of(peerId1, node2->getId(), ports1[val], std::to_string(val), std::vector<uint8_t>(64, val));
+        peer = PeerInfo::of(peerId1.blob(), {}, node2->getId().blob(), {}, ports1[val], std::to_string(val), std::vector<uint8_t>(64, val));
         auto future2 = node2->announcePeer(peer);
         future2.get();
 
         val++;
-        peer = PeerInfo::of(peerId1, node3->getId(), ports1[val], std::to_string(val), std::vector<uint8_t>(64, val));
+        peer = PeerInfo::of(peerId1.blob(), {}, node3->getId().blob(), {}, ports1[val], std::to_string(val), std::vector<uint8_t>(64, val));
         auto future3 = node3->announcePeer(peer);
         future3.get();
 #if 0
