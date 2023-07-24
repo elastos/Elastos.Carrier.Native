@@ -253,8 +253,8 @@ Sp<Value> SqliteStorage::getValue(const Id& valueId) {
             }
         }
 
-        sqlite3_finalize(pStmt);
         auto value = Value::of(publicKey, privateKey, recipient, nonce, sequenceNumber, signature, data);
+        sqlite3_finalize(pStmt);
         return std::make_shared<Value>(value);
     }
 
@@ -414,7 +414,6 @@ std::list<Value> SqliteStorage::getPersistentValues(uint64_t lastAnnounceBefore)
 
         auto value = Value::of(publicKey, privateKey, recipient, nonce, sequenceNumber, signature, data);
         values.emplace_back(value);
-
     }
 
     sqlite3_finalize(pStmt);
