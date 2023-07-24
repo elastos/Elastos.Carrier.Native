@@ -46,7 +46,7 @@ public:
     static Value createValue(const std::vector<uint8_t>& data) {
         auto empty = Blob();
         auto _data = Blob(data);
-        return Value(empty, empty, empty, empty, -1, _data, empty);
+        return Value(empty, empty, empty, empty, -1, empty, _data);
     }
 
     static Value createSignedValue(const std::vector<uint8_t>& data) {
@@ -146,7 +146,7 @@ public:
 
 private: // internal methods used in friend class.
     Value(const Blob& publicKey, const Blob& privateKey, const Blob& recipient,
-        const Blob& nonce, int sequenceNumber, const Blob& data, const Blob& signature);
+        const Blob& nonce, int sequenceNumber, const Blob& signature, const Blob& data);
 
     Value(const Signature::KeyPair& keyPair, const Id& recipient, const CryptoBox::Nonce& nonce,
         int sequenceNumber, const std::vector<uint8_t>& data);
