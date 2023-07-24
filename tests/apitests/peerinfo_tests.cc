@@ -45,10 +45,10 @@ PeerInfoTests::testPeerInfo() {
     uint16_t port = 65535;
     std::vector<uint8_t> sig1(64, 1);
     std::string address1 = "251.251.251.251";
-    auto peer1 = PeerInfo::of(id1.blob(), {}, pid1.blob(), {}, port, address1, sig1);
+    auto peer1 = PeerInfo::of(pid1.blob(), {}, id1.blob(), {}, port, address1, sig1);
 
+    CPPUNIT_ASSERT_EQUAL(pid1, peer1.getId());
     CPPUNIT_ASSERT_EQUAL(id1, peer1.getNodeId());
-    CPPUNIT_ASSERT_EQUAL(pid1, peer1.getNodeId());
     CPPUNIT_ASSERT_EQUAL(port, peer1.getPort());
     CPPUNIT_ASSERT_EQUAL(address1, peer1.getAlternativeURL());
     CPPUNIT_ASSERT(sig1 == peer1.getSignature());
