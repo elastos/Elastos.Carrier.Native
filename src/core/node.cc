@@ -529,7 +529,7 @@ std::future<std::list<PeerInfo>> Node::findPeer(const Id& id, int expected, Look
 std::future<void> Node::announcePeer(const PeerInfo& peer, bool persistent) const {
     checkState(isRunning(), "Node not running");
     // checkArgument(peer != nullptr, "Invalid peer: null");
-    checkArgument(!peer.getOrigin() == getId(), "Invaid peer: not belongs to current node");
+    checkArgument(peer.getOrigin() == getId(), "Invaid peer: not belongs to current node");
     checkArgument(peer.isValid(), "Invalid peer");
 
     auto promise = std::promise<void>();

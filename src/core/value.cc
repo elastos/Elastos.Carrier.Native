@@ -36,22 +36,22 @@ Value::Value(const Blob& publicKey, const Blob& privateKey, const Blob& recipien
         int sequenceNumber, const Blob& signature, const Blob& data) {
 
     if (!publicKey.empty()) {
-        if (privateKey && privateKey.size() != Signature::PrivateKey::BYTES)
+        if (privateKey.ptr() != nullptr && privateKey.size() != Signature::PrivateKey::BYTES)
             throw std::invalid_argument("Invalid private key");
 
-        if (nonce.size() != CryptoBox::Nonce::BYTES)
+        if (nonce.ptr() == nullptr || nonce.size() != CryptoBox::Nonce::BYTES)
             throw std::invalid_argument("Invalid nonce");
 
         if (sequenceNumber < 0)
             throw std::invalid_argument("Invalid sequence number");
 
-        if (signature.size() != Signature::BYTES)
+        if (signature.ptr() == nullptr || signature.size() != Signature::BYTES)
             throw std::invalid_argument("Invalid signature");
 
         this->publicKey = Id(publicKey);
-        if (privateKey)
+        if (privateKey.ptr() != nullptr)
             this->privateKey = Signature::PrivateKey(privateKey);
-        if (recipient)
+        if (recipient.ptr() != nullptr)
             this->recipient = Id(recipient);
         this->nonce = CryptoBox::Nonce(nonce);
         this->sequenceNumber = sequenceNumber;
