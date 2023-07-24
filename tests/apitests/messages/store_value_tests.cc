@@ -36,7 +36,7 @@ void StoreValueTests::setUp() {
 void StoreValueTests::testStoreValueRequestSize() {
     std::vector<uint8_t> data(1025, 'D');
 
-    Value value = Value::of({}, {}, {}, {}, 0, {}, {});
+    Value value = Value::of({}, {}, {}, {}, -1, {}, data);
 
     auto msg = StoreValueRequest();
     msg.setId(Id::random());
