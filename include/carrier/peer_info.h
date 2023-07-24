@@ -32,37 +32,8 @@ namespace carrier {
 struct CARRIER_PUBLIC PeerInfo {
     PeerInfo() = default;
 
-    static PeerInfo of(const Id& peerId, const Id& nodeId, int port, const std::vector<uint8_t>& signature) {
-        return PeerInfo(peerId, {}, nodeId, {}, port, {}, signature);
-    }
-
-    static PeerInfo of(const Id& peerId, Blob& privateKey, const Id& nodeId, int port, const std::vector<uint8_t>& signature) {
-        return PeerInfo(peerId, privateKey, nodeId, {}, port, {}, signature);
-    }
-
-    static PeerInfo of(const Id& peerId, const Id& nodeId, int port, const std::string& alternativeURL, const std::vector<uint8_t>& signature) {
-        return PeerInfo(peerId, {}, nodeId, {}, port, alternativeURL, signature);
-    }
-
-    static PeerInfo of(const Id& peerId, Blob& privateKey, const Id& nodeId, int port,
-            const std::string& alternativeURL, const std::vector<uint8_t>& signature) {
-        return PeerInfo(peerId, privateKey, nodeId, {}, port, alternativeURL, signature);
-    }
-
-    static PeerInfo of(const Id& peerId, const Id& nodeId, Id origin, int port, const std::vector<uint8_t>& signature) {
-        return PeerInfo(peerId, {}, nodeId, origin, port, {}, signature);
-    }
-
-    static PeerInfo of(const Id& peerId, Blob& privateKey, const Id& nodeId,  Id origin, int port, const std::vector<uint8_t>& signature) {
-        return PeerInfo(peerId, privateKey, nodeId, origin, port, {}, signature);
-    }
-
-    static PeerInfo of(const Id& peerId, const Id& nodeId, Id origin, int port, const std::string& alternativeURL, const std::vector<uint8_t>& signature) {
-        return PeerInfo(peerId, {}, nodeId, origin, port, alternativeURL, signature);
-    }
-
-    static PeerInfo of(const Id& peerId, Blob& privateKey, const Id& nodeId, Id origin, int port,
-            const std::string& alternativeURL, const std::vector<uint8_t>& signature) {
+    static PeerInfo of(Blob peerId, Blob privateKey, Blob nodeId, Blob origin, uint16_t port,
+        const std::string& alternativeURL, Blob signature) {
         return PeerInfo(peerId, privateKey, nodeId, origin, port, alternativeURL, signature);
     }
 
@@ -111,7 +82,7 @@ struct CARRIER_PUBLIC PeerInfo {
         return privateKey.size() != 0;
     }
 
-    const Blob& getPrivateKey() const noexcept {
+    const Signature::PrivateKey& getPrivateKey() const noexcept {
         return privateKey;
     }
 
@@ -124,7 +95,7 @@ struct CARRIER_PUBLIC PeerInfo {
     }
 
     bool isDelegated() const noexcept {
-        return delegated;
+        return nodeId != origin;
     }
 
     uint16_t getPort() const noexcept {
@@ -145,8 +116,6 @@ struct CARRIER_PUBLIC PeerInfo {
 
     bool isValid() const;
 
-    // int getFamily() const noexcept { return family; }
-
     bool operator==(const PeerInfo& other) const;
 
     bool operator<(const PeerInfo& other) const {
@@ -157,8 +126,8 @@ struct CARRIER_PUBLIC PeerInfo {
     friend std::ostream& operator<< (std::ostream& s, const PeerInfo& pi);
 
 private:
-    PeerInfo(const Id& peerId, const Blob& privateKey, const Id& nodeId, const Id& origin, uint16_t port,
-            const std::string& alternativeURL, const std::vector<uint8_t>& signature);
+    PeerInfo(const Blob& peerId, const Blob& privateKey, const Blob& nodeId, const Blob& origin, uint16_t port,
+            const std::string& alternativeURL, const Blob& signature);
 
     PeerInfo(const Signature::KeyPair& keypair, const Id& nodeId, const Id& origin, uint16_t port,
             const std::string& alternativeURL);
@@ -167,14 +136,12 @@ private:
 
 private:
     Id publicKey {};
-    Blob privateKey {};
+    Signature::PrivateKey privateKey {};
     Id nodeId {};
     Id origin {};
     uint16_t port {0};
     std::string alternativeURL {};
     std::vector<uint8_t> signature {};
-
-    bool delegated {false};
 };
 
 }

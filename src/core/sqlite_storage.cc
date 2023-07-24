@@ -456,11 +456,11 @@ std::list<PeerInfo> SqliteStorage::getPeer(const Id& peerId, int maxPeers) {
 
     while (sqlite3_step(pStmt) == SQLITE_ROW) {
         Blob privateKey {};
-        Id nodeId {};
-        Id origin {};
+        Blob nodeId {};
+        Blob origin {};
         uint16_t port {0};
         std::string alt {};
-        std::vector<uint8_t>  signature {};
+        Blob signature {};
 
         int cNum = sqlite3_column_count(pStmt);
         for (int i = 0; i < cNum; i++) {
@@ -477,19 +477,19 @@ std::list<PeerInfo> SqliteStorage::getPeer(const Id& peerId, int maxPeers) {
             if (std::strcmp(name, "privateKey") == 0 && len > 0) {
                 privateKey = Blob(ptr, len);
             } else if (std::strcmp(name, "nodeId") == 0 && len > 0) {
-                nodeId = Id(Blob(ptr, len));
+                nodeId = Blob(ptr, len);
             } else if (std::strcmp(name, "origin") == 0 && len > 0) {
-                origin = Id(Blob(ptr, len));
+                origin = Blob(ptr, len);
             } else if (std::strcmp(name, "port") == 0) {
                 port = sqlite3_column_int(pStmt, i);
             } else if (std::strcmp(name, "alternativeURL") == 0) {
                 alt = (char *)sqlite3_column_text(pStmt, i);
             } else if (std::strcmp(name, "signature") == 0) {
-                signature = {Blob(ptr, len)};
+                signature = Blob(ptr, len);
             }
         }
 
-        PeerInfo peer = PeerInfo::of(peerId, privateKey, nodeId, origin, port, alt, signature);
+        PeerInfo peer = PeerInfo::of(peerId.blob(), privateKey, nodeId, origin, port, alt, signature);
         peers.push_back(peer);
     }
     sqlite3_finalize(pStmt);
@@ -511,11 +511,11 @@ Sp<PeerInfo> SqliteStorage::getPeer(const Id& peerId, const Id& origin) {
 
     if (sqlite3_step(pStmt) == SQLITE_ROW) {
         Blob privateKey {};
-        Id nodeId {};
-        Id origin {};
+        Blob nodeId {};
+        Blob origin {};
         uint16_t port {0};
         std::string alt {};
-        std::vector<uint8_t>  signature {};
+        Blob  signature {};
 
         const int cNum = sqlite3_column_count(pStmt);
         for (int i = 0; i < cNum; i++) {
@@ -532,18 +532,18 @@ Sp<PeerInfo> SqliteStorage::getPeer(const Id& peerId, const Id& origin) {
             if (std::strcmp(name, "privateKey") == 0 && len > 0) {
                 privateKey = Blob(ptr, len);
             } else if (std::strcmp(name, "nodeId") == 0 && len > 0) {
-                nodeId = Id(Blob(ptr, len));
+                nodeId = Blob(ptr, len);
             } else if (std::strcmp(name, "port") == 0) {
                 port = sqlite3_column_int(pStmt, i);
             } else if (std::strcmp(name, "alternativeURL") == 0) {
                 alt = (char *)sqlite3_column_text(pStmt, i);
             } else if (std::strcmp(name, "signature") == 0) {
-                signature = {Blob(ptr, len)};
+                signature = Blob(ptr, len);
             }
         }
 
         sqlite3_finalize(pStmt);
-        auto peer = PeerInfo::of(peerId, privateKey, nodeId, origin, port, alt, signature);
+        auto peer = PeerInfo::of(peerId.blob(), privateKey, nodeId, origin, port, alt, signature);
         return std::make_shared<PeerInfo>(peer);
     }
 
@@ -565,7 +565,7 @@ void SqliteStorage::putPeer(const std::list<PeerInfo>& peers) {
     for (const auto& peer : peers) {
         sqlite3_bind_blob(pStmt, 1, peer.getId().data(), peer.getId().size(), SQLITE_STATIC);
         sqlite3_bind_int(pStmt, 2, false);
-        sqlite3_bind_blob(pStmt, 3, peer.getPrivateKey().ptr(), peer.getPrivateKey().size(), SQLITE_STATIC);
+        sqlite3_bind_blob(pStmt, 3, peer.getPrivateKey().bytes(), peer.getPrivateKey().size(), SQLITE_STATIC);
         sqlite3_bind_blob(pStmt, 4, peer.getNodeId().data(), peer.getNodeId().size(), SQLITE_STATIC);
         sqlite3_bind_blob(pStmt, 5, peer.getOrigin().data(), peer.getOrigin().size(), SQLITE_STATIC);
         sqlite3_bind_int(pStmt, 6, peer.getPort());
@@ -596,7 +596,7 @@ void SqliteStorage::putPeer(const PeerInfo& peer, bool persistent, bool updateLa
 
     sqlite3_bind_blob(pStmt, 1, peer.getId().data(), peer.getId().size(), SQLITE_STATIC);
     sqlite3_bind_int(pStmt, 2, persistent);
-    sqlite3_bind_int(pStmt, 3, peer.getPrivateKey());
+    sqlite3_bind_int(pStmt, 3, peer.getPrivateKey().blob());
     sqlite3_bind_blob(pStmt, 4, peer.getNodeId().data(), peer.getNodeId().size(), SQLITE_STATIC);
     sqlite3_bind_blob(pStmt, 5, peer.getOrigin().data(), peer.getOrigin().size(), SQLITE_STATIC);
     sqlite3_bind_int(pStmt, 6, peer.getPort());
@@ -669,13 +669,13 @@ std::list<PeerInfo> SqliteStorage::getPersistentPeers(uint64_t lastAnnounceBefor
     sqlite3_bind_int64(pStmt, 1, lastAnnounceBefore);
 
     while (sqlite3_step(pStmt) == SQLITE_ROW) {
-        Id peerId {};
+        Blob peerId {};
         Blob privateKey {};
-        Id nodeId {};
-        Id origin {};
+        Blob nodeId {};
+        Blob origin {};
         uint16_t port {0};
         std::string alt {};
-        std::vector<uint8_t>  signature {};
+        Blob signature {};
 
         const int cNum = sqlite3_column_count(pStmt);
         for (int i = 0; i < cNum; i++) {
@@ -690,17 +690,17 @@ std::list<PeerInfo> SqliteStorage::getPersistentPeers(uint64_t lastAnnounceBefor
             }
 
             if (std::strcmp(name, "id") == 0 && len > 0) {
-                peerId = Id(Blob(ptr, len));
+                peerId = Blob(ptr, len);
             } else if (std::strcmp(name, "privateKey") == 0 && len > 0) {
                 privateKey = Blob(ptr, len);
             } else if (std::strcmp(name, "nodeId") == 0 && len > 0) {
-                nodeId = Id(Blob(ptr, len));
+                nodeId = Blob(ptr, len);
             } else if (std::strcmp(name, "port") == 0) {
                 port = sqlite3_column_int(pStmt, i);
             } else if (std::strcmp(name, "alternativeURL") == 0) {
                 alt = (char *)sqlite3_column_text(pStmt, i);
             } else if (std::strcmp(name, "signature") == 0) {
-                signature = {Blob(ptr, len)};
+                signature = Blob(ptr, len);
             }
         }
 

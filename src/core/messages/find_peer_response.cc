@@ -76,16 +76,16 @@ void FindPeerResponse::_parse(const std::string& fieldName, nlohmann::json& obje
     if (fieldName != KEY_RES_PEERS)
         throw std::invalid_argument("invalid find peer response message");
 
-    Id peerId {};
+    Blob peerId {};
     for (nlohmann::json::iterator it = object.begin(); it != object.end(); ++it) {
         if (!it->is_array()) {
-            peerId = Id(it->get_binary());
+            peerId = it->get_binary();
         } else {
-            auto id = Id(it->at(0).get_binary());
+            auto id = it->at(0).get_binary();
 
-            Id origin {};
+            Blob origin {};
             if (!it->at(1).is_null())
-                origin = Id(it->at(1).get_binary());
+                origin =it->at(1).get_binary();
 
             auto port = it->at(2).get<uint16_t>();
 
@@ -95,7 +95,7 @@ void FindPeerResponse::_parse(const std::string& fieldName, nlohmann::json& obje
 
             auto sig = it->at(4).get_binary();
 
-            auto pi = PeerInfo::of(peerId, id, origin, port, alt, sig);
+            auto pi = PeerInfo::of(peerId,{}, id, origin, port, alt, sig);
             peers.emplace_back(pi);
         }
     }

@@ -29,13 +29,13 @@
 namespace elastos {
 namespace carrier {
 
-PeerInfo::PeerInfo(const Id& peerId, const Blob& privateKey, const Id& nodeId, const Id& origin, uint16_t port,
-            const std::string& alternativeURL, const std::vector<uint8_t>& signature) {
+PeerInfo::PeerInfo(const Blob& peerId, const Blob& privateKey, const Blob& nodeId, const Blob& origin,
+            uint16_t port, const std::string& alternativeURL, const Blob& signature) {
 
-    if (peerId == Id::MIN_ID)
-        throw std::invalid_argument("Invalid peer id");
+    if (peerId.size() != Id::BYTES)
+        throw std::invalid_argument("Invalid peer Id");
 
-    if (privateKey && privateKey.size() != Signature::PrivateKey::BYTES)
+    if (privateKey.size() != Signature::PrivateKey::BYTES)
         throw std::invalid_argument("Invalid private key");
 
     if (nodeId == Id::MIN_ID)
@@ -47,15 +47,14 @@ PeerInfo::PeerInfo(const Id& peerId, const Blob& privateKey, const Id& nodeId, c
     if (signature.size() != Signature::BYTES)
         throw std::invalid_argument("Invalid signature");
 
-    this->publicKey = peerId;
-    this->privateKey = privateKey;
-    this->nodeId = nodeId;
-    this->delegated = origin != Id::MIN_ID;
-    this->origin = this->delegated ? origin : nodeId;
+    this->publicKey = Id(peerId);
+    this->privateKey = Signature::PrivateKey(privateKey);
+    this->nodeId = Id(nodeId);
+    this->origin = Id(origin);
     this->port = port;
     if (!alternativeURL.empty())
         this->alternativeURL = (char *)utf8proc_NFC((unsigned char *)(alternativeURL.c_str()));
-    this->signature = signature;
+    this->signature = std::vector<uint8_t>(signature.cbegin(), signature.cend());
 }
 
 PeerInfo::PeerInfo(const Signature::KeyPair& keypair, const Id& nodeId, const Id& origin, uint16_t port,
@@ -69,8 +68,7 @@ PeerInfo::PeerInfo(const Signature::KeyPair& keypair, const Id& nodeId, const Id
     this->publicKey = Id(keypair.publicKey());
     this->privateKey = keypair.privateKey().blob();
     this->nodeId = nodeId;
-    this->delegated = origin != Id::MIN_ID;
-    this->origin = this->delegated ? origin : nodeId;
+    this->origin = origin;
     this->port = port;
     if (!alternativeURL.empty())
         this->alternativeURL = (char *)utf8proc_NFC((unsigned char *)(alternativeURL.c_str()));
@@ -84,7 +82,7 @@ bool PeerInfo::operator==(const PeerInfo& other) const {
 
 PeerInfo::operator std::string() const {
     std::stringstream ss;
-    // ss.str().reserve(80);
+    ss.str().reserve(80);
     ss << "<" << nodeId.toBase58String() << ",";
 
     if (isDelegated())

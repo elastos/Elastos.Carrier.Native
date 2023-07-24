@@ -35,7 +35,7 @@ void AnnouncePeerTests::setUp() {
 
 void AnnouncePeerTests::testAnnouncePeerRequestSize() {
     std::vector<uint8_t> sig(64);
-    PeerInfo peer = PeerInfo::of(Id::random(), Id::random(), 65535, sig);
+    PeerInfo peer = PeerInfo::of(Id::random().blob(), {}, Id::random().blob(), {}, 65535, {}, sig);
 
     auto msg = AnnouncePeerRequest();
     msg.setId(Id::random());
@@ -52,7 +52,7 @@ void AnnouncePeerTests::testAnnouncePeerRequestSize() {
 void AnnouncePeerTests::testAnnouncePeerRequestSize2() {
     std::vector<uint8_t> sig(64);
     Random::buffer(sig.data(), sig.size());
-    PeerInfo peer = PeerInfo::of(Id::random(), Id::random(), 65535, "https://abc.pc2.net", sig);
+    PeerInfo peer = PeerInfo::of(Id::random().blob(), {}, Id::random().blob(), {}, 65535, "https://abc.pc2.net", sig);
 
     auto msg = AnnouncePeerRequest();
     msg.setId(Id::random());
@@ -76,7 +76,7 @@ void AnnouncePeerTests::testAnnouncePeerRequest() {
     std::vector<uint8_t> sig(64);
     Random::buffer(sig.data(), sig.size());
 
-    PeerInfo peer = PeerInfo::of(peerId, nodeId, port, sig);
+    PeerInfo peer = PeerInfo::of(peerId.blob(), {}, nodeId.blob(), {}, port, {}, sig);
 
     auto msg = AnnouncePeerRequest();
     msg.setId(nodeId);
@@ -113,7 +113,7 @@ void AnnouncePeerTests::testAnnouncePeerRequest2() {
     std::vector<uint8_t> sig(64);
     Random::buffer(sig.data(), sig.size());
 
-    PeerInfo peer = PeerInfo::of(peerId, nodeId, origin, port, "http://abc.pc2.net/", sig);
+    PeerInfo peer = PeerInfo::of(peerId.blob(), {}, nodeId.blob(), origin.blob(), port, "http://abc.pc2.net/", sig);
 
     auto msg = AnnouncePeerRequest();
     msg.setId(origin);
