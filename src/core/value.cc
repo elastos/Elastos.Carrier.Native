@@ -48,9 +48,11 @@ Value::Value(const Blob& publicKey, const Blob& privateKey, const Blob& recipien
         if (signature.size() != Signature::BYTES)
             throw std::invalid_argument("Invalid signature");
 
-        this->publicKey = publicKey;
-        this->privateKey = Signature::PrivateKey(privateKey);
-        this->recipient = recipient;
+        this->publicKey = Id(publicKey);
+        if (privateKey)
+            this->privateKey = Signature::PrivateKey(privateKey);
+        if (recipient)
+            this->recipient = Id(recipient);
         this->nonce = CryptoBox::Nonce(nonce);
         this->sequenceNumber = sequenceNumber;
         this->signature = std::vector<uint8_t>(signature.cbegin(), signature.cend());
