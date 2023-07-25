@@ -119,7 +119,16 @@ struct CARRIER_PUBLIC PeerInfo {
     bool operator==(const PeerInfo& other) const;
 
     bool operator<(const PeerInfo& other) const {
-        return nodeId.compareTo(other.nodeId) < 0;
+        int rc = publicKey.compareTo(other.publicKey);
+        if (rc != 0)
+            return rc < 0;
+
+        rc = nodeId.compareTo(other.nodeId);
+        if (rc != 0)
+            return rc < 0;
+
+        rc = origin.compareTo(other.origin);
+        return rc < 0;
     }
 
     operator std::string() const;

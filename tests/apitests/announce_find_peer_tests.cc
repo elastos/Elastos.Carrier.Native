@@ -93,8 +93,11 @@ AnnounceFindPeerTests::setUp() {
 
 void
 AnnounceFindPeerTests::testPeer() {
-    auto peerId1 = Id::random();
-    auto peerId2 = Id::random();
+    Signature::KeyPair keyPair1 = Signature::KeyPair::random();
+    Signature::KeyPair keyPair2 = Signature::KeyPair::random();
+    Id peerId1 = Id(keyPair1.publicKey());
+    Id peerId2 = Id(keyPair2.publicKey());
+
     auto proxyId = proxy->getId();
 
     std::vector<int> ports1;
@@ -112,41 +115,44 @@ AnnounceFindPeerTests::testPeer() {
 
     for (int i = 0; i < 4; i++) {
         int val = 3 * i;
-        auto peer = PeerInfo::of(peerId1.blob(), {}, node1->getId().blob(), {}, ports1[val], std::to_string(val), std::vector<uint8_t>(64, val));
+        auto peer = PeerInfo::create(keyPair1, node1->getId().blob(), ports1[val], std::to_string(val));
         auto future1 = node1->announcePeer(peer);
         future1.get();
 
         val++;
-        peer = PeerInfo::of(peerId1.blob(), {}, node2->getId().blob(), {}, ports1[val], std::to_string(val), std::vector<uint8_t>(64, val));
+        peer = PeerInfo::create(keyPair1, node2->getId().blob(), ports1[val], std::to_string(val));
         auto future2 = node2->announcePeer(peer);
         future2.get();
 
         val++;
-        peer = PeerInfo::of(peerId1.blob(), {}, node3->getId().blob(), {}, ports1[val], std::to_string(val), std::vector<uint8_t>(64, val));
+        peer = PeerInfo::create(keyPair1, node3->getId().blob(), ports1[val], std::to_string(val));
         auto future3 = node3->announcePeer(peer);
         future3.get();
-#if 0
+
         val = 3 * i;
-        auto data1 = Utils::getSignData(node1->getId(), proxyId, ports2[val], std::to_string(val));
-        auto signature1 = proxy->sign(data1);
-        auto future4 = node1->announcePeer(peerId2, proxyId, ports2[val], std::to_string(val), signature1);
-        auto result4 = future4.get();
-        CPPUNIT_ASSERT(result4);
+        auto data1 = Utils::getSignData(proxyId, node1->getId(), ports2[val], std::to_string(val));
+        auto signature1 = keyPair2.privateKey().sign(data1);
+
+        Signature::PublicKey pk = keyPair2.publicKey();
+        CPPUNIT_ASSERT(Signature::verify(data1, signature1, pk));
+
+        peer = PeerInfo::of(peerId2.blob(), keyPair2.privateKey().blob(), proxyId.blob(), node1->getId().blob(), ports2[val], std::to_string(val), signature1);
+        auto future4 = node1->announcePeer(peer);
+        future4.get();
 
         val++;
-        auto data2 = Utils::getSignData(node2->getId(), proxyId, ports2[val], std::to_string(val));
-        auto signature2 = proxy->sign(data2);
-        auto future5 = node2->announcePeer(peerId2, proxyId, ports2[val], std::to_string(val), signature2);
-        auto result5 = future5.get();
-        CPPUNIT_ASSERT(result5);
+        auto data2 = Utils::getSignData(proxyId, node2->getId(), ports2[val], std::to_string(val));
+        auto signature2 = keyPair2.privateKey().sign(data2);
+        peer = PeerInfo::of(peerId2.blob(), keyPair2.privateKey().blob(), proxyId.blob(), node2->getId().blob(), ports2[val], std::to_string(val), signature2);
+        auto future5 = node2->announcePeer(peer);
+        future5.get();
 
         val++;
-        auto data3 = Utils::getSignData(node3->getId(), proxyId, ports2[val], std::to_string(val));
-        auto signature3 = proxy->sign(data3);
-        auto future6 = node3->announcePeer(peerId2, proxyId, ports2[val], std::to_string(val), signature3);
-        auto result6 = future6.get();
-        CPPUNIT_ASSERT(result6);
-#endif
+        auto data3 = Utils::getSignData(proxyId, node3->getId(), ports2[val], std::to_string(val));
+        auto signature3 = keyPair2.privateKey().sign(data3);
+        peer = PeerInfo::of(peerId2.blob(), keyPair2.privateKey().blob(), proxyId.blob(), node3->getId().blob(), ports2[val], std::to_string(val), signature3);
+        auto future6 = node3->announcePeer(peer);
+        future6.get();
     }
 
     std::this_thread::sleep_for(2000ms);
@@ -177,8 +183,8 @@ AnnounceFindPeerTests::testPeer() {
     auto future9 = node1->findPeer(peerId2, 24);
     auto peers9 = future9.get();
     CPPUNIT_ASSERT(3 == peers9.size());
-    //for (auto& peer: peers9)
-        //CPPUNIT_ASSERT(peer.isValid());
+    for (auto& peer: peers9)
+        CPPUNIT_ASSERT(peer.isValid());
 
     auto future10 = node2->findPeer(peerId2, 4);
     auto peers10 = future10.get();
@@ -189,10 +195,14 @@ AnnounceFindPeerTests::testPeer() {
 
         auto port = peer.getPort();
         auto node = peer.getNodeId();
+        auto origin = peer.getOrigin();
+
         auto result9 = std::find(ports2.begin(), ports2.end(), port);
         CPPUNIT_ASSERT(result9 != ports2.end());
 
-        auto result10 = std::find(nodes.begin(), nodes.end(), node);
+        CPPUNIT_ASSERT(node == proxyId);
+
+        auto result10 = std::find(nodes.begin(), nodes.end(), origin);
         CPPUNIT_ASSERT(result10 != nodes.end());
     }
 }

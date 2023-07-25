@@ -20,6 +20,9 @@ add_submodule(spdlog
 add_submodule(spdlog-setup
     DEPENDS spdlog platform-specific)
 
+add_submodule(libutf8proc
+    DEPENDS platform-specific)
+
 if (ENABLE_ADDONS)
     add_submodule(libuv
         DEPENDS platform-specific)
@@ -32,8 +35,6 @@ if (ENABLE_APPS)
     add_submodule(CLI11
         DEPENDS platform-specific)
 
-    add_submodule(libutf8proc
-        DEPENDS platform-specific)
 endif()
 
 if(ENABLE_CARRIER_CRAWLER)
