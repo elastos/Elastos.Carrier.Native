@@ -24,6 +24,7 @@
 #include <climits>
 #include <string>
 #include <algorithm>
+#include <stdexcept>
 
 #include "carrier/id.h"
 #include "utils/hex.h"
@@ -36,6 +37,14 @@ namespace carrier {
 
 Id Id::MIN_ID = Id::zero();
 Id Id::MAX_ID = Id::ofHex("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
+
+Id::Id(const Blob& id) {
+    if (id.empty() || id.size() != ID_BYTES)
+        throw std::invalid_argument("Binary id should be " + std::to_string(ID_BYTES) + " bytes long.");
+
+    bytes = new uint8_t[ID_BYTES];
+    std::memcpy(bytes, id.ptr(), id.size());
+}
 
 std::ostream& operator<< (std::ostream& os, const Id& id) {
     os << static_cast<std::string>(id);
@@ -54,6 +63,7 @@ Id Id::ofBase58(const std::string& base58Id) {
     return id;
 }
 
+// TODO: to be removed.
 Id Id::ofName(std::string name) {
     std::transform(name.begin(), name.end(), name.begin(), ::tolower);
 
@@ -67,8 +77,8 @@ Id Id::ofName(std::string name) {
 
 Id Id::random() {
     Id id;
-    auto a = reinterpret_cast<uint32_t*>(id.bytes.data());
-    auto b = reinterpret_cast<uint32_t*>(id.bytes.data()+ ID_BYTES);
+    auto a = reinterpret_cast<uint32_t*>(id.bytes);
+    auto b = reinterpret_cast<uint32_t*>(id.bytes + ID_BYTES);
 
     RandomGenerator<uint32_t> generator;
     std::generate(a, b, generator);
@@ -138,7 +148,7 @@ void Id::bitsCopy(const Id& src, Id& dest, int depth) {
     // copy over all complete bytes
     int idx = depth >> 3;
     if (idx > 0)
-        std::memcpy(dest.bytes.data(), src.bytes.data(), idx);
+        std::memcpy(dest.bytes, src.bytes, idx);
 
     int mask = 0xff80 >> (depth & 0x07);
 
@@ -179,15 +189,15 @@ int Id::getLeadingZeros() {
 }
 
 bool Id::operator<(const Id& other) const {
-    return std::lexicographical_compare(bytes.begin(), bytes.end(), other.bytes.begin(), other.bytes.end());
+    return std::lexicographical_compare(cbegin(), cend(), other.cbegin(), other.cend());
 }
 
 const std::string Id::toHexString() const {
-    return "0x" + Hex::encode(bytes);
+    return "0x" + Hex::encode(bytes, ID_BYTES);
 }
 
 const std::string Id::toBase58String() const {
-    return base58_encode((uint8_t*)bytes.data(), bytes.size());
+    return base58_encode(bytes, ID_BYTES);
 }
 
 const std::string Id::toBinaryString() const {
@@ -205,7 +215,7 @@ void Id::fromBase58String(const std::string& str) {
     if(data.size() != ID_BYTES)
         throw std::out_of_range("Invalid id string, the size of data from decoding string is 32 bytes.");
 
-    std::memcpy(bytes.data(), data.data(), ID_BYTES);
+    std::memcpy(bytes, data.data(), ID_BYTES);
 }
 
 void Id::fromHexString(const std::string& str) {
@@ -215,7 +225,7 @@ void Id::fromHexString(const std::string& str) {
         throw std::out_of_range("Hex ID string should be 64 characters long.");
 
     auto data = Hex::decode(str.c_str() + pos, ID_BYTES * 2);
-    std::memcpy(bytes.data(), data.data(), bytes.size());
+    std::memcpy(bytes, data.data(), ID_BYTES);
 }
 
 }

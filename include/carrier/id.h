@@ -22,14 +22,12 @@
 
 #pragma once
 
-#include <array>
-#include <vector>
-#include <stdexcept>
+
 #include <string>
 
 #include "def.h"
-#include "types.h"
 #include "blob.h"
+#include "types.h"
 #include "signature.h"
 #include "crypto_box.h"
 
@@ -46,25 +44,35 @@ public:
     static Id MIN_ID;
     static Id MAX_ID;
 
-    Id() noexcept = default;
-    Id(const Id& id) = default;
-
-    Id(const Blob& id) {
-        if (!id || id.size() != ID_BYTES)
-            throw std::invalid_argument("Binary id should be " + std::to_string(ID_BYTES) + " bytes long.");
-
-        std::memcpy(bytes.data(), id.ptr(), id.size());
+    Id() {
+        bytes = new uint8_t[ID_BYTES];
+        std::memset(bytes, 0, ID_BYTES);
     }
 
-    Id(const Signature::PublicKey& key)
-        : Id(key.blob()) {}
+    Id(const Id& id) {
+        bytes = new uint8_t[ID_BYTES];
+        std::memcpy(bytes, id.bytes, ID_BYTES);
+    }
+
+    Id(Id&& id) noexcept {
+        bytes = id.bytes;
+        id.bytes = nullptr;
+    };
+
+    ~Id() {
+        std::memset(bytes, 0, ID_BYTES);
+        if (bytes)
+            delete [] bytes;
+    }
+
+    Id(const Blob& id);
 
     explicit Id(const std::string& id) {
         id.find("0x") == 0 ? fromHexString(id) : fromBase58String(id);
     }
 
     constexpr const uint8_t* data() const noexcept {
-        return bytes.data();
+        return const_cast<uint8_t*>(bytes);
     }
 
     constexpr size_t size() const noexcept {
@@ -72,15 +80,15 @@ public:
     }
 
     constexpr const uint8_t* cbegin() const noexcept {
-        return bytes.data();
+        return const_cast<uint8_t*>(bytes);
     }
 
     constexpr const uint8_t* cend() const noexcept {
-        return bytes.data() + ID_BYTES;
+        return const_cast<uint8_t*>(bytes) + ID_BYTES;
     }
 
     const Blob blob() const noexcept {
-        return static_cast<bool>(*this) ? Blob(bytes) : Blob();
+        return Blob(bytes, ID_BYTES);
     }
 
     Sp<Signature::PublicKey> toKey() const {
@@ -96,7 +104,7 @@ public:
     }
 
     Signature::PublicKey toSignatureKey() const {
-        return Signature::PublicKey(bytes);
+        return Signature::PublicKey(Blob(bytes, ID_BYTES));
     }
 
     CryptoBox::PublicKey toEncryptionKey() const {
@@ -138,25 +146,29 @@ public:
     bool operator<(const Id& other) const;
 
     Id& operator=(const Id& other) noexcept {
-        std::memcpy(bytes.data(), other.data(), ID_BYTES);
+        std::memcpy(bytes, other.bytes, ID_BYTES);
         return *this;
     }
 
     Id& operator=(Id&& other) noexcept {
-        std::memcpy(bytes.data(), other.bytes.data(), ID_BYTES);
-        std::memset(other.bytes.data(), 0, ID_BYTES);
+        delete [] bytes;
+        bytes = other.bytes;
+        other.bytes = nullptr;
         return *this;
     }
 
-    operator std::string() const { return toBase58String(); }
+    operator std::string() const {
+        return toBase58String();
+    }
+
     operator bool() const {
-        return !std::all_of(bytes.cbegin(), bytes.cend(), [](uint8_t i){ return !i; });
+        return compareTo(MIN_ID) != 0;
     }
 
     friend std::ostream& operator<< (std::ostream& os, const Id& id);
 
 protected:
-    std::array<uint8_t, ID_BYTES>& getData() { return bytes; }
+    uint8_t* getData() { return bytes; }
 
 private:
     void fromBase58String(const std::string&);
@@ -165,7 +177,7 @@ private:
     // Counts the number of leading 0's in this Id
     int getLeadingZeros();
 
-    std::array<uint8_t, ID_BYTES> bytes {0};
+    uint8_t *bytes { nullptr };
 };
 
 } // namespace carrier

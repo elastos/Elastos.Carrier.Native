@@ -24,6 +24,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include "carrier/types.h"
 #include "carrier/id.h"
 #include "carrier/node_info.h"
 #include "utils/time.h"

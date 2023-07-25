@@ -24,13 +24,14 @@
 
 #include <vector>
 #include <memory>
-#include <nlohmann/json.hpp>
 #include <map>
+#include <nlohmann/json.hpp>
 
-#include "constants.h"
-#include "carrier/socket_address.h"
 #include "carrier/id.h"
+#include "carrier/types.h"
+#include "carrier/socket_address.h"
 #include "carrier/version.h"
+#include "constants.h"
 
 // #define MSG_PRINT_DETAIL 1
 
