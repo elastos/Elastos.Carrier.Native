@@ -534,6 +534,8 @@ Sp<PeerInfo> SqliteStorage::getPeer(const Id& peerId, const Id& origin) {
                 privateKey = Blob(ptr, len);
             } else if (std::strcmp(name, "nodeId") == 0 && len > 0) {
                 nodeId = Blob(ptr, len);
+            } else if (std::strcmp(name, "origin") == 0 && len > 0) {
+                origin = Blob(ptr, len);
             } else if (std::strcmp(name, "port") == 0) {
                 port = sqlite3_column_int(pStmt, i);
             } else if (std::strcmp(name, "alternativeURL") == 0) {
