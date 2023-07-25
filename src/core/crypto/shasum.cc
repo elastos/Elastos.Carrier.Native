@@ -22,6 +22,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <cassert>
+#include <stdexcept>
 
 #include <sodium.h>
 #include "shasum.h"

@@ -2,7 +2,7 @@ project(libutf8proc)
 
 include(ProjectDefaults)
 include(ExternalProject)
-include(ExternalConfigureArgs)
+include(ExternalCMakeArgs)
 
 ExternalProject_Add(
     libutf8proc

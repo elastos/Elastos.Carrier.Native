@@ -29,16 +29,14 @@
 namespace elastos {
 namespace carrier {
 
-class _LIBCPP_EXCEPTION_ABI StateError: public std::runtime_error
+class StateError: public std::runtime_error
 {
 public:
-    _LIBCPP_INLINE_VISIBILITY explicit StateError(const std::string& __s) : runtime_error(__s) {}
-    _LIBCPP_INLINE_VISIBILITY explicit StateError(const char* __s)   : runtime_error(__s) {}
+    explicit StateError(const std::string& __s) : runtime_error(__s) {}
+    explicit StateError(const char* __s)  : runtime_error(__s) {}
 
-#ifndef _LIBCPP_ABI_VCRUNTIME
-    StateError(const StateError&) _NOEXCEPT = default;
-    ~StateError() _NOEXCEPT = default;
-#endif
+    StateError(const StateError&) noexcept = default;
+    ~StateError() noexcept = default;
 };
 
 inline void checkArgument(bool expression, const std::string& errorMessage) {
