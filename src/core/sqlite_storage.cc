@@ -420,7 +420,7 @@ std::list<Value> SqliteStorage::getPersistentValues(uint64_t lastAnnounceBefore)
     return values;
 }
 
-bool SqliteStorage::removeValue(const Id& valueId){
+bool SqliteStorage::removeValue(const Id& valueId) {
     sqlite3_stmt* pStmt {nullptr};
     if (sqlite3_prepare_v2(sqlite_store, REMOVE_VALUE.c_str(), strlen(REMOVE_VALUE.c_str()), &pStmt, 0) != SQLITE_OK) {
         sqlite3_finalize(pStmt);
@@ -430,8 +430,10 @@ bool SqliteStorage::removeValue(const Id& valueId){
     sqlite3_bind_blob(pStmt, 1, valueId.data(), valueId.size(), SQLITE_STATIC);
 
     bool ret = false;
-    if (sqlite3_step(pStmt) == SQLITE_DONE)
-        ret = true;
+    if (sqlite3_step(pStmt) == SQLITE_DONE) {
+        if (sqlite3_changes(sqlite_store) > 0)
+            ret = true;
+    }
 
     sqlite3_finalize(pStmt);
     return ret;
@@ -722,8 +724,10 @@ bool SqliteStorage::removePeer(const Id& peerId, const Id& origin) {
     sqlite3_bind_blob(pStmt, 2, origin.data(), origin.size(), SQLITE_STATIC);
 
     bool ret = false;
-    if (sqlite3_step(pStmt) == SQLITE_DONE)
-        ret = true;
+    if (sqlite3_step(pStmt) == SQLITE_DONE) {
+        if (sqlite3_changes(sqlite_store) > 0)
+            ret = true;
+    }
 
     sqlite3_finalize(pStmt);
     return ret;
