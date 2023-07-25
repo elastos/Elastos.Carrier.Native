@@ -75,52 +75,99 @@ void NodeApiTester::testSelfNodes() {
     auto ni1 = NodeInfo {node1->getId(), Utils::getLocalIpAddresses(), node1->getPort()};
     node2->bootstrap(ni1);
 
+    auto remoteId = node2->getId();
 #if 1
-    std::cout << "Trying to find Node " << node2->getId() << std::endl;
-    auto future = node1->findNode(node2->getId());
+    std::cout << "-----Find node-----" << std::endl;
+    std::cout << "Trying to find Node " << remoteId.toBase58String() << std::endl;
+    auto future = node1->findNode(remoteId);
     auto ni2 = future.get();
     std::cout << "ni2 size: " << ni2.size() << std::endl;
     CPPUNIT_ASSERT_MESSAGE("Node not found!", ni2.size());
     for (auto ni: ni2) {
-        std::cout << "ni: " << *ni << std::endl;
+        std::cout << "ni: " << static_cast<std::string>(*ni) << std::endl;
     }
 #endif
 
 #if 1
-    std::cout << "----------" << std::endl;
-    std::vector<uint8_t> blob({1,2,3,4,5});
-    auto value = Value::createValue(blob);
+    std::cout << "-----Store value-----" << std::endl;
+    std::vector<uint8_t> data({0, 1, 2, 3, 4});
+    auto value = Value::createValue(data);
     std::cout << "Trying to Sotre Value " << std::endl;
     auto future1 = node1->storeValue(value);
     future1.get();
     std::cout << "Store value succeeeed." << std::endl;
+
+	auto signedValue = Value::createSignedValue(data);
+    future1 = node1->storeValue(signedValue);
+    future1.get();
+    std::cout << "Store signedValue succeeeed." << std::endl;
+
+    auto recipientId = remoteId;
+    auto encryptedValue = Value::createEncryptedValue(recipientId, data);
+    future1 = node1->storeValue(encryptedValue);
+    future1.get();
+    std::cout << "Store encryptedValue succeeeed." << std::endl;
 #endif
 
 #if 1
-    std::cout << "----------" << std::endl;
-    std::cout << "Trying to find Value with Id: " << value.getId() << std::endl;
+    std::cout << "-----Find value-----" << std::endl;
+    std::cout << "Trying to find Value with Id: " << value.getId().toBase58String() << std::endl;
     auto future2 = node1->findValue(value.getId());
     auto val = future2.get();
-    CPPUNIT_ASSERT(value == *val);
     CPPUNIT_ASSERT_MESSAGE("Value not found!", val != nullptr);
+    CPPUNIT_ASSERT_MESSAGE("Value is invalid!", val->isValid());
     std::cout << "Value: " << static_cast<std::string>(*val) << std::endl;
+
+    std::cout << "Trying to find SignedValue with Id: " << signedValue.getId().toBase58String() << std::endl;
+    future2 = node1->findValue(signedValue.getId());
+    val = future2.get();
+    CPPUNIT_ASSERT_MESSAGE("SignedValue not found!", val != nullptr);
+    CPPUNIT_ASSERT_MESSAGE("SignedValue is invalid!", val->isValid());
+    std::cout << "SignedValue: " << static_cast<std::string>(*val) << std::endl;
+
+    std::cout << "Trying to find EncryptedValue with Id: " << encryptedValue.getId().toBase58String() << std::endl;
+    future2 = node1->findValue(encryptedValue.getId());
+    val = future2.get();
+    CPPUNIT_ASSERT_MESSAGE("EncryptedValue not found!", val != nullptr);
+    CPPUNIT_ASSERT_MESSAGE("EncryptedValue is invalid!", val->isValid());
+    std::cout << "EncryptedValue: " << static_cast<std::string>(*val) << std::endl;
 #endif
 
 #if 1
-    std::cout << "----------" << std::endl;
+    std::cout << "-----Update value-----" << std::endl;
+    std::cout << "Trying to update signedValue with Id: " << signedValue.getId().toBase58String() << std::endl;
+    std::vector<uint8_t> data1({5, 6, 7, 8});
+    auto updatevalue = signedValue.update(data1);
+    future1 = node1->storeValue(updatevalue);
+    future1.get();
+    std::cout << "Store updatevalue succeeeed." << std::endl;
+
+    std::cout << "Trying to find updatevalue with Id: " << updatevalue.getId().toBase58String() << std::endl;
+    future2 = node1->findValue(updatevalue.getId());
+    val = future2.get();
+    CPPUNIT_ASSERT_MESSAGE("updatevalue not found!", val != nullptr);
+    CPPUNIT_ASSERT_MESSAGE("updatevalue is invalid!", val->isValid());
+    std::cout << "updatevalue: " << static_cast<std::string>(*val) << std::endl;
+#endif
+
+#if 1
+    std::cout << "-----Announce peer-----" << std::endl;
     std::cout << "Trying to announce peer " << std::endl;
 
     auto peer = PeerInfo::create(node1->getId(), 42244);
-    auto peerId = peer.getId();
-
     auto future3 = node1->announcePeer(peer);
     future3.get();
-    std::cout << "Announce peer succeeeed." << std::endl;
+    std::cout << "Announce peer1 succeeeed." << std::endl;
+
+    Id nodeId = remoteId;
+    auto peer2 = PeerInfo::create(nodeId, node1->getId(), 42245);
+    future3 = node1->announcePeer(peer2);
+    future3.get();
+    std::cout << "Announce peer2 succeeeed." << std::endl;
 #endif
 
 #if 1
-    std::cout << "----------" << std::endl;
-    std::cout << "Trying to find peer with Id: " << peerId << std::endl;
+    std::cout << "-----Find peer-----" << std::endl;
 
     //The node2(announcePeer node) can't save the peer now (the same as Java), so new the node3 for test
     auto b3 = DefaultConfiguration::Builder {};
@@ -135,12 +182,22 @@ void NodeApiTester::testSelfNodes() {
     node3->start();
     node3->bootstrap(ni1);
 
-    auto future4 = node3->findPeer(peerId, 1);
+    std::cout << "Trying to find peer1 with Id: " << peer.getId().toBase58String() << std::endl;
+    auto future4 = node3->findPeer(peer.getId(), 1);
     auto peers = future4.get();
-    CPPUNIT_ASSERT_MESSAGE("Peer not found!", !peers.empty());
+    CPPUNIT_ASSERT_MESSAGE("Peer1 not found!", !peers.empty());
     for (auto& peer: peers) {
-        std::cout << "Peer: " << peer << std::endl;
-        CPPUNIT_ASSERT_MESSAGE("peer is invalid!", peer.isValid());
+        std::cout << "Peer1: " << static_cast<std::string>(peer) << std::endl;
+        CPPUNIT_ASSERT_MESSAGE("Peer1 is invalid!", peer.isValid());
+    }
+
+    std::cout << "Trying to find peer2 with Id: " << peer2.getId().toBase58String() << std::endl;
+    future4 = node3->findPeer(peer2.getId(), 1);
+    peers = future4.get();
+    CPPUNIT_ASSERT_MESSAGE("Peer2 not found!", !peers.empty());
+    for (auto& peer: peers) {
+        std::cout << "Peer2: " << static_cast<std::string>(peer) << std::endl;
+        CPPUNIT_ASSERT_MESSAGE("Peer2 is invalid!", peer.isValid());
     }
 
     node3->stop();

@@ -23,6 +23,7 @@
 #include <string>
 #include <algorithm>
 #include <stdexcept>
+#include <cassert>
 
 #include <sodium.h>
 #include "carrier/signature.h"

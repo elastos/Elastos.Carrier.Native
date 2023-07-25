@@ -228,22 +228,14 @@ std::string Utils::getLocalIpAddresses() {
     return ipAddress;
 }
 
-std::vector<uint8_t> Utils::getSignData(const Id& nodeId, const Id& proxyId, uint16_t port, const std::string& alt)
+std::vector<uint8_t> Utils::getSignData(const Id& proxyId, const Id& nodeId, uint16_t port, const std::string& alt)
 {
-    bool proxied = false;
-    if (proxyId != Id::MIN_ID) {
-        proxied = true;
-    }
-    auto size = nodeId.size() + sizeof(port) + alt.size();
-    if (proxied)
-        size += proxyId.size();
+    auto size = Id::BYTES *2 + sizeof(port) + alt.size();
 
     std::vector<uint8_t> toSign {};
     toSign.reserve(size);
-    toSign.insert(toSign.begin(), nodeId.cbegin(), nodeId.cend());
-    if (proxied)
-        toSign.insert(toSign.end(), proxyId.cbegin(), proxyId.cend());
-
+    toSign.insert(toSign.begin(), proxyId.cbegin(), proxyId.cend());
+    toSign.insert(toSign.end(), nodeId.cbegin(), nodeId.cend());
     toSign.insert(toSign.end(), (uint8_t*)(&port), (uint8_t*)(&port) + sizeof(port));
     const uint8_t* ptr = (const uint8_t*)alt.c_str();
     toSign.insert(toSign.end(), ptr, ptr + strlen(alt.c_str()));

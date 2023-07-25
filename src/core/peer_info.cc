@@ -84,7 +84,7 @@ bool PeerInfo::operator==(const PeerInfo& other) const {
 PeerInfo::operator std::string() const {
     std::stringstream ss;
     ss.str().reserve(80);
-    ss << "<" << nodeId.toBase58String() << ",";
+    ss << "<" << publicKey.toBase58String() << "," << nodeId.toBase58String() << ",";
 
     if (isDelegated())
         ss<< origin.toBase58String() << ",";

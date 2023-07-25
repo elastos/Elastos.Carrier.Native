@@ -25,6 +25,7 @@
 #include <string>
 #include <vector>
 #include <array>
+#include <cstring>
 
 #include "carrier/blob.h"
 
@@ -67,7 +68,7 @@ public:
     }
 
     static std::vector<uint8_t> decode(const std::string& str) {
-        return decode(str.c_str(), strlen(str.c_str()));
+        return decode(str.c_str(), std::strlen(str.c_str()));
     }
 
     template <size_t S>
