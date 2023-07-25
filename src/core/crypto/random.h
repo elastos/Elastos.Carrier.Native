@@ -22,47 +22,30 @@
 
 #pragma once
 
-#include "carrier/value.h"
-#include "carrier/crypto_box.h"
-
-#include "lookup_response.h"
-#include "message.h"
+#include <vector>
+#include "carrier/blob.h"
 
 namespace elastos {
 namespace carrier {
 
-class FindValueResponse : public LookupResponse {
+class Random {
 public:
-    FindValueResponse(int txid)
-        : LookupResponse(Message::Method::FIND_VALUE, txid) {}
+    // [0, upbound)
+    static uint8_t uint8();
+    static uint8_t uint8(uint8_t upbound);
 
-    FindValueResponse()
-        : FindValueResponse(0) {}
+    static uint16_t uint16();
+    static uint16_t uint16(uint16_t upbound);
 
-    void setValue(const Value& value);
+    static uint32_t uint32();
+    static uint32_t uint32(uint32_t upbound);
 
-    bool hasValue() {
-        return !value.empty();
-    }
+    static uint64_t uint64();
+    static uint64_t uint64(uint64_t upbound);
 
-    Value getValue() const;
-
-    int estimateSize() const override {
-        return LookupResponse::estimateSize() + 195 + value.size();
-    }
-
-protected:
-    void _serialize(nlohmann::json& object) const override;
-    void _parse(const std::string& field, nlohmann::json& object) override;
-    void _toString(std::stringstream& ss) const override;
-
-private:
-    Id publicKey {};
-    Id recipient {};
-    CryptoBox::Nonce nonce {};
-    int sequenceNumber {-1};
-    std::vector<uint8_t> signature {};
-    std::vector<uint8_t> value;
+    static void buffer(void* buf, size_t length);
+    static void buffer(Blob& blob);
+    static void buffer(std::vector<uint8_t>& bytes);
 };
 
 }

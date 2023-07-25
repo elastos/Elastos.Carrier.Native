@@ -24,20 +24,20 @@
 #pragma once
 
 #include <string>
+#include <stdexcept>
 
 namespace elastos {
 namespace carrier {
 
-class _LIBCPP_EXCEPTION_ABI illegal_state
-    : public std::runtime_error
+class _LIBCPP_EXCEPTION_ABI StateError: public std::runtime_error
 {
 public:
-    _LIBCPP_INLINE_VISIBILITY explicit illegal_state(const std::string& __s) : runtime_error(__s) {}
-    _LIBCPP_INLINE_VISIBILITY explicit illegal_state(const char* __s)   : runtime_error(__s) {}
+    _LIBCPP_INLINE_VISIBILITY explicit StateError(const std::string& __s) : runtime_error(__s) {}
+    _LIBCPP_INLINE_VISIBILITY explicit StateError(const char* __s)   : runtime_error(__s) {}
 
 #ifndef _LIBCPP_ABI_VCRUNTIME
-    illegal_state(const illegal_state&) _NOEXCEPT = default;
-    ~illegal_state() _NOEXCEPT = default;
+    StateError(const StateError&) _NOEXCEPT = default;
+    ~StateError() _NOEXCEPT = default;
 #endif
 };
 
@@ -49,7 +49,7 @@ inline void checkArgument(bool expression, const std::string& errorMessage) {
 
 inline void checkState(bool expression, const std::string& errorMessage) {
     if (!expression) {
-        throw illegal_state(errorMessage);
+        throw StateError(errorMessage);
     }
 }
 

@@ -29,7 +29,8 @@
 #include "types.h"
 #include "id.h"
 #include "socket_address.h"
-#include "crypto_core.h"
+#include "crypto_box.h"
+#include "signature.h"
 
 namespace elastos {
 namespace carrier {

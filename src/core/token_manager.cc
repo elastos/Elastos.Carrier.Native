@@ -25,6 +25,7 @@
 #include "carrier/socket_address.h"
 #include "utils/random_generator.h"
 #include "utils/time.h"
+#include "crypto/shasum.h"
 #include "token_manager.h"
 
 #ifdef __linux__

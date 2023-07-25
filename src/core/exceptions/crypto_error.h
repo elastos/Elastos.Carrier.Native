@@ -22,47 +22,20 @@
 
 #pragma once
 
-#include "carrier/value.h"
-#include "carrier/crypto_box.h"
-
-#include "lookup_response.h"
-#include "message.h"
+#include <string>
+#include <stdexcept>
 
 namespace elastos {
 namespace carrier {
 
-class FindValueResponse : public LookupResponse {
+class CryptoError : public std::runtime_error
+{
 public:
-    FindValueResponse(int txid)
-        : LookupResponse(Message::Method::FIND_VALUE, txid) {}
+    explicit CryptoError(const std::string& what) : runtime_error(what) {}
+    explicit CryptoError(const char* what) : runtime_error(what) {}
 
-    FindValueResponse()
-        : FindValueResponse(0) {}
-
-    void setValue(const Value& value);
-
-    bool hasValue() {
-        return !value.empty();
-    }
-
-    Value getValue() const;
-
-    int estimateSize() const override {
-        return LookupResponse::estimateSize() + 195 + value.size();
-    }
-
-protected:
-    void _serialize(nlohmann::json& object) const override;
-    void _parse(const std::string& field, nlohmann::json& object) override;
-    void _toString(std::stringstream& ss) const override;
-
-private:
-    Id publicKey {};
-    Id recipient {};
-    CryptoBox::Nonce nonce {};
-    int sequenceNumber {-1};
-    std::vector<uint8_t> signature {};
-    std::vector<uint8_t> value;
+    CryptoError(const CryptoError&) noexcept = default;
+    virtual ~CryptoError() noexcept = default;
 };
 
 }
