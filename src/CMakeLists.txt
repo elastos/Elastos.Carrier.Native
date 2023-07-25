@@ -29,8 +29,11 @@ list(APPEND CARRIER_SOURCES
     core/utils/hex.cc
     core/utils/socket_address.cc
     core/utils/json_to_any.cc
-    core/crypto/crypto_core.cc
     core/crypto/base58.cc
+    core/crypto/crypto_box.cc
+    core/crypto/signature.cc
+    core/crypto/shasum.cc
+    core/crypto/random.cc
     core/messages/message.cc
     core/messages/announce_peer_request.cc
     core/messages/error_message.cc
@@ -77,7 +80,8 @@ list(APPEND CARRIER_HEADERS
     ${INCLUDE_DIR}/carrier/blob.h
     ${INCLUDE_DIR}/carrier/def.h
     ${INCLUDE_DIR}/carrier/types.h
-    ${INCLUDE_DIR}/carrier/crypto_core.h
+    ${INCLUDE_DIR}/carrier/crypto_box.h
+    ${INCLUDE_DIR}/carrier/signature.h
     ${INCLUDE_DIR}/carrier/socket_address.h
     ${INCLUDE_DIR}/carrier/prefix.h
     ${INCLUDE_DIR}/carrier/id.h

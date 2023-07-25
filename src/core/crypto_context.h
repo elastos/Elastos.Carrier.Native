@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include "carrier/crypto_core.h"
+#include "carrier/crypto_box.h"
 
 namespace elastos {
 namespace carrier {

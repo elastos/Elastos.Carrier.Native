@@ -30,7 +30,7 @@
 
 #include "carrier/node.h"
 #include "carrier/node_status.h"
-#include "utils/check.h"
+#include "exceptions/state_error.h"
 #include "sqlite_storage.h"
 #include "crypto_cache.h"
 #include "dht.h"

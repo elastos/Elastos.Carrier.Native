@@ -30,7 +30,8 @@
 #include "def.h"
 #include "types.h"
 #include "blob.h"
-#include "crypto_core.h"
+#include "signature.h"
+#include "crypto_box.h"
 
 #define ID_BYTES   32u
 #define ID_BITS    256u

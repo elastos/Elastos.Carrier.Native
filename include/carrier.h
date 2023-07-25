@@ -26,7 +26,8 @@
 #include <carrier/blob.h>
 #include <carrier/def.h>
 #include <carrier/types.h>
-#include <carrier/crypto_core.h>
+#include <carrier/crypto_box.h>
+#include <carrier/signature.h>
 #include <carrier/socket_address.h>
 #include <carrier/prefix.h>
 #include <carrier/id.h>

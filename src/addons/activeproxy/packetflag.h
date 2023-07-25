@@ -25,7 +25,7 @@
 #include <cstdint>
 #include <cassert>
 
-#include "carrier/crypto_core.h"
+#include "crypto/random.h"
 
 namespace elastos {
 namespace carrier {
