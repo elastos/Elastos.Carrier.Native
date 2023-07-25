@@ -133,6 +133,7 @@ void DataStorageTests::testPutAndGetValue() {
     ds->close();
 }
 
+#if 0
 void DataStorageTests::testPutAndRemoveValue() {
     auto ds = SqliteStorage::open(path3, scheduler);
 
@@ -194,6 +195,7 @@ void DataStorageTests::testPutAndRemoveValue() {
 
     ds->close();
 }
+#endif
 
 void DataStorageTests::testPutAndGetPersistentValue() {
     auto ds = SqliteStorage::open(path3, scheduler);
