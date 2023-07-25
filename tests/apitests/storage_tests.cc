@@ -343,17 +343,16 @@ void DataStorageTests::testPutAndGetPeer() {
         auto c = [&](const PeerInfo& a, const PeerInfo& b) {
             int r = a.getNodeId().compareTo(b.getNodeId());
             if (r != 0)
-                return r;
+                return r < 0;
 
-            return a.getOrigin().compareTo(b.getOrigin());
+            return a.getOrigin().compareTo(b.getOrigin()) < 0;
         };
 
         peers.sort(c);
         ps.sort(c);
 
-        for (int i = 0; i < peers.size(); i++) {
+        for (int i = 0; i < peers.size(); i++)
             CPPUNIT_ASSERT_EQUAL(list_get(peers, i), list_get(ps, i));
-        }
 
         // limited
         ps = ds->getPeer(id, 16);
