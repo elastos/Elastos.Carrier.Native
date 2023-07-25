@@ -102,7 +102,8 @@ void DataStorageTests::testPutAndGetValue() {
     for (int i = 1; i <= 256; i++) {
         std::vector<uint8_t> data;
         data.resize(1024);
-        std::fill(data.begin(), data.end(), (uint8_t)(i % (126 - 32) + 33));
+        Utils::setRandomBytes(data.data(), data.size());
+        data[0] = (uint8_t)(i % (126 - 32) + 33);
         auto v = Value::createValue(data);
 
         ids.push_back(v.getId());
@@ -132,70 +133,6 @@ void DataStorageTests::testPutAndGetValue() {
 
     ds->close();
 }
-
-#if 0
-void DataStorageTests::testPutAndRemoveValue() {
-    auto ds = SqliteStorage::open(path3, scheduler);
-
-    std::list<Id> ids {};
-    std::vector<uint8_t> data(1024);
-
-    std::cout << "Writing values...";
-    for (int i = 1; i <= 256; i++) {
-        std::vector<uint8_t> data;
-        data.resize(1024);
-        std::fill(data.begin(), data.end(), (uint8_t)(i % (126 - 32) + 33));
-        auto v = Value::createValue(data);
-
-        ids.push_back(v.getId());
-        ds->putValue(v);
-
-        std::cout << ".";
-        if (i % 16 == 0)
-            std::cout << std::endl;
-    }
-
-    std::cout << std::endl;
-    std::cout << "Reading values...";
-    for (int i = 1; i <= 94; i++) {
-        auto id = ids.front();
-        auto v = ds->getValue(id);
-        CPPUNIT_ASSERT(v != nullptr);
-
-        CPPUNIT_ASSERT(1024 == v->getData().size());
-        CPPUNIT_ASSERT((uint8_t)(i % (126 - 32) + 33) == v->getData()[0]);
-
-        auto removed = ds->removeValue(id);
-        CPPUNIT_ASSERT(removed);
-
-        v = ds->getValue(id);
-        CPPUNIT_ASSERT(v == nullptr);
-
-        removed = ds->removeValue(id);
-        CPPUNIT_ASSERT(!removed);
-
-        std::cout << ".";
-        if (i % 16 == 0)
-            std::cout << std::endl;
-
-        ids.pop_front();
-    }
-
-    for (int i = 95; i <= 256; i++) {
-        auto id = ids.front();
-        auto v = ds->getValue(id);
-        CPPUNIT_ASSERT(v == nullptr);
-
-        std::cout << ".";
-        if (i % 16 == 0)
-            std::cout << std::endl;
-
-        ids.pop_front();
-    }
-
-    ds->close();
-}
-#endif
 
 void DataStorageTests::testPutAndGetPersistentValue() {
     auto ds = SqliteStorage::open(path3, scheduler);
@@ -205,7 +142,7 @@ void DataStorageTests::testPutAndGetPersistentValue() {
 
     std::cout << "Writing values...";
     for (int i = 1; i <= 256; i++) {
-        Random::buffer(data);
+        Utils::setRandomBytes(data.data(), data.size());
         data[0] = (uint8_t)(i % (126 - 32) + 33);
         auto v = Value::createValue(data);
 
@@ -247,7 +184,7 @@ void DataStorageTests::testPutAndGetPersistentValue() {
         CPPUNIT_ASSERT(removed);
 
         v = ds->getValue(id);
-        CPPUNIT_ASSERT(v);
+        CPPUNIT_ASSERT(v == nullptr);
 
         removed = ds->removeValue(id);
         CPPUNIT_ASSERT(!removed);
@@ -369,20 +306,24 @@ void DataStorageTests::testPutAndGetPeer() {
     int basePort = 8000;
 
     std::cout << "Writing peers...";
-    std::vector<uint8_t> sig(64, 5);
+    std::vector<uint8_t> sig(64);
     for (int i = 1; i <= 64; i++) {
         auto id = Id::random();
-        ids.push_back(id);
 
         std::list<PeerInfo> peers = {};
         for (int j = 0; j < i; j++) {
-            auto pi = PeerInfo::of(Id::random().blob(), {}, Id::random().blob(), {}, basePort + i, "alt:" + std::to_string(i), sig);
+            Utils::setRandomBytes(sig.data(), sig.size());
+            auto pi = PeerInfo::of(id.blob(), {}, Id::random().blob(), {}, basePort + i, {}, sig);
+            peers.push_back(pi);
+
+            Utils::setRandomBytes(sig.data(), sig.size());
+            pi = PeerInfo::of(id.blob(), {}, Id::random().blob(), Id::random().blob(), basePort + i, "alt:" + std::to_string(i), sig);
             peers.push_back(pi);
         }
+        ds->putPeer(peers);
 
         allPeers.emplace(id, peers);
 
-        ds->putPeer(peers);
         std::cout << ".";
         if (i % 16 == 0)
             std::cout << std::endl;
@@ -409,6 +350,7 @@ void DataStorageTests::testPutAndGetPeer() {
 
         peers.sort(c);
         ps.sort(c);
+
         for (int i = 0; i < peers.size(); i++) {
             CPPUNIT_ASSERT_EQUAL(list_get(peers, i), list_get(ps, i));
         }
@@ -428,7 +370,7 @@ void DataStorageTests::testPutAndGetPeer() {
             CPPUNIT_ASSERT(removed);
 
             pi = ds->getPeer(p.getId(), p.getOrigin());
-            CPPUNIT_ASSERT(pi);
+            CPPUNIT_ASSERT(pi == nullptr);
 
             removed = ds->removePeer(p.getId(), p.getOrigin());
             CPPUNIT_ASSERT(!removed);
@@ -437,9 +379,9 @@ void DataStorageTests::testPutAndGetPeer() {
         std::cout << ".";
         if (total % 16 == 0)
             std::cout << std::endl;
-
-        ids.pop_front();
     }
+
+    CPPUNIT_ASSERT_EQUAL(64, total);
 
     ds->close();
 }
