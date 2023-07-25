@@ -22,48 +22,46 @@
 
 #pragma once
 
-#include "carrier/value.h"
-#include "carrier/crypto_box.h"
-
-#include "lookup_response.h"
-#include "message.h"
+#include <vector>
+#include "carrier/blob.h"
 
 namespace elastos {
 namespace carrier {
 
-class FindValueResponse : public LookupResponse {
+class SHA256 {
 public:
-    FindValueResponse(int txid)
-        : LookupResponse(Message::Method::FIND_VALUE, txid) {}
+    static const uint32_t BYTES { 32 };
 
-    FindValueResponse()
-        : FindValueResponse(0) {}
-
-    void setValue(const Value& value);
-
-    bool hasValue() {
-        return !value.empty();
+    SHA256() noexcept {
+        reset();
     }
 
-    Value getValue() const;
+    void reset();
 
-    int estimateSize() const override {
-        return LookupResponse::estimateSize() + 195 + value.size();
+    void update(const Blob& part);
+
+    void digest(Blob& hash);
+
+    std::vector<uint8_t> digest() {
+        std::vector<uint8_t> hash(BYTES);
+        Blob _hash{hash};
+        digest(_hash);
+        return hash;
     }
 
-protected:
-    void _serialize(nlohmann::json& object) const override;
-    void _parse(const std::string& field, nlohmann::json& object) override;
-    void _toString(std::stringstream& ss) const override;
+    static void digest(Blob& hash, const Blob& data);
+
+    static std::vector<uint8_t> digest(const Blob& data) {
+        std::vector<uint8_t> hash(BYTES);
+        Blob _hash{hash};
+        digest(_hash, data);
+        return hash;
+    }
 
 private:
-    Id publicKey {};
-    Id recipient {};
-    CryptoBox::Nonce nonce {};
-    int sequenceNumber {-1};
-    std::vector<uint8_t> signature {};
-    std::vector<uint8_t> value;
+    struct DigestState { uint8_t __opaque__[128]; };
+    DigestState state;
 };
 
-}
-}
+} // namespace carrier
+} // namespace elastos

@@ -25,6 +25,7 @@
 
 #include <carrier.h>
 #include "utils/random_generator.h"
+#include "crypto/random.h"
 
 using namespace elastos::carrier;
 

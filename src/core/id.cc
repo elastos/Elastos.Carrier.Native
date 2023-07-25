@@ -29,6 +29,7 @@
 #include "utils/hex.h"
 #include "utils/random_generator.h"
 #include "crypto/base58.h"
+#include "crypto/shasum.h"
 
 namespace elastos {
 namespace carrier {

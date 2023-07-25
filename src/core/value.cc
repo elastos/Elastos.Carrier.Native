@@ -24,9 +24,10 @@
 
 #include "carrier/value.h"
 
-#include "utils/check.h"
 #include "utils/misc.h"
 #include "utils/hex.h"
+#include "crypto/shasum.h"
+#include "exceptions/state_error.h"
 #include "serializers.h"
 
 namespace elastos {
@@ -142,10 +143,10 @@ bool Value::isValid() const {
 
 Value Value::update(const std::vector<uint8_t>& data) {
     if (!isMutable())
-        throw  illegal_state("Immutable value " + getId().toBase58String());
+        throw StateError("Immutable value " + getId().toBase58String());
 
     if (!hasPrivateKey())
-        throw illegal_state("Not the owner of the value " + getId().toBase58String());
+        throw StateError("Not the owner of the value " + getId().toBase58String());
 
     Signature::KeyPair kp = Signature::KeyPair(getPrivateKey());
     return Value(kp, recipient, nonce, sequenceNumber + 1, data);

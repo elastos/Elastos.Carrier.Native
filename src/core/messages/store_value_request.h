@@ -25,7 +25,7 @@
 #include <vector>
 
 #include "carrier/value.h"
-#include "carrier/crypto_core.h"
+#include "carrier/crypto_box.h"
 
 #include "message.h"
 

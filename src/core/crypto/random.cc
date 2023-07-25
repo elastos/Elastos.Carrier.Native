@@ -20,50 +20,67 @@
  * SOFTWARE.
  */
 
-#pragma once
-
-#include "carrier/value.h"
-#include "carrier/crypto_box.h"
-
-#include "lookup_response.h"
-#include "message.h"
+#include <vector>
+#include <sodium.h>
+#include "random.h"
 
 namespace elastos {
 namespace carrier {
 
-class FindValueResponse : public LookupResponse {
-public:
-    FindValueResponse(int txid)
-        : LookupResponse(Message::Method::FIND_VALUE, txid) {}
-
-    FindValueResponse()
-        : FindValueResponse(0) {}
-
-    void setValue(const Value& value);
-
-    bool hasValue() {
-        return !value.empty();
-    }
-
-    Value getValue() const;
-
-    int estimateSize() const override {
-        return LookupResponse::estimateSize() + 195 + value.size();
-    }
-
-protected:
-    void _serialize(nlohmann::json& object) const override;
-    void _parse(const std::string& field, nlohmann::json& object) override;
-    void _toString(std::stringstream& ss) const override;
-
-private:
-    Id publicKey {};
-    Id recipient {};
-    CryptoBox::Nonce nonce {};
-    int sequenceNumber {-1};
-    std::vector<uint8_t> signature {};
-    std::vector<uint8_t> value;
-};
-
+uint8_t Random::uint8()
+{
+    return (uint8_t)randombytes_uniform(UINT8_MAX + 1);
 }
+
+uint8_t Random::uint8(uint8_t upbound)
+{
+    return (uint8_t)randombytes_uniform(upbound);
 }
+
+uint16_t Random::uint16()
+{
+    return (uint16_t)randombytes_uniform(UINT16_MAX + 1);
+}
+
+uint16_t Random::uint16(uint16_t upbound)
+{
+    return (uint16_t)randombytes_uniform(upbound);
+}
+
+uint32_t Random::uint32()
+{
+    return randombytes_random();
+}
+
+uint32_t Random::uint32(uint32_t upbound)
+{
+    return randombytes_uniform(upbound);
+}
+
+uint64_t Random::uint64()
+{
+    return ((uint64_t)randombytes_random() << 32) | (uint64_t)randombytes_random();
+}
+
+uint64_t Random::uint64(uint64_t upbound)
+{
+    return (((uint64_t)randombytes_random() << 32) | (uint64_t)randombytes_random()) % upbound;
+}
+
+void Random::buffer(void* buf, size_t length)
+{
+    randombytes_buf(buf, length);
+}
+
+void Random::buffer(Blob& blob)
+{
+    randombytes_buf(blob.begin(), blob.size());
+}
+
+void Random::buffer(std::vector<uint8_t>& bytes)
+{
+    randombytes_buf(bytes.data(), bytes.size());
+}
+
+} // namespace carrier
+} // namespace elastos
