@@ -435,7 +435,6 @@ void DHT::onFindNode(const Sp<Message>& msg) {
 void DHT::onFindValue(const Sp<Message>& msg) {
     auto request = std::dynamic_pointer_cast<FindValueRequest>(msg);
 
-
     auto response = std::make_shared<FindValueResponse>(msg->getTxid());
 
     auto token = tokenManager->generateToken(request->getId(), request->getOrigin(), node.getId());
