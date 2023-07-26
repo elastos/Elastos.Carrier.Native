@@ -195,10 +195,14 @@ AnnounceFindPeerTests::testPeer() {
 
         auto port = peer.getPort();
         auto node = peer.getNodeId();
+        auto origin = peer.getOrigin();
+
         auto result9 = std::find(ports2.begin(), ports2.end(), port);
         CPPUNIT_ASSERT(result9 != ports2.end());
 
-        auto result10 = std::find(nodes.begin(), nodes.end(), node);
+        CPPUNIT_ASSERT(node == proxyId);
+
+        auto result10 = std::find(nodes.begin(), nodes.end(), origin);
         CPPUNIT_ASSERT(result10 != nodes.end());
     }
 }
