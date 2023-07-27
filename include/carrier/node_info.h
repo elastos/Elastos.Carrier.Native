@@ -29,7 +29,8 @@
 namespace elastos {
 namespace carrier {
 
-struct CARRIER_PUBLIC NodeInfo {
+class CARRIER_PUBLIC NodeInfo {
+public:
     NodeInfo() = default;
 
     explicit NodeInfo(const Blob& id, const Blob& ip, int port)

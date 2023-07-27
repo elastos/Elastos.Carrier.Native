@@ -29,7 +29,8 @@
 namespace elastos {
 namespace carrier {
 
-struct CARRIER_PUBLIC PeerInfo {
+class CARRIER_PUBLIC PeerInfo {
+public:
     PeerInfo() = default;
 
     static PeerInfo of(Blob peerId, Blob privateKey, Blob nodeId, Blob origin, uint16_t port,
