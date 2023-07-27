@@ -568,11 +568,14 @@ void SqliteStorage::putPeer(const std::list<PeerInfo>& peers) {
     for (const auto& peer : peers) {
         sqlite3_bind_blob(pStmt, 1, peer.getId().data(), peer.getId().size(), SQLITE_STATIC);
         sqlite3_bind_int(pStmt, 2, false);
-        sqlite3_bind_blob(pStmt, 3, peer.getPrivateKey().bytes(), peer.getPrivateKey().size(), SQLITE_STATIC);
+        if (peer.hasPrivateKey())
+            sqlite3_bind_blob(pStmt, 3, peer.getPrivateKey().bytes(), peer.getPrivateKey().size(), SQLITE_STATIC);
         sqlite3_bind_blob(pStmt, 4, peer.getNodeId().data(), peer.getNodeId().size(), SQLITE_STATIC);
         sqlite3_bind_blob(pStmt, 5, peer.getOrigin().data(), peer.getOrigin().size(), SQLITE_STATIC);
         sqlite3_bind_int(pStmt, 6, peer.getPort());
-        const char* alt = peer.getAlternativeURL().c_str();
+        const char* alt = "";
+        if (peer.hasAlternativeURL())
+            alt = peer.getAlternativeURL().c_str();
         sqlite3_bind_text(pStmt, 7, alt, strlen(alt), NULL);
         sqlite3_bind_blob(pStmt, 8, peer.getSignature().data(), peer.getSignature().size(), SQLITE_STATIC);
         sqlite3_bind_int64(pStmt, 9, now);
@@ -599,11 +602,14 @@ void SqliteStorage::putPeer(const PeerInfo& peer, bool persistent, bool updateLa
 
     sqlite3_bind_blob(pStmt, 1, peer.getId().data(), peer.getId().size(), SQLITE_STATIC);
     sqlite3_bind_int(pStmt, 2, persistent);
-    sqlite3_bind_int(pStmt, 3, peer.getPrivateKey().blob());
+    if (peer.hasPrivateKey())
+        sqlite3_bind_int(pStmt, 3, peer.getPrivateKey().blob());
     sqlite3_bind_blob(pStmt, 4, peer.getNodeId().data(), peer.getNodeId().size(), SQLITE_STATIC);
     sqlite3_bind_blob(pStmt, 5, peer.getOrigin().data(), peer.getOrigin().size(), SQLITE_STATIC);
     sqlite3_bind_int(pStmt, 6, peer.getPort());
-    const char* alt = peer.getAlternativeURL().c_str();
+    const char *alt = "";
+    if (peer.hasAlternativeURL())
+        alt = peer.getAlternativeURL().c_str();
     sqlite3_bind_text(pStmt, 7, alt, strlen(alt), NULL);
     sqlite3_bind_blob(pStmt, 8, peer.getSignature().data(), peer.getSignature().size(), SQLITE_STATIC);
     auto now = currentTimeMillis();

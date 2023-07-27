@@ -20,11 +20,10 @@
 * SOFTWARE.
 */
 #include <sstream>
+#include <stdexcept>
 #include <utf8proc.h>
 
 #include "carrier/peer_info.h"
-#include "carrier/socket_address.h"
-#include "utils/hex.h"
 
 namespace elastos {
 namespace carrier {
@@ -35,62 +34,63 @@ PeerInfo::PeerInfo(const Blob& peerId, const Blob& privateKey, const Blob& nodeI
     if (peerId.size() != Id::BYTES)
         throw std::invalid_argument("Invalid peer Id");
 
-    if (privateKey.ptr() != nullptr && privateKey.size() != Signature::PrivateKey::BYTES)
+    if (!privateKey.empty() && privateKey.size() != Signature::PrivateKey::BYTES)
         throw std::invalid_argument("Invalid private key");
 
-    if (nodeId == Id::MIN_ID)
+    if (nodeId.size() != Id::BYTES)
         throw std::invalid_argument("Invalid node id");
+
+    if (!origin.empty() && origin.size() != Id::BYTES)
+        throw std::invalid_argument("Invalid origin id");
 
     if (port <= 0 || port > 65535)
         throw std::invalid_argument("Invalid port");
 
-    if (signature.ptr() == nullptr || signature.size() != Signature::BYTES)
+    if (signature.size() != Signature::BYTES)
         throw std::invalid_argument("Invalid signature");
 
     this->publicKey = Id(peerId);
-    if (privateKey.ptr() != nullptr)
-        this->privateKey = Signature::PrivateKey(privateKey);
+    if (!privateKey.empty())
+        this->privateKey = std::optional<Signature::PrivateKey>(privateKey);
     this->nodeId = Id(nodeId);
-    this->origin = origin.ptr() != nullptr  ? Id(origin) : nodeId;
+    this->origin = Id(origin.empty() ? nodeId : origin);
     this->port = port;
     if (!alternativeURL.empty())
-        this->alternativeURL = (char *)utf8proc_NFC((unsigned char *)(alternativeURL.c_str()));
+        this->alternativeURL = (const char *)utf8proc_NFC((unsigned char *)(alternativeURL.c_str()));
+    else
+        this->alternativeURL = std::nullopt;
     this->signature = std::vector<uint8_t>(signature.cbegin(), signature.cend());
 }
 
 PeerInfo::PeerInfo(const Signature::KeyPair& keypair, const Id& nodeId, const Id& origin, uint16_t port,
             const std::string& alternativeURL) {
-    if (nodeId == Id::MIN_ID)
-        throw std::invalid_argument("Invalid node id");
-
     if (port <= 0 || port > 65535)
         throw std::invalid_argument("Invalid port");
 
     this->publicKey = Id(keypair.publicKey());
-    this->privateKey = keypair.privateKey();
+    this->privateKey = std::optional<Signature::PrivateKey>(keypair.privateKey());
     this->nodeId = nodeId;
-    this->origin = origin != Id::MIN_ID  ? origin : nodeId;
+    this->origin = origin == Id::MIN_ID ? nodeId : origin;
     this->port = port;
     if (!alternativeURL.empty())
-        this->alternativeURL = (char *)utf8proc_NFC((unsigned char *)(alternativeURL.c_str()));
-    this->signature = Signature::sign(getSignData(), keypair.privateKey());
+        this->alternativeURL = std::optional<std::string>((char *)utf8proc_NFC((unsigned char *)(alternativeURL.c_str())));
+    this->signature = Signature::sign(getSignData(), this->privateKey.value());
 }
 
 bool PeerInfo::operator==(const PeerInfo& other) const {
-    return publicKey == other.publicKey && nodeId == other.nodeId && origin == other.origin
-                && port == other.port && alternativeURL == other.alternativeURL && signature == other.signature;
+    return publicKey == other.publicKey && signature == other.signature;
 }
 
 PeerInfo::operator std::string() const {
     std::stringstream ss;
-    ss.str().reserve(80);
+    ss.str().reserve(128);
     ss << "<" << publicKey.toBase58String() << "," << nodeId.toBase58String() << ",";
 
     if (isDelegated())
         ss<< origin.toBase58String() << ",";
     ss << std::to_string(port);
     if (hasAlternativeURL())
-        ss << "," << alternativeURL;
+        ss << "," << alternativeURL.value();
     ss << ">";
 
     return ss.str();
@@ -102,15 +102,19 @@ std::ostream& operator<< (std::ostream& os, const PeerInfo& pi) {
 }
 
 std::vector<uint8_t> PeerInfo::getSignData() const {
-    auto size = Id::BYTES * 2  + sizeof(port) + alternativeURL.size();
+    auto size = Id::BYTES * 2  + sizeof(port);
+
+    if (hasAlternativeURL())
+        size += alternativeURL.value().size();
 
     std::vector<uint8_t> toSign {};
     toSign.reserve(size);
     toSign.insert(toSign.begin(), nodeId.cbegin(), nodeId.cend());
     toSign.insert(toSign.end(), origin.cbegin(), origin.cend());
     toSign.insert(toSign.end(), (uint8_t*)(&port), (uint8_t*)(&port) + sizeof(port));
-    const uint8_t* ptr = (const uint8_t*)alternativeURL.c_str();
-    toSign.insert(toSign.end(), ptr, ptr + strlen(alternativeURL.c_str()));
+
+    if (hasAlternativeURL())
+        toSign.insert(toSign.end(), alternativeURL.value().cbegin(), alternativeURL.value().cend());
     return toSign;
 }
 
@@ -118,7 +122,7 @@ bool PeerInfo::isValid() const {
     if (signature.size() != Signature::BYTES)
             return false;
 
-    Signature::PublicKey pk = publicKey.toSignatureKey();
+    auto pk = publicKey.toSignatureKey();
     return Signature::verify(getSignData(), signature, pk);
 }
 

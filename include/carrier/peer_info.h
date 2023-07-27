@@ -22,8 +22,14 @@
 
 #pragma once
 
+#include <string>
+#include <vector>
+#include <optional>
+
 #include "def.h"
 #include "id.h"
+#include "signature.h"
+#include "blob.h"
 #include "socket_address.h"
 
 namespace elastos {
@@ -39,7 +45,7 @@ public:
     }
 
     static PeerInfo create(const Id& nodeId, int port) {
-        Signature::KeyPair keypair = Signature::KeyPair::random();
+        auto keypair = Signature::KeyPair::random();
         return create(keypair, nodeId, {}, port, {});
     }
 
@@ -48,7 +54,7 @@ public:
     }
 
     static PeerInfo create(const Id& nodeId, Id origin, int port) {
-        Signature::KeyPair keypair = Signature::KeyPair::random();
+        auto keypair = Signature::KeyPair::random();
         return create(keypair, nodeId, origin, port, {});
     }
 
@@ -57,7 +63,7 @@ public:
     }
 
     static PeerInfo create(const Id& nodeId, int port, const std::string& alternativeURL) {
-        Signature::KeyPair keypair = Signature::KeyPair::random();
+        auto keypair = Signature::KeyPair::random();
         return create(keypair, nodeId, {}, port, alternativeURL);
     }
 
@@ -66,7 +72,7 @@ public:
     }
 
     static PeerInfo create(const Id& nodeId, Id origin, int port, const std::string& alternativeURL) {
-        Signature::KeyPair keypair = Signature::KeyPair::random();
+        auto keypair = Signature::KeyPair::random();
         return create(keypair, nodeId, origin, port, alternativeURL);
     }
 
@@ -80,11 +86,14 @@ public:
     }
 
     bool hasPrivateKey() const noexcept {
-        return privateKey.size() != 0;
+        return privateKey.has_value();
     }
 
-    const Signature::PrivateKey& getPrivateKey() const noexcept {
-        return privateKey;
+    const Signature::PrivateKey& getPrivateKey() const {
+        if (!privateKey.has_value())
+            throw std::runtime_error("No private key");
+
+        return privateKey.value();
     }
 
     const Id& getNodeId() const noexcept {
@@ -103,12 +112,15 @@ public:
         return port;
     };
 
-    const std::string& getAlternativeURL() const noexcept {
-        return alternativeURL;
+    bool hasAlternativeURL() const noexcept {
+        return alternativeURL.has_value();
     }
 
-    bool hasAlternativeURL() const noexcept {
-        return !alternativeURL.empty();
+    const std::string& getAlternativeURL() const {
+        if (!alternativeURL.has_value())
+            throw std::runtime_error("No alternative URL");
+
+        return alternativeURL.value();
     }
 
     const std::vector<uint8_t>& getSignature() const noexcept {
@@ -146,11 +158,11 @@ private:
 
 private:
     Id publicKey {};
-    Signature::PrivateKey privateKey {};
+    std::optional<Signature::PrivateKey> privateKey {};
     Id nodeId {};
     Id origin {};
     uint16_t port {0};
-    std::string alternativeURL {};
+    std::optional<std::string> alternativeURL {};
     std::vector<uint8_t> signature {};
 };
 
