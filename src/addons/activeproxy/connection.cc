@@ -338,16 +338,30 @@ void ProxyConnection::sendAuthenticateRequest() noexcept
     const CryptoBox::PublicKey& pk = proxy.getSessionKey();
     const CryptoBox::Nonce& nonce = proxy.getSessionNonce();
 
-    std::array<uint8_t, CryptoBox::PublicKey::BYTES + CryptoBox::Nonce::BYTES> plain;
-    std::memcpy(plain.data(), pk.bytes(), pk.size());
-    std::memcpy(plain.data() + pk.size(), nonce.bytes(), nonce.size());
-
+    auto domain = proxy.getDomainName();
     size_t padding = randomPadding();
-    size_t size = PACKET_HEADER_BYTES + nodeId.size() + CryptoBox::MAC_BYTES + plain.size() + padding;
+
+    std::vector<uint8_t> plain(CryptoBox::PublicKey::BYTES + CryptoBox::Nonce::BYTES + 1 + domain.size() + padding);
+    uint8_t* ptr = plain.data();
+    std::memcpy(ptr, pk.bytes(), pk.size());
+    ptr += pk.size();
+    std::memcpy(ptr, nonce.bytes(), nonce.size());
+    ptr += nonce.size();
+    //domain length
+    *ptr++ = domain.size();
+    //domain
+    if (domain.size() > 0) {
+        std::memcpy(ptr, domain.c_str(), domain.size());
+        ptr += domain.size();
+    }
+    // random padding
+    Random::buffer(ptr, padding);
+
+    size_t size = PACKET_HEADER_BYTES + nodeId.size() + CryptoBox::MAC_BYTES + plain.size();
 
     WriteRequest* request = new WriteRequest{this, size};
 
-    uint8_t* ptr = (uint8_t*)request->buf.base;
+    ptr = (uint8_t*)request->buf.base;
     // size
     *(uint16_t*)ptr = htons(size);
     ptr += sizeof(uint16_t);
@@ -360,10 +374,6 @@ void ProxyConnection::sendAuthenticateRequest() noexcept
     Blob _cipher{ptr, plain.size() + CryptoBox::MAC_BYTES};
     Blob _plain{plain};
     proxy.encryptWithNode(_cipher, _plain);
-    ptr += CryptoBox::MAC_BYTES;
-    ptr += plain.size();
-    // random padding
-    Random::buffer(ptr, padding);
 
     log->debug("Connection {} send AUTH to server {}.", id, proxy.serverEndpoint());
     auto rc = uv_write((uv_write_t*)request, (uv_stream_t*)(&relay), &request->buf, 1, [](uv_write_t* req, int status) {
@@ -631,60 +641,6 @@ void ProxyConnection::sendDataRequest(const uint8_t* data, size_t _size) noexcep
     }
 }
 
-void ProxyConnection::sendSignatureRequest() noexcept
-{
-    if (state == ConnectionState::Closed)
-        return;
-
-    const char* domainName = proxy.getDomainName().c_str();
-    int len = strlen(domainName);
-    size_t _size = 1 + len;
-    uint8_t* data = (uint8_t*)alloca(_size);
-
-    if (len > 0) {
-        data[0] = 1;
-        memcpy(data + 1, domainName, len);
-    }
-    else {
-        data[0] = 0;
-    }
-
-    size_t size = PACKET_HEADER_BYTES + CryptoBox::MAC_BYTES + _size;
-
-    WriteRequest* request = new WriteRequest{this, size};
-
-    uint8_t* ptr = (uint8_t*)request->buf.base;
-    // size
-    *(uint16_t*)ptr = htons(size);
-    ptr += sizeof(uint16_t);
-    // flag
-    *ptr++ = PacketFlag::signature();
-    // encrypted: data
-    Blob _cipher{ptr, _size + CryptoBox::MAC_BYTES};
-    const Blob _plain{data, _size};
-    proxy.encrypt(_cipher, _plain);
-
-    log->debug("Connection {} send SIGNATURE to server {}.", id, proxy.serverEndpoint());
-    auto rc = uv_write((uv_write_t*)request, (uv_stream_t*)(&relay), &request->buf, 1, [](uv_write_t* req, int status) {
-        WriteRequest* request = (WriteRequest*)req;
-        ProxyConnection* pc = request->connection();
-
-        if (status < 0) {
-            log->error("Connection {} send SIGNATURE to server {} failed({}): {}",
-                    pc->id, pc->proxy.serverEndpoint(), status, uv_strerror(status));
-            pc->close();
-        }
-
-        delete request;
-    });
-    if (rc < 0) {
-        log->error("Connection {} send SIGNATURE to server {} failed({}): {}",
-                id, proxy.serverEndpoint(), rc, uv_strerror(rc));
-        delete request;
-        close();
-    }
-}
-
 inline void vectorAppend(std::vector<uint8_t>& v, const uint8_t* data, size_t size)
 {
     size_t oldSize = v.size();
@@ -798,9 +754,6 @@ void ProxyConnection::processRelayPacket(const uint8_t* packet, size_t size) noe
         } else if (!ack && type == PacketFlag::CONNECT) {
             onConnectRequest(packet, size);
             return;
-        } else if (!ack && type == PacketFlag::SIGNATURE) {
-            onSignature(packet, size);
-            return;
         } else {
             log->error("Connection {} got a wrong packet({}), PING acknowledge or CONNECT expected.", id, flag);
             close();
@@ -849,15 +802,28 @@ void ProxyConnection::onAuthenticateResponse(const uint8_t* packet, size_t size)
     CryptoBox::Nonce nonce({ptr, CryptoBox::Nonce::BYTES});
     ptr += CryptoBox::Nonce::BYTES;
     uint16_t port = ntohs(*(uint16_t*)ptr);
+    ptr += sizeof(port);
+    std::vector<uint8_t> sig(Signature::BYTES);
+    memcpy(sig.data(), ptr, Signature::BYTES);
+    //domain
+    ptr += Signature::BYTES;
+    size_t len = *ptr++;
+    char domain[len + 1];
+    memcpy(domain, ptr, len);
+    domain[len] = '\0';
 
     onAuthorized(serverPk, nonce, port);
+
+    log->info("announcePeer Id: {}, server: {}, port: {}, domain: {} ",
+            proxy.getPeerId().toBase58String(), proxy.getServerHost(), port, (char*)domain);
+    //TODO:: set peer pk, sk, sig
+    auto peer = PeerInfo::create(proxy.getServerId(), proxy.getNodeId(), port, domain);
+    proxy.getNode()->announcePeer(peer, true);
+
     state = ConnectionState::Idling;
     onOpened();
 
     log->info("Connection {} opened.", id);
-
-    //send sig requeset to server
-    sendSignatureRequest();
 }
 
 const static size_t ATTACH_ACK_SIZE = PACKET_HEADER_BYTES;
@@ -951,40 +917,6 @@ void ProxyConnection::onDataRequest(const uint8_t* packet, size_t size) noexcept
         closeUpstream();
         delete request;
     }
-}
-
-void ProxyConnection::onSignature(const uint8_t* packet, size_t size) noexcept {
-    if (size < PACKET_HEADER_BYTES + CryptoBox::MAC_BYTES + sizeof(uint16_t) + Signature::BYTES) {
-        log->error("Connection {} got an invalid signature from server {}", id, proxy.serverEndpoint());
-        close();
-        return;
-    }
-
-    log->debug("Connection {} got AUTH ACK from server {}", id, proxy.serverEndpoint());
-
-    std::vector<uint8_t> plain(size - PACKET_HEADER_BYTES - CryptoBox::MAC_BYTES);
-
-    Blob _plain{plain};
-    const Blob _cipher{packet + PACKET_HEADER_BYTES, size - PACKET_HEADER_BYTES};
-    proxy.decrypt(_plain, _cipher);
-
-    const uint8_t* ptr = plain.data();
-    uint16_t port = ntohs(*(uint16_t*)ptr);
-    ptr += sizeof(port);
-    size_t len = plain.size() - sizeof(port) - Signature::BYTES;
-    char *domainName = (char*)alloca(len + 1);
-    memcpy(domainName, ptr, len);
-    domainName[len] = '\0';
-    ptr += len;
-    std::vector<uint8_t> sig(Signature::BYTES);
-    memcpy(sig.data(), ptr, Signature::BYTES);
-
-    log->info("announcePeer Id: {}, server: {}, port: {}, domain: {} ",
-            proxy.getPeerId().toBase58String(), proxy.getServerHost(), port, (char*)domainName);
-    //TODO::modify
-    // proxy.getNode()->announcePeer(proxy.getPeerId(), proxy.getServerId(), port, domainName, sig);
-
-    log->info("announcePeer.");
 }
 
 void ProxyConnection::openUpstream() noexcept
