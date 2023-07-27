@@ -570,13 +570,17 @@ void SqliteStorage::putPeer(const std::list<PeerInfo>& peers) {
         sqlite3_bind_int(pStmt, 2, false);
         if (peer.hasPrivateKey())
             sqlite3_bind_blob(pStmt, 3, peer.getPrivateKey().bytes(), peer.getPrivateKey().size(), SQLITE_STATIC);
+        else
+            sqlite3_bind_null(pStmt, 3);
         sqlite3_bind_blob(pStmt, 4, peer.getNodeId().data(), peer.getNodeId().size(), SQLITE_STATIC);
         sqlite3_bind_blob(pStmt, 5, peer.getOrigin().data(), peer.getOrigin().size(), SQLITE_STATIC);
         sqlite3_bind_int(pStmt, 6, peer.getPort());
-        const char* alt = "";
-        if (peer.hasAlternativeURL())
-            alt = peer.getAlternativeURL().c_str();
-        sqlite3_bind_text(pStmt, 7, alt, strlen(alt), NULL);
+        if (peer.hasAlternativeURL()) {
+            const char* alt = peer.getAlternativeURL().c_str();
+            sqlite3_bind_text(pStmt, 7, alt, strlen(alt), NULL);
+        } else {
+            sqlite3_bind_text(pStmt, 7, "", 0, NULL);
+        }
         sqlite3_bind_blob(pStmt, 8, peer.getSignature().data(), peer.getSignature().size(), SQLITE_STATIC);
         sqlite3_bind_int64(pStmt, 9, now);
         sqlite3_bind_int64(pStmt, 10, 0);
@@ -603,14 +607,18 @@ void SqliteStorage::putPeer(const PeerInfo& peer, bool persistent, bool updateLa
     sqlite3_bind_blob(pStmt, 1, peer.getId().data(), peer.getId().size(), SQLITE_STATIC);
     sqlite3_bind_int(pStmt, 2, persistent);
     if (peer.hasPrivateKey())
-        sqlite3_bind_int(pStmt, 3, peer.getPrivateKey().blob());
+        sqlite3_bind_blob(pStmt, 3, peer.getPrivateKey().bytes(), peer.getPrivateKey().size(), SQLITE_STATIC);
+    else
+        sqlite3_bind_null(pStmt, 3);
     sqlite3_bind_blob(pStmt, 4, peer.getNodeId().data(), peer.getNodeId().size(), SQLITE_STATIC);
     sqlite3_bind_blob(pStmt, 5, peer.getOrigin().data(), peer.getOrigin().size(), SQLITE_STATIC);
     sqlite3_bind_int(pStmt, 6, peer.getPort());
-    const char *alt = "";
-    if (peer.hasAlternativeURL())
-        alt = peer.getAlternativeURL().c_str();
-    sqlite3_bind_text(pStmt, 7, alt, strlen(alt), NULL);
+    if (peer.hasAlternativeURL()) {
+        const char *alt = peer.getAlternativeURL().c_str();
+        sqlite3_bind_text(pStmt, 7, alt, strlen(alt), NULL);
+    } else {
+        sqlite3_bind_text(pStmt, 7, "", 0, NULL);
+    }
     sqlite3_bind_blob(pStmt, 8, peer.getSignature().data(), peer.getSignature().size(), SQLITE_STATIC);
     auto now = currentTimeMillis();
     sqlite3_bind_int64(pStmt, 9, currentTimeMillis());
