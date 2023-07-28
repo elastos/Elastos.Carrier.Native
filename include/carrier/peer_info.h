@@ -28,16 +28,15 @@
 
 #include "def.h"
 #include "id.h"
-#include "signature.h"
 #include "blob.h"
-#include "socket_address.h"
+#include "signature.h"
 
 namespace elastos {
 namespace carrier {
 
 class CARRIER_PUBLIC PeerInfo {
 public:
-    PeerInfo() = default;
+    PeerInfo() = delete;
 
     static PeerInfo of(Blob peerId, Blob privateKey, Blob nodeId, Blob origin, uint16_t port,
         const std::string& alternativeURL, Blob signature) {

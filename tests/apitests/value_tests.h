@@ -32,7 +32,7 @@ namespace test {
 
 class ValueTests : public CppUnit::TestFixture {
     CPPUNIT_TEST_SUITE(ValueTests);
-    CPPUNIT_TEST(testValue);
+    CPPUNIT_TEST(testImmutableValue);
     CPPUNIT_TEST(testSignedValue);
     CPPUNIT_TEST(testEncryptedValue);
     CPPUNIT_TEST_SUITE_END();
@@ -41,7 +41,7 @@ public:
     void setUp();
     void tearDown();
 
-    void testValue();
+    void testImmutableValue();
     void testSignedValue();
     void testEncryptedValue();
 

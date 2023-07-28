@@ -31,33 +31,37 @@ namespace elastos {
 namespace carrier {
 
 void FindValueResponse::setValue(const Value& value) {
-    this->publicKey = value.getPublicKey();
-    this->recipient = value.getRecipient();
-    this->nonce = value.getNonce();
-    this->signature = value.getSignature();;
-    this->sequenceNumber = value.getSequenceNumber();
+    if (value.isMutable()) {
+        this->publicKey = std::optional<Id>(value.getPublicKey());
+        this->nonce = std::optional<CryptoBox::Nonce>(value.getNonce());
+        this->signature = std::optional<std::vector<uint8_t>>(value.getSignature());
+        this->sequenceNumber = value.getSequenceNumber();
+        if (value.isEncrypted())
+            this->recipient = std::optional<Id>(value.getRecipient());
+    }
     this->value = value.getData();
 }
 
 Value FindValueResponse::getValue() const {
-    return Value::of(publicKey.blob(), {}, recipient.blob(), nonce.blob(), sequenceNumber, Blob(signature), Blob(value));
+    return Value::of(publicKey.has_value() ? publicKey.value().blob(): Blob(), {},
+        recipient.has_value()? recipient.value().blob() : Blob(),
+        nonce.has_value() ? nonce.value().blob() : Blob(), sequenceNumber,
+        signature.has_value() ? signature.value(): Blob(), Blob(value));
 }
 
 void FindValueResponse::_serialize(nlohmann::json& object) const {
-    if (publicKey != Id::MIN_ID)
-        object[Message::KEY_RES_PUBLICKEY] = publicKey;
+    if (publicKey.has_value()) {
+        object[Message::KEY_RES_PUBLICKEY] = publicKey.value();
 
-    if (recipient != Id::MIN_ID)
-        object[Message::KEY_RES_RECIPIENT] = recipient;
+        if (recipient.has_value())
+            object[Message::KEY_RES_RECIPIENT] = recipient.value();
 
-    if (nonce.size() > 0)
-        object[Message::KEY_RES_NONCE] = nlohmann::json::binary_t {{nonce.cbegin(), nonce.cend()}};
+        object[Message::KEY_RES_NONCE] = nlohmann::json::binary_t {{nonce.value().cbegin(), nonce.value().cend()}};
+        if (sequenceNumber >= 0)
+            object[Message::KEY_RES_SEQ] = sequenceNumber;
 
-    if (sequenceNumber >= 0)
-        object[Message::KEY_RES_SEQ] = sequenceNumber;
-
-    if (!signature.empty())
-        object[Message::KEY_RES_SIGNATURE] = nlohmann::json::binary_t {signature};
+        object[Message::KEY_RES_SIGNATURE] = nlohmann::json::binary_t {signature.value()};
+    }
 
     if (!value.empty())
         object[Message::KEY_RES_VALUE] = nlohmann::json::binary_t {value};
@@ -65,15 +69,15 @@ void FindValueResponse::_serialize(nlohmann::json& object) const {
 
 void FindValueResponse::_parse(const std::string& fieldName, nlohmann::json& object) {
     if (fieldName == Message::KEY_RES_PUBLICKEY) {
-        publicKey = object.get<Id>();
+        publicKey = std::optional<Id>(object.get<Id>());
     } else if (fieldName == Message::KEY_RES_RECIPIENT) {
-        recipient = object.get<Id>();
+        recipient = std::optional<Id>(object.get<Id>());
     } else if (fieldName == Message::KEY_RES_NONCE) {
-        nonce = Blob(object.get_binary());
+        nonce = std::optional<CryptoBox::Nonce>(Blob(object.get_binary()));
     } else if (fieldName == Message::KEY_RES_SEQ) {
         sequenceNumber = object.get<int>();
     } else if (fieldName == Message::KEY_RES_SIGNATURE) {
-        signature = object.get_binary();
+        signature = std::optional<std::vector<uint8_t>>(object.get_binary());
     } else if (fieldName == Message::KEY_RES_VALUE) {
         value = object.get_binary();
     } else {
@@ -82,21 +86,18 @@ void FindValueResponse::_parse(const std::string& fieldName, nlohmann::json& obj
 }
 
 void FindValueResponse::_toString(std::stringstream& ss) const {
-    if (publicKey != Id::MIN_ID)
-        ss << ",k:" << publicKey;
+    if (publicKey.has_value()) {
+        ss << ",k:" << publicKey.value();
 
-    if (recipient != Id::MIN_ID)
-        ss << ",rec:" << recipient;
+        if (recipient.has_value())
+            ss << ",rec:" << recipient.value();
 
-    if (nonce.size() > 0)
-        ss << ",n:" << Hex::encode(nonce.blob());
+        ss << ",n:" << Hex::encode(nonce.value().blob());
+        if (sequenceNumber >= 0)
+            ss << ",seq:" << std::to_string(sequenceNumber);
+        ss << ",sig:" << Hex::encode(signature.value());
 
-    if (sequenceNumber >= 0)
-        ss << ",seq:" << std::to_string(sequenceNumber);
-
-    if (!signature.empty())
-        ss << ",sig:" << Hex::encode(signature);
-
+    }
     if (!value.empty())
         ss << ",v:" << Hex::encode(value);
 }

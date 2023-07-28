@@ -289,20 +289,40 @@ Sp<Value> SqliteStorage::putValue(const Value& value, int expectedSeq, bool pers
     sqlite3_bind_blob(pStmt, 1, id.data(), id.size(), SQLITE_STATIC);
     sqlite3_bind_int(pStmt, 2, persistent);
 
-    auto signer = value.getPublicKey().blob();
-    sqlite3_bind_blob(pStmt, 3, signer.ptr(), signer.size(), SQLITE_STATIC);
+    if (value.isMutable()) {
+        auto signer = value.getPublicKey().blob();
+        sqlite3_bind_blob(pStmt, 3, signer.ptr(), signer.size(), SQLITE_STATIC);
+    } else {
+        sqlite3_bind_null(pStmt, 3);
+    }
 
-    auto sk = value.getPrivateKey().blob();
-    sqlite3_bind_blob(pStmt, 4, sk.ptr(), sk.size(), SQLITE_STATIC);
+    if (value.hasPrivateKey()) {
+        auto sk = value.getPrivateKey().blob();
+        sqlite3_bind_blob(pStmt, 4, sk.ptr(), sk.size(), SQLITE_STATIC);
+    } else {
+        sqlite3_bind_null(pStmt, 4);
+    }
 
-    auto recipient = value.getRecipient().blob();
-    sqlite3_bind_blob(pStmt, 5, recipient.ptr(), recipient.size(), SQLITE_STATIC);
+    if (value.isEncrypted()) {
+        auto recipient = value.getRecipient().blob();
+        sqlite3_bind_blob(pStmt, 5, recipient.ptr(), recipient.size(), SQLITE_STATIC);
+    } else {
+        sqlite3_bind_null(pStmt, 5);
+    }
 
-    auto nonce = value.getNonce().blob();
-    sqlite3_bind_blob(pStmt, 6, nonce.ptr(), nonce.size(), SQLITE_STATIC);
+    if (value.isMutable()) {
+        auto nonce = value.getNonce().blob();
+        sqlite3_bind_blob(pStmt, 6, nonce.ptr(), nonce.size(), SQLITE_STATIC);
+    } else {
+        sqlite3_bind_null(pStmt, 6);
+    }
 
-    auto sig = Blob(value.getSignature());
-    sqlite3_bind_blob(pStmt, 7, sig.ptr(), sig.size(), SQLITE_STATIC);
+    if (value.isSigned()) {
+        auto sig = Blob(value.getSignature());
+        sqlite3_bind_blob(pStmt, 7, sig.ptr(), sig.size(), SQLITE_STATIC);
+    } else {
+        sqlite3_bind_null(pStmt, 7);
+    }
 
     sqlite3_bind_int(pStmt, 8, value.getSequenceNumber());
 

@@ -22,6 +22,10 @@
 
 #pragma once
 
+#include <vector>
+#include <optional>
+
+#include "carrier/id.h"
 #include "carrier/value.h"
 #include "carrier/crypto_box.h"
 
@@ -57,11 +61,11 @@ protected:
     void _toString(std::stringstream& ss) const override;
 
 private:
-    Id publicKey {};
-    Id recipient {};
-    CryptoBox::Nonce nonce {};
+    std::optional<Id> publicKey {};
+    std::optional<Id> recipient {};
+    std::optional<CryptoBox::Nonce> nonce {};
+    std::optional<std::vector<uint8_t>> signature {};
     int sequenceNumber {-1};
-    std::vector<uint8_t> signature {};
     std::vector<uint8_t> value;
 };
 

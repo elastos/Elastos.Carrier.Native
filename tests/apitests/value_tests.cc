@@ -63,21 +63,17 @@ ValueTests::setUp() {
 }
 
 void
-ValueTests::testValue() {
+ValueTests::testImmutableValue() {
     auto data = Utils::getRandomData(32);
-    auto val = Value::createValue(data);
+    auto value = Value::createValue(data);
 
-    CPPUNIT_ASSERT(val.isValid());
-    CPPUNIT_ASSERT_EQUAL(static_cast<bool>(val.getPublicKey()), false);
-    CPPUNIT_ASSERT_EQUAL(static_cast<bool>(val.getRecipient()), false);
-    CPPUNIT_ASSERT_EQUAL(val.hasPrivateKey(), false);
-    CPPUNIT_ASSERT_EQUAL(static_cast<bool>(val.getNonce()), false);
-    CPPUNIT_ASSERT(val.getSignature().empty());
-    CPPUNIT_ASSERT_EQUAL(val.isMutable(), false);
-    CPPUNIT_ASSERT_EQUAL(val.isEncrypted(), false);
-    CPPUNIT_ASSERT_EQUAL(val.isSigned(), false);
-    CPPUNIT_ASSERT_EQUAL(val.getSequenceNumber(), 0);
-    CPPUNIT_ASSERT(val.getData() == data);
+    CPPUNIT_ASSERT(value.isValid());
+    CPPUNIT_ASSERT(!value.isMutable());
+    CPPUNIT_ASSERT(!value.isSigned());
+    CPPUNIT_ASSERT(!value.isEncrypted());
+    CPPUNIT_ASSERT(!value.hasPrivateKey());
+    CPPUNIT_ASSERT(value.getSequenceNumber() == 0);
+    CPPUNIT_ASSERT(value.getData() == data);
 }
 
 void
@@ -86,44 +82,39 @@ ValueTests::testSignedValue() {
     auto val1 = Value::createSignedValue(data1);
 
     CPPUNIT_ASSERT(val1.isValid());
-    CPPUNIT_ASSERT_EQUAL(static_cast<bool>(val1.getPublicKey()), true);
-    CPPUNIT_ASSERT_EQUAL(static_cast<bool>(val1.getRecipient()), false);
-    CPPUNIT_ASSERT_EQUAL(val1.hasPrivateKey(), true);
-    CPPUNIT_ASSERT_EQUAL(static_cast<bool>(val1.getNonce()), true);
+    CPPUNIT_ASSERT(val1.isMutable());
+    CPPUNIT_ASSERT(val1.isSigned());
+    CPPUNIT_ASSERT(!val1.isEncrypted());
+    CPPUNIT_ASSERT(val1.hasPrivateKey());
     CPPUNIT_ASSERT(!val1.getSignature().empty());
-    CPPUNIT_ASSERT_EQUAL(val1.isMutable(), true);
-    CPPUNIT_ASSERT_EQUAL(val1.isEncrypted(), false);
-    CPPUNIT_ASSERT_EQUAL(val1.isSigned(), true);
-    CPPUNIT_ASSERT_EQUAL(val1.getSequenceNumber(), 0);
+    CPPUNIT_ASSERT(val1.getSequenceNumber() == 0);
     CPPUNIT_ASSERT(val1.getData() == data1);
 
     auto valueId = val1.getId();
+    auto future = node1->storeValue(val1);
+    future.get();
 
-    auto p1 = node1->storeValue(val1);
-    p1.get();
-
-    auto p2 = node1->findValue(valueId, LookupOption::ARBITRARY);
-    auto val2 = p2.get();
+    auto futureValue = node1->findValue(valueId, LookupOption::ARBITRARY);
+    auto val2 = futureValue.get();
 
     CPPUNIT_ASSERT(val1 == *val2);
-    //printf("\n\nval1: %s\n", (static_cast<std::string>(*val1)).c_str());
-    //printf("val2: %s\n\n", (static_cast<std::string>(*val2)).c_str());
 
     //update signed value
     auto data2 = Utils::getRandomData(64);
     auto val3 = val1.update(data2);
 
     CPPUNIT_ASSERT(val3.isValid());
+    CPPUNIT_ASSERT(val3.isMutable());
+    CPPUNIT_ASSERT(val3.isSigned());
+    CPPUNIT_ASSERT(!val3.isEncrypted());
+    CPPUNIT_ASSERT(val3.hasPrivateKey());
     CPPUNIT_ASSERT(val3.getPublicKey() == val1.getPublicKey());
-    CPPUNIT_ASSERT_EQUAL(static_cast<bool>(val3.getRecipient()), false);
-    CPPUNIT_ASSERT(val1.getNonce() == val3.getNonce());
+    CPPUNIT_ASSERT(val3.getNonce() == val1.getNonce());
+    CPPUNIT_ASSERT(val3.getPrivateKey() == val1.getPrivateKey());
     CPPUNIT_ASSERT(val3.getSignature() != val1.getSignature());
     CPPUNIT_ASSERT(val3.getData() == data2);
-    CPPUNIT_ASSERT_EQUAL(true, val3.hasPrivateKey());
-    CPPUNIT_ASSERT_EQUAL(1, val3.getSequenceNumber());
-    CPPUNIT_ASSERT_EQUAL(false, val3.isEncrypted());
-    CPPUNIT_ASSERT_EQUAL(true, val3.isSigned());
-    CPPUNIT_ASSERT_EQUAL(true, val3.isMutable());
+    CPPUNIT_ASSERT(val3.getSequenceNumber() == 1);
+    CPPUNIT_ASSERT(val3.getId() == val1.getId());
 
     auto p3 = node1->storeValue(val3);
     p3.get();
@@ -141,24 +132,21 @@ ValueTests::testEncryptedValue() {
     auto val1 = Value::createEncryptedValue(node2->getId(), data1);
 
     CPPUNIT_ASSERT(val1.isValid());
-    CPPUNIT_ASSERT_EQUAL(static_cast<bool>(val1.getPublicKey()), true);
-    CPPUNIT_ASSERT_EQUAL(static_cast<bool>(val1.getRecipient()), true);
+    CPPUNIT_ASSERT(val1.isMutable());
+    CPPUNIT_ASSERT(val1.isSigned());
+    CPPUNIT_ASSERT(val1.isEncrypted());
+    CPPUNIT_ASSERT(val1.hasPrivateKey());
     CPPUNIT_ASSERT(val1.getRecipient() == node2->getId());
-    CPPUNIT_ASSERT_EQUAL(static_cast<bool>(val1.getNonce()), true);
     CPPUNIT_ASSERT(!val1.getSignature().empty());
-    CPPUNIT_ASSERT_EQUAL(val1.isMutable(), true);
-    CPPUNIT_ASSERT_EQUAL(val1.isEncrypted(), true);
-    CPPUNIT_ASSERT_EQUAL(val1.isSigned(), true);
-    CPPUNIT_ASSERT_EQUAL(val1.getSequenceNumber(), 0);
-    CPPUNIT_ASSERT(val1.getData() != data1); //the data of encrypted value is encrpted data, not origin data
+    CPPUNIT_ASSERT(val1.getSequenceNumber() == 0);
+    CPPUNIT_ASSERT(val1.getData() != data1); // encrypted data.
 
     auto valueId = val1.getId();
+    auto future = node1->storeValue(val1);
+    future.get();
 
-    auto p1 = node1->storeValue(val1);
-    p1.get();
-
-    auto p2 = node1->findValue(valueId, LookupOption::ARBITRARY);
-    auto val2 = p2.get();
+    auto futureValue = node1->findValue(valueId, LookupOption::ARBITRARY);
+    auto val2 = futureValue.get();
 
     CPPUNIT_ASSERT(val1 == *val2);
 
@@ -167,16 +155,18 @@ ValueTests::testEncryptedValue() {
     auto val3 = val1.update(data2);
 
     CPPUNIT_ASSERT(val3.isValid());
+    CPPUNIT_ASSERT(val3.isMutable());
+    CPPUNIT_ASSERT(val3.isSigned());
+    CPPUNIT_ASSERT(val3.isEncrypted());
+    CPPUNIT_ASSERT(val3.hasPrivateKey());
     CPPUNIT_ASSERT(val3.getPublicKey() == val1.getPublicKey());
     CPPUNIT_ASSERT(val3.getRecipient()== node2->getId());
-    CPPUNIT_ASSERT(val1.getNonce() == val3.getNonce());
+    CPPUNIT_ASSERT(val3.getNonce() == val1.getNonce());
     CPPUNIT_ASSERT(val3.getSignature() != val1.getSignature());
+    CPPUNIT_ASSERT(val3.getRecipient() == val1.getRecipient());
     CPPUNIT_ASSERT(val3.getData() != data2);
-    CPPUNIT_ASSERT_EQUAL(true, val3.hasPrivateKey());
-    CPPUNIT_ASSERT_EQUAL(1, val3.getSequenceNumber());
-    CPPUNIT_ASSERT_EQUAL(true, val3.isEncrypted());
-    CPPUNIT_ASSERT_EQUAL(true, val3.isSigned());
-    CPPUNIT_ASSERT_EQUAL(true, val3.isMutable());
+    CPPUNIT_ASSERT(val3.getSequenceNumber() == 1);
+    CPPUNIT_ASSERT(val3.getId() == val1.getId());
 
     auto p3 = node1->storeValue(val3);
     p3.get();
