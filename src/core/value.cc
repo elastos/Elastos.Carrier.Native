@@ -37,26 +37,26 @@ Value::Value(const Blob& publicKey, const Blob& privateKey, const Blob& recipien
         int sequenceNumber, const Blob& signature, const Blob& data) {
 
     if (!publicKey.empty()) {
-        if (privateKey.ptr() != nullptr && privateKey.size() != Signature::PrivateKey::BYTES)
+        if (!privateKey.empty() && privateKey.size() != Signature::PrivateKey::BYTES)
             throw std::invalid_argument("Invalid private key");
 
-        if (nonce.ptr() == nullptr || nonce.size() != CryptoBox::Nonce::BYTES)
+        if (nonce.size() != CryptoBox::Nonce::BYTES)
             throw std::invalid_argument("Invalid nonce");
 
         if (sequenceNumber < 0)
             throw std::invalid_argument("Invalid sequence number");
 
-        if (signature.ptr() == nullptr || signature.size() != Signature::BYTES)
+        if (signature.size() != Signature::BYTES)
             throw std::invalid_argument("Invalid signature");
 
-        this->publicKey = Id(publicKey);
-        if (privateKey.ptr() != nullptr)
-            this->privateKey = Signature::PrivateKey(privateKey);
-        if (recipient.ptr() != nullptr)
-            this->recipient = Id(recipient);
-        this->nonce = CryptoBox::Nonce(nonce);
+        this->publicKey = std::optional<Id>(publicKey);
+        if (!privateKey.empty())
+            this->privateKey = std::optional<Signature::PrivateKey>(privateKey);
+        if (!recipient.empty())
+            this->recipient = std::optional<Id>(recipient);
+        this->nonce = std::optional<CryptoBox::Nonce>(nonce);
+        this->signature = std::optional<std::vector<uint8_t>>(std::vector<uint8_t>(signature.cbegin(), signature.cend()));
         this->sequenceNumber = sequenceNumber;
-        this->signature = std::vector<uint8_t>(signature.cbegin(), signature.cend());
     }
 
     if (data.empty())
@@ -65,47 +65,45 @@ Value::Value(const Blob& publicKey, const Blob& privateKey, const Blob& recipien
     this->data = std::vector<uint8_t>(data.cbegin(), data.cend());
 }
 
-Value::Value(const Signature::KeyPair& keypair, const Id& recipient, const CryptoBox::Nonce& nonce,
-        int sequenceNumber, const std::vector<uint8_t>& data) {
-    if (nonce.size() != CryptoBox::Nonce::BYTES)
-        throw std::invalid_argument("Invalid nonce");
-
+Value::Value(const Signature::KeyPair& keypair, const std::optional<Id>& recipient,
+        const CryptoBox::Nonce& nonce, int sequenceNumber, const std::vector<uint8_t>& data) {
     if (sequenceNumber < 0)
         throw std::invalid_argument("Invalid sequence number");
 
     if (data.empty())
         throw std::invalid_argument("Invalid data");
 
-    this->publicKey = Id(keypair.publicKey());
-    this->privateKey = keypair.privateKey();
-    this->recipient = recipient;
+    this->publicKey = std::optional<Id>(keypair.publicKey());
+    this->privateKey = std::optional<Signature::PrivateKey>(keypair.privateKey());
+
     this->nonce = nonce;
     this->sequenceNumber = sequenceNumber;
 
-    if (isEncrypted()) {
-        CryptoBox::PublicKey recipientPk = recipient.toEncryptionKey();
+    if (recipient.has_value()) {
+        CryptoBox::PublicKey recipientPk = recipient->toEncryptionKey();
         CryptoBox::PrivateKey ownerSk = CryptoBox::PrivateKey::fromSignatureKey(keypair.privateKey());
 
+        this->recipient = std::optional<Id>(recipient);
         this->data = CryptoBox::encrypt(data, nonce, recipientPk, ownerSk);
     } else {
         this->data = data;
     }
 
-    this->signature = Signature::sign(getSignData(), keypair.privateKey());
+    const auto signData = Signature::sign(getSignData(), keypair.privateKey());
+    this->signature = std::optional<std::vector<uint8_t>>(std::vector<uint8_t>(signData.cbegin(), signData.cend()));
 }
 
-Id Value::calculateId(const Id& publicKey, const CryptoBox::Nonce& nonce, const std::vector<uint8_t>& data) {
+Id Value::calculateId(const std::optional<Id>& publicKey, const std::optional<CryptoBox::Nonce>& nonce,
+        const std::vector<uint8_t>& data) {
     auto sha = SHA256();
-
-    if (!static_cast<bool>(publicKey)) {
-        sha.update(data);
+    if (publicKey.has_value()) {
+        sha.update(publicKey->blob());
+        sha.update(nonce->blob());
     } else {
-        sha.update(publicKey.blob());
-        sha.update(nonce.blob());
+        sha.update(data);
     }
 
-    auto digest = sha.digest();
-    return Id(digest);
+    return Id(sha.digest());
 }
 
 std::vector<uint8_t> Value::getSignData() const {
@@ -114,9 +112,9 @@ std::vector<uint8_t> Value::getSignData() const {
 
     std::vector<uint8_t> toSign(size);
     if (isEncrypted())
-        toSign.insert(toSign.end(), recipient.cbegin(), recipient.cend());
+        toSign.insert(toSign.end(), recipient.value().cbegin(), recipient.value().cend());
 
-    toSign.insert(toSign.end(), nonce.cbegin(), nonce.cend());
+    toSign.insert(toSign.end(), nonce.value().cbegin(), nonce.value().cend());
     toSign.insert(toSign.end(), (uint8_t*)(&sequenceNumber), (uint8_t*)(&sequenceNumber) + sizeof(sequenceNumber));
     toSign.insert(toSign.end(), data.begin(), data.end());
     return toSign;
@@ -127,15 +125,11 @@ bool Value::isValid() const {
         return false;
 
     if (isMutable()) {
-        if (nonce.size() != CryptoBox::Nonce::BYTES)
-            return false;
+        assert(nonce.has_value() && nonce.value().size() == CryptoBox::Nonce::BYTES);
+        assert(signature.has_value() && signature.value().size() == Signature::BYTES);
 
-        if (signature.size() != Signature::BYTES)
-            return false;
-
-        Signature::PublicKey pk = publicKey.toSignatureKey();
-
-        return Signature::verify(getSignData(), signature, pk);
+        auto pk = publicKey->toSignatureKey();
+        return Signature::verify(getSignData(), signature.value(), pk);
     }
 
     return true;
@@ -148,8 +142,8 @@ Value Value::update(const std::vector<uint8_t>& data) {
     if (!hasPrivateKey())
         throw StateError("Not the owner of the value " + getId().toBase58String());
 
-    Signature::KeyPair kp = Signature::KeyPair(getPrivateKey());
-    return Value(kp, recipient, nonce, sequenceNumber + 1, data);
+    auto kp = Signature::KeyPair(getPrivateKey());
+    return Value(kp, recipient, nonce.value(), sequenceNumber + 1, data);
 }
 
 bool Value::operator==(const Value& other) const {
@@ -164,13 +158,13 @@ Value::operator std::string() const {
 
     ss << "id:" << getId();
     if (isMutable()) {
-        ss << ",publicKey:" << static_cast<std::string>(publicKey);
-        ss << ",nonce: " << Hex::encode(nonce.blob());
+        ss << ",publicKey:" << static_cast<std::string>(publicKey.value());
+        ss << ",nonce: " << Hex::encode(nonce.value().blob());
     }
     if (isEncrypted())
-        ss << ",recipient:" << static_cast<std::string>(recipient);
+        ss << ",recipient:" << static_cast<std::string>(recipient.value());
     if (isSigned())
-        ss << ",sig:" << Hex::encode(signature);
+        ss << ",sig:" << Hex::encode(signature.value());
 
     ss << ",seq:" << std::to_string(sequenceNumber);
     ss << ",data:" << Hex::encode(data);

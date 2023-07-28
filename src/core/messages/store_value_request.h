@@ -23,7 +23,9 @@
 #pragma once
 
 #include <vector>
+#include <optional>
 
+#include "carrier/id.h"
 #include "carrier/value.h"
 #include "carrier/crypto_box.h"
 
@@ -62,11 +64,11 @@ public:
     Value getValue() const;
 
     bool isMutable() const {
-        return static_cast<bool>(publicKey);
+        return publicKey.has_value();
     }
 
     bool isEncrypted() const {
-        return static_cast<bool>(recipient);
+        return recipient.has_value();
     }
 
     Id getValueId() {
@@ -84,12 +86,12 @@ protected:
 
 private:
     int token {0};
-    Id publicKey {};
-    Id recipient {};
-    CryptoBox::Nonce nonce {};
+    std::optional<Id> publicKey {};
+    std::optional<Id> recipient {};
+    std::optional<CryptoBox::Nonce> nonce {};
+    std::optional<std::vector<uint8_t>> signature {};
     int sequenceNumber {-1};
     int expectedSequenceNumber {-1};
-    std::vector<uint8_t> signature {};
     std::vector<uint8_t> value;
 };
 

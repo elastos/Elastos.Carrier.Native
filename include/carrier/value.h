@@ -23,12 +23,11 @@
 #pragma once
 
 #include <vector>
-#include <memory>
+#include <optional>
 
 #include "def.h"
-#include "types.h"
 #include "id.h"
-#include "socket_address.h"
+#include "blob.h"
 #include "crypto_box.h"
 #include "signature.h"
 
@@ -45,77 +44,88 @@ public:
     }
 
     static Value createValue(const std::vector<uint8_t>& data) {
-        auto empty = Blob();
-        auto _data = Blob(data);
-        return Value(empty, empty, empty, empty, -1, empty, _data);
+        return Value({}, {}, {}, {}, -1, {}, Blob(data));
     }
 
     static Value createSignedValue(const std::vector<uint8_t>& data) {
         auto keyPair = Signature::KeyPair::random();
         auto nonce = CryptoBox::Nonce::random();
-        return  createSignedValue(keyPair, nonce, data);
+        return Value(keyPair, std::nullopt, nonce, 0, data);
     }
 
     static Value createSignedValue(const Signature::KeyPair& keyPair, const CryptoBox::Nonce& nonce,
         const std::vector<uint8_t>& data) {
-        return Value(keyPair, {}, nonce, 0, data);
+        return Value(keyPair, std::nullopt, nonce, 0, data);
     }
 
     static Value createSignedValue(const Signature::KeyPair& keyPair, const CryptoBox::Nonce& nonce,
         int sequenceNumber, const std::vector<uint8_t>& data) {
-        return Value(keyPair, {}, nonce, sequenceNumber, data);
+        return Value(keyPair, std::nullopt, nonce, sequenceNumber, data);
     }
 
     static Value createEncryptedValue(const Id& recipient, const std::vector<uint8_t>& data) {
         auto keyPair = Signature::KeyPair::random();
         auto nonce = CryptoBox::Nonce::random();
-        return createEncryptedValue(keyPair, recipient, nonce, data);
+        return Value(keyPair, std::optional<Id>(recipient), nonce, 0, data);
     }
 
     static Value createEncryptedValue(const Signature::KeyPair& keyPair, const Id& recipient,
         const CryptoBox::Nonce& nonce, const std::vector<uint8_t>& data) {
-        return Value(keyPair, recipient, nonce, 0, data);
+        return Value(keyPair, std::optional<Id>(recipient), nonce, 0, data);
     }
 
     static Value createEncryptedValue(const Signature::KeyPair& keyPair, const Id& recipient,
         const CryptoBox::Nonce& nonce, int sequenceNumber, const std::vector<uint8_t>& data) {
-        if (recipient == Id::MIN_ID)
-            throw std::invalid_argument("Invalid recipient");
-        return Value(keyPair, recipient, nonce, sequenceNumber, data);
+        return Value(keyPair, std::optional<Id>(recipient), nonce, sequenceNumber, data);
     }
 
-    static Id calculateId(const Id& publicKey, const CryptoBox::Nonce& nonce, const std::vector<uint8_t>& data);
+    static Id calculateId(const std::optional<Id>& publicKey, const std::optional<CryptoBox::Nonce>& nonce,
+        const std::vector<uint8_t>& data);
 
     Id getId() const {
         return Value::calculateId(publicKey, nonce, data);
     }
 
-    const Id& getPublicKey() const noexcept {
-        return publicKey;
+    const Id& getPublicKey() const {
+        if (!publicKey.has_value())
+            throw std::runtime_error("No public key");
+
+        return publicKey.value();
     }
 
-    const Id& getRecipient() const noexcept {
-        return recipient;
+    const Id& getRecipient() const {
+        if (!recipient.has_value())
+            throw std::runtime_error("No recipient");
+
+        return recipient.value();
     }
 
     bool hasPrivateKey() const noexcept {
-        return static_cast<bool>(privateKey);
+        return privateKey.has_value();
     }
 
-    const Signature::PrivateKey& getPrivateKey() const noexcept {
-        return privateKey;
+    const Signature::PrivateKey& getPrivateKey() const {
+        if (!privateKey.has_value())
+            throw std::runtime_error("No private key");
+
+        return privateKey.value();
     }
 
     int getSequenceNumber() const noexcept {
         return sequenceNumber;
     }
 
-    const CryptoBox::Nonce& getNonce() const noexcept {
-        return nonce;
+    const CryptoBox::Nonce& getNonce() const {
+        if (!nonce.has_value())
+            throw std::runtime_error("No nonce");
+
+        return nonce.value();
     }
 
-    const std::vector<uint8_t>& getSignature() const noexcept {
-        return signature;
+    const std::vector<uint8_t>& getSignature() const {
+        if (!signature.has_value())
+            throw std::runtime_error("No signature");
+        return signature.value();
     }
 
     const std::vector<uint8_t>& getData() const noexcept {
@@ -125,19 +135,22 @@ public:
     Value update(const std::vector<uint8_t>& data);
 
     size_t size() const noexcept {
-        return data.size() + signature.size();
+        auto size = data.size();
+        if (signature.has_value())
+            size += signature.value().size();
+        return size;
     }
 
     bool isEncrypted() const noexcept {
-        return static_cast<bool>(recipient);
+        return recipient.has_value();
     }
 
     bool isSigned() const noexcept {
-        return !signature.empty();
+        return signature.has_value();
     }
 
     bool isMutable() const noexcept {
-        return static_cast<bool>(publicKey);
+        return publicKey.has_value();
     }
 
     bool isValid() const;
@@ -145,21 +158,21 @@ public:
     bool operator== (const Value& other) const;
     operator std::string() const;
 
-private: // internal methods used in friend class.
+private:
     Value(const Blob& publicKey, const Blob& privateKey, const Blob& recipient,
         const Blob& nonce, int sequenceNumber, const Blob& signature, const Blob& data);
 
-    Value(const Signature::KeyPair& keyPair, const Id& recipient, const CryptoBox::Nonce& nonce,
+    Value(const Signature::KeyPair& keyPair, const std::optional<Id>& recipient, const CryptoBox::Nonce& nonce,
         int sequenceNumber, const std::vector<uint8_t>& data);
 
     std::vector<uint8_t> getSignData() const;
 
-    Id publicKey {};
-    Id recipient {};
+    std::optional<Id> publicKey {};
+    std::optional<Id> recipient {};
 
-    Signature::PrivateKey privateKey {};
-    CryptoBox::Nonce nonce {};
-    std::vector<uint8_t> signature {};
+    std::optional<Signature::PrivateKey> privateKey {};
+    std::optional<CryptoBox::Nonce> nonce {};
+    std::optional<std::vector<uint8_t>> signature {};
     std::vector<uint8_t> data {};
     int32_t sequenceNumber {0};
 };
