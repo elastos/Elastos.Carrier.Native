@@ -32,12 +32,12 @@ namespace carrier {
 
 void FindValueResponse::setValue(const Value& value) {
     if (value.isMutable()) {
-        this->publicKey = std::optional<Id>(value.getPublicKey());
-        this->nonce = std::optional<CryptoBox::Nonce>(value.getNonce());
-        this->signature = std::optional<std::vector<uint8_t>>(value.getSignature());
+        this->publicKey = value.getPublicKey();
+        this->nonce = value.getNonce();
+        this->signature = value.getSignature();
         this->sequenceNumber = value.getSequenceNumber();
         if (value.isEncrypted())
-            this->recipient = std::optional<Id>(value.getRecipient());
+            this->recipient = value.getRecipient();
     }
     this->value = value.getData();
 }
@@ -69,15 +69,15 @@ void FindValueResponse::_serialize(nlohmann::json& object) const {
 
 void FindValueResponse::_parse(const std::string& fieldName, nlohmann::json& object) {
     if (fieldName == Message::KEY_RES_PUBLICKEY) {
-        publicKey = std::optional<Id>(object.get<Id>());
+        publicKey = object.get<Id>();
     } else if (fieldName == Message::KEY_RES_RECIPIENT) {
-        recipient = std::optional<Id>(object.get<Id>());
+        recipient = object.get<Id>();
     } else if (fieldName == Message::KEY_RES_NONCE) {
-        nonce = std::optional<CryptoBox::Nonce>(Blob(object.get_binary()));
+        nonce = CryptoBox::Nonce(Blob(object.get_binary()));
     } else if (fieldName == Message::KEY_RES_SEQ) {
         sequenceNumber = object.get<int>();
     } else if (fieldName == Message::KEY_RES_SIGNATURE) {
-        signature = std::optional<std::vector<uint8_t>>(object.get_binary());
+        signature = object.get_binary();
     } else if (fieldName == Message::KEY_RES_VALUE) {
         value = object.get_binary();
     } else {

@@ -49,13 +49,13 @@ Value::Value(const Blob& publicKey, const Blob& privateKey, const Blob& recipien
         if (signature.size() != Signature::BYTES)
             throw std::invalid_argument("Invalid signature");
 
-        this->publicKey = std::optional<Id>(publicKey);
+        this->publicKey = Id(publicKey);
         if (!privateKey.empty())
-            this->privateKey = std::optional<Signature::PrivateKey>(privateKey);
+            this->privateKey = Signature::PrivateKey(privateKey);
         if (!recipient.empty())
-            this->recipient = std::optional<Id>(recipient);
-        this->nonce = std::optional<CryptoBox::Nonce>(nonce);
-        this->signature = std::optional<std::vector<uint8_t>>(std::vector<uint8_t>(signature.cbegin(), signature.cend()));
+            this->recipient = Id(recipient);
+        this->nonce = CryptoBox::Nonce(nonce);
+        this->signature = std::vector<uint8_t>(signature.cbegin(), signature.cend());
         this->sequenceNumber = sequenceNumber;
     }
 
@@ -73,8 +73,8 @@ Value::Value(const Signature::KeyPair& keypair, const std::optional<Id>& recipie
     if (data.empty())
         throw std::invalid_argument("Invalid data");
 
-    this->publicKey = std::optional<Id>(keypair.publicKey());
-    this->privateKey = std::optional<Signature::PrivateKey>(keypair.privateKey());
+    this->publicKey = Id(keypair.publicKey());
+    this->privateKey = Signature::PrivateKey(keypair.privateKey());
 
     this->nonce = nonce;
     this->sequenceNumber = sequenceNumber;
@@ -83,14 +83,14 @@ Value::Value(const Signature::KeyPair& keypair, const std::optional<Id>& recipie
         CryptoBox::PublicKey recipientPk = recipient->toEncryptionKey();
         CryptoBox::PrivateKey ownerSk = CryptoBox::PrivateKey::fromSignatureKey(keypair.privateKey());
 
-        this->recipient = std::optional<Id>(recipient);
+        this->recipient = Id(recipient.value());
         this->data = CryptoBox::encrypt(data, nonce, recipientPk, ownerSk);
     } else {
         this->data = data;
     }
 
     const auto signData = Signature::sign(getSignData(), keypair.privateKey());
-    this->signature = std::optional<std::vector<uint8_t>>(std::vector<uint8_t>(signData.cbegin(), signData.cend()));
+    this->signature = std::vector<uint8_t>(signData.cbegin(), signData.cend());
 }
 
 Id Value::calculateId(const std::optional<Id>& publicKey, const std::optional<CryptoBox::Nonce>& nonce,

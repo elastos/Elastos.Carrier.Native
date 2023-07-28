@@ -51,7 +51,7 @@ PeerInfo::PeerInfo(const Blob& peerId, const Blob& privateKey, const Blob& nodeI
 
     this->publicKey = Id(peerId);
     if (!privateKey.empty())
-        this->privateKey = std::optional<Signature::PrivateKey>(privateKey);
+        this->privateKey = Signature::PrivateKey(privateKey);
     this->nodeId = Id(nodeId);
     this->origin = Id(origin.empty() ? nodeId : origin);
     this->port = port;
@@ -68,12 +68,12 @@ PeerInfo::PeerInfo(const Signature::KeyPair& keypair, const Id& nodeId, const Id
         throw std::invalid_argument("Invalid port");
 
     this->publicKey = Id(keypair.publicKey());
-    this->privateKey = std::optional<Signature::PrivateKey>(keypair.privateKey());
+    this->privateKey = Signature::PrivateKey(keypair.privateKey());
     this->nodeId = nodeId;
     this->origin = origin == Id::MIN_ID ? nodeId : origin;
     this->port = port;
     if (!alternativeURL.empty())
-        this->alternativeURL = std::optional<std::string>((char *)utf8proc_NFC((unsigned char *)(alternativeURL.c_str())));
+        this->alternativeURL = (char *)utf8proc_NFC((unsigned char *)(alternativeURL.c_str()));
     this->signature = Signature::sign(getSignData(), this->privateKey.value());
 }
 
