@@ -31,12 +31,12 @@ namespace carrier {
 
 void StoreValueRequest::setValue(const Value& value) {
     if (value.isMutable()) {
-        this->publicKey = std::optional<Id>(value.getPublicKey());
-        this->nonce = std::optional<CryptoBox::Nonce>(value.getNonce());
-        this->signature = std::optional<std::vector<uint8_t>>(value.getSignature());
+        this->publicKey = value.getPublicKey();
+        this->nonce = value.getNonce();
+        this->signature = value.getSignature();
         this->sequenceNumber = value.getSequenceNumber();
         if (value.isEncrypted())
-            this->recipient = std::optional<Id>(value.getRecipient());
+            this->recipient = value.getRecipient();
     }
     this->value = value.getData();
 }
@@ -76,13 +76,13 @@ void StoreValueRequest::parse(const std::string& fieldName, nlohmann::json& obje
 
     for (const auto& [key, object] : object.items()) {
         if (key == Message::KEY_REQ_PUBLICKEY) {
-            publicKey = std::optional<Id>(object.get<Id>());
+            publicKey = object.get<Id>();
         } else if (key == Message::KEY_REQ_RECIPIENT) {
-            recipient = std::optional<Id>(object.get<Id>());
+            recipient = object.get<Id>();
         } else if (key == Message::KEY_REQ_NONCE) {
-            nonce = std::optional<CryptoBox::Nonce>(Blob(object.get_binary()));
+            nonce = CryptoBox::Nonce(Blob(object.get_binary()));
         } else if (key == Message::KEY_REQ_SIGNATURE) {
-           signature = std::optional<std::vector<uint8_t>>(object.get_binary());
+           signature = object.get_binary();
         } else if (key == Message::KEY_REQ_SEQ) {
             sequenceNumber = object.get<uint16_t>();
         } else if (key == Message::KEY_REQ_CAS) {
