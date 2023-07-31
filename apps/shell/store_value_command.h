@@ -69,7 +69,7 @@ protected:
 
         auto future = node->storeValue(value, persistent);
         future.get();
-        std::cout << "Value " << value.getId().toBase58String() << " stored.";
+        std::cout << "Value " << value.getId().toBase58String() << " stored." << std::endl;
     };
 
 private:

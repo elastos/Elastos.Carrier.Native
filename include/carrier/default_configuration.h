@@ -101,9 +101,11 @@ public:
             this->port = port;
         }
 
-        void setStoragePath(const std::string& path) {
-            this->storagePath = path;
+        bool hasStoragePath() {
+            return !this->storagePath.empty();
         }
+
+        void setStoragePath(const std::string& path);
 
         const std::string& getStoragePath() {
             return this->storagePath;

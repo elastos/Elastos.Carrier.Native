@@ -88,13 +88,12 @@ void Shell::handleCommands()
     }
 
     auto builder = DefaultConfiguration::Builder {};
-    if (configFile.empty())
-        configFile = "./shell.conf";
-
-    try {
-        builder.load(configFile);
-    } catch (const std::exception& e) {
-        std::cout << "Can not load the config file: " << configFile << ", error: " << e.what();
+    if (!configFile.empty()) {
+        try {
+            builder.load(configFile);
+        } catch (const std::exception& e) {
+            std::cout << "Can not load the config file: " << configFile << ", error: " << e.what();
+        }
     }
 
     if (!addr4.empty())
@@ -106,8 +105,12 @@ void Shell::handleCommands()
     if (port != 0)
         builder.setListeningPort(port);
 
-    if (builder.getStoragePath().empty())
+    if(!dataDir.empty()) {
         builder.setStoragePath(dataDir);
+    } else {
+        if (!builder.hasStoragePath())
+            builder.setStoragePath("~/.cache/carrier");
+    }
 
     auto config = builder.build();
     node = std::make_shared<Node>(config);
