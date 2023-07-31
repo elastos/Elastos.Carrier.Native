@@ -39,7 +39,6 @@ public:
     const static uint8_t CONNECT    = 0x20;
     const static uint8_t DISCONNECT = 0x30;
     const static uint8_t DATA       = 0x40;
-    const static uint8_t SIGNATURE  = 0x50;
     const static uint8_t ERR        = 0x70;
 
     static uint8_t auth() {
@@ -82,10 +81,6 @@ public:
         return random(DATA_MIN, DATA_MAX);
     }
 
-    static uint8_t signature() {
-        return random(SIGNATURE_MIN, SIGNATURE_MAX);
-    }
-
     static uint8_t error() {
         return random(ERROR_MIN, ERROR_MAX) | ACK_MASK;
     }
@@ -114,9 +109,6 @@ public:
         if(type >= DATA_MIN && type <= DATA_MAX)
             return DATA;
 
-        if(type >= SIGNATURE_MIN && type <= SIGNATURE_MAX)
-            return SIGNATURE;
-
         if(type >= ERROR_MIN && type <= ERROR_MAX)
             return ERR;
 
@@ -142,10 +134,7 @@ private:
     const static uint8_t DISCONNECT_MAX = 0x3F;
 
     const static uint8_t DATA_MIN       = DATA;
-    const static uint8_t DATA_MAX       = 0x4F;
-
-    const static uint8_t SIGNATURE_MIN  = SIGNATURE;
-    const static uint8_t SIGNATURE_MAX  = 0x5F;
+    const static uint8_t DATA_MAX       = 0x6F;
 
     const static uint8_t ERROR_MIN      = ERR;
     const static uint8_t ERROR_MAX      = 0x7F;

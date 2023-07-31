@@ -64,12 +64,17 @@ std::future<void> ActiveProxy::initialize(Sp<Node> node, const std::map<std::str
     serverId = Id(strId);
     serverHost = std::any_cast<std::string>(configure.at("serverHost"));
     serverPort = (uint16_t)std::any_cast<int64_t>(configure.at("serverPort"));
+    if (serverHost.empty() || serverPort == 0)
+        throw std::runtime_error("Addon ActiveProxy's configure item has error: empty serverHost or serverPort is not allowed");
+
     upstreamHost = std::any_cast<std::string>(configure.at("upstreamHost"));
     if (upstreamHost == "LOCAL-IP4-ADDRESS")
         upstreamHost = getLocalIPv4();
     else if (upstreamHost == "LOCAL-IP6-ADDRESS")
         upstreamHost = getLocalIPv6();
     upstreamPort = (uint16_t)std::any_cast<int64_t>(configure.at("upstreamPort"));
+    if (upstreamHost.empty() || upstreamPort == 0)
+        throw std::runtime_error("Addon ActiveProxy's configure item has error: empty upstreamHost or upstreamPort is not allowed");
 
     if (configure.count("peerName")) {
         peerId = Id::ofName(std::any_cast<std::string>(configure.at("peerName")));
@@ -83,10 +88,6 @@ std::future<void> ActiveProxy::initialize(Sp<Node> node, const std::map<std::str
     if (configure.count("domainName"))
         domainName = std::any_cast<std::string>(configure.at("domainName"));
 
-    if (serverHost.empty() || serverPort == 0)
-        throw std::runtime_error("Addon ActiveProxy's configure item has error: empty serverHost or serverPort is not allowed");
-    if (upstreamName.empty() || upstreamPort == 0)
-        throw std::runtime_error("Addon ActiveProxy's configure item has error: empty upstreamHost or upstreamPort is not allowed");
 
     //init data
     log->setLevel(Level::Info);
