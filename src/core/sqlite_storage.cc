@@ -30,7 +30,7 @@
 namespace elastos {
 namespace carrier {
 
-static int VERSION = 4;
+static int VERSION = 5;
 static std::string SET_USER_VERSION = "PRAGMA user_version = " + std::to_string(VERSION);
 static std::string GET_USER_VERSION = "PRAGMA user_version";
 
@@ -53,10 +53,10 @@ static std::string CREATE_VALUES_INDEX =
 
 static std::string CREATE_PEERS_TABLE = "CREATE TABLE IF NOT EXISTS peers( \
         id BLOB NOT NULL, \
-        persistent BOOLEAN NOT NULL DEFAULT FALSE, \
-        privateKey BLOB, \
         nodeId BLOB NOT NULL, \
         origin BLOB NOT NULL, \
+        persistent BOOLEAN NOT NULL DEFAULT FALSE, \
+        privateKey BLOB, \
         port INTEGER NOT NULL, \
         alternativeURL VARCHAR(512), \
         signature BLOB NOT NULL, \
@@ -86,18 +86,19 @@ static std::string SELECT_VALUE = "SELECT * from valores \
 static std::string UPDATE_VALUE_LAST_ANNOUNCE = "UPDATE valores \
         SET timestamp=?, announced = ? WHERE id = ?";
 
-static std::string GET_VALUES = "SELECT DISTINCT id from valores ORDER BY id";
+static std::string GET_VALUES = "SELECT id from valores ORDER BY id WHERE timestamp >= ?";
 
 static std::string GET_PERSISTENT_VALUES = "SELECT * FROM valores WHERE persistent = true AND announced <= ?";
 
 static std::string REMOVE_VALUE = "DELETE FROM valores WHERE id = ?";
 
 static std::string UPSERT_PEER = "INSERT INTO peers(\
-        id, persistent, privateKey, nodeId, origin, port, alternativeURL, signature, timestamp, announced) \
+        id, nodeId, origin, persistent, privateKey, port, alternativeURL, signature, timestamp, announced) \
         VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id, nodeId, origin) DO UPDATE SET \
-        privateKey=excluded.privateKey, \
+        persistent=excluded.persistent, privateKey=excluded.privateKey, \
         port=excluded.port, alternativeURL=excluded.alternativeURL, \
-        signature=excluded.signature, timestamp=excluded.timestamp";
+        signature=excluded.signature, timestamp=excluded.timestamp, \
+		announced=excluded.announced";
 
 static std::string SELECT_PEER = "SELECT * from peers \
         WHERE id = ? and timestamp >= ? \
@@ -109,7 +110,7 @@ static std::string SELECT_PEER_WITH_SRC = "SELECT * from peers \
 static std::string UPDATE_PEER_LAST_ANNOUNCE = "UPDATE peers \
         SET timestamp=?, announced = ? WHERE id = ? and origin = ?";
 
-static std::string GET_PEERS = "SELECT DISTINCT id from peers ORDER BY id";
+static std::string GET_PEERS = "SELECT DISTINCT id from peers ORDER BY id WHERE timestamp >= ?";
 
 static std::string GET_PERSISTENT_PEERS = "SELECT * FROM peers WHERE persistent = true AND announced <= ?";
 
@@ -150,7 +151,7 @@ void SqliteStorage::init(const std::string& path, Scheduler& scheduler) {
     // we should check the user version, do the schema update,
     // then increase the user_version;
     int userVersion = getUserVersion();
-    if (userVersion < 4) {
+    if (userVersion < 5) {
         if (sqlite3_exec(sqlite_store, "DROP INDEX IF EXISTS idx_valores_timpstamp", 0, 0, 0) != 0
             || sqlite3_exec(sqlite_store, "DROP TABLE IF EXISTS valores", 0, 0, 0) != 0
             || sqlite3_exec(sqlite_store, "DROP INDEX IF EXISTS idx_peers_timpstamp", 0, 0, 0) != 0
@@ -345,6 +346,9 @@ std::list<Id> SqliteStorage::getAllValues() {
         sqlite3_finalize(pStmt);
         throw std::runtime_error("Prepare sqlite failed.");;
     }
+
+    const uint64_t when = currentTimeMillis() - Constants::MAX_VALUE_AGE;
+    sqlite3_bind_int64(pStmt, 1, when);
 
     while (sqlite3_step(pStmt) == SQLITE_ROW) {
         int cNum = sqlite3_column_count(pStmt);
@@ -588,13 +592,13 @@ void SqliteStorage::putPeer(const std::list<PeerInfo>& peers) {
     uint64_t now = currentTimeMillis();
     for (const auto& peer : peers) {
         sqlite3_bind_blob(pStmt, 1, peer.getId().data(), peer.getId().size(), SQLITE_STATIC);
-        sqlite3_bind_int(pStmt, 2, false);
+        sqlite3_bind_blob(pStmt, 2, peer.getNodeId().data(), peer.getNodeId().size(), SQLITE_STATIC);
+        sqlite3_bind_blob(pStmt, 3, peer.getOrigin().data(), peer.getOrigin().size(), SQLITE_STATIC);
+        sqlite3_bind_int(pStmt, 4, false);
         if (peer.hasPrivateKey())
-            sqlite3_bind_blob(pStmt, 3, peer.getPrivateKey().bytes(), peer.getPrivateKey().size(), SQLITE_STATIC);
+            sqlite3_bind_blob(pStmt, 5, peer.getPrivateKey().bytes(), peer.getPrivateKey().size(), SQLITE_STATIC);
         else
-            sqlite3_bind_null(pStmt, 3);
-        sqlite3_bind_blob(pStmt, 4, peer.getNodeId().data(), peer.getNodeId().size(), SQLITE_STATIC);
-        sqlite3_bind_blob(pStmt, 5, peer.getOrigin().data(), peer.getOrigin().size(), SQLITE_STATIC);
+            sqlite3_bind_null(pStmt, 5);
         sqlite3_bind_int(pStmt, 6, peer.getPort());
         if (peer.hasAlternativeURL()) {
             const char* alt = peer.getAlternativeURL().c_str();
@@ -626,13 +630,13 @@ void SqliteStorage::putPeer(const PeerInfo& peer, bool persistent, bool updateLa
     }
 
     sqlite3_bind_blob(pStmt, 1, peer.getId().data(), peer.getId().size(), SQLITE_STATIC);
-    sqlite3_bind_int(pStmt, 2, persistent);
+    sqlite3_bind_blob(pStmt, 2, peer.getNodeId().data(), peer.getNodeId().size(), SQLITE_STATIC);
+    sqlite3_bind_blob(pStmt, 3, peer.getOrigin().data(), peer.getOrigin().size(), SQLITE_STATIC);
+    sqlite3_bind_int(pStmt, 4, persistent);
     if (peer.hasPrivateKey())
-        sqlite3_bind_blob(pStmt, 3, peer.getPrivateKey().bytes(), peer.getPrivateKey().size(), SQLITE_STATIC);
+        sqlite3_bind_blob(pStmt, 5, peer.getPrivateKey().bytes(), peer.getPrivateKey().size(), SQLITE_STATIC);
     else
-        sqlite3_bind_null(pStmt, 3);
-    sqlite3_bind_blob(pStmt, 4, peer.getNodeId().data(), peer.getNodeId().size(), SQLITE_STATIC);
-    sqlite3_bind_blob(pStmt, 5, peer.getOrigin().data(), peer.getOrigin().size(), SQLITE_STATIC);
+        sqlite3_bind_null(pStmt, 5);
     sqlite3_bind_int(pStmt, 6, peer.getPort());
     if (peer.hasAlternativeURL()) {
         const char *alt = peer.getAlternativeURL().c_str();
@@ -657,6 +661,9 @@ std::list<Id> SqliteStorage::getAllPeers() {
         sqlite3_finalize(pStmt);
         throw std::runtime_error("Prepare sqlite failed.");;
     }
+
+    uint64_t when = currentTimeMillis() - Constants::MAX_PEER_AGE;
+    sqlite3_bind_int64(pStmt, 1, when);
 
     while (sqlite3_step(pStmt) == SQLITE_ROW) {
         int cNum = sqlite3_column_count(pStmt);

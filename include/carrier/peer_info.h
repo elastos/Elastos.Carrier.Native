@@ -45,11 +45,11 @@ public:
 
     static PeerInfo create(const Id& nodeId, int port) {
         auto keypair = Signature::KeyPair::random();
-        return create(keypair, nodeId, {}, port, {});
+        return create(keypair, nodeId, nodeId, port, {});
     }
 
     static PeerInfo create(const Signature::KeyPair& keypair, const Id& nodeId, int port) {
-        return create(keypair, nodeId, {}, port, {});
+        return create(keypair, nodeId, nodeId, port, {});
     }
 
     static PeerInfo create(const Id& nodeId, Id origin, int port) {
@@ -63,11 +63,11 @@ public:
 
     static PeerInfo create(const Id& nodeId, int port, const std::string& alternativeURL) {
         auto keypair = Signature::KeyPair::random();
-        return create(keypair, nodeId, {}, port, alternativeURL);
+        return create(keypair, nodeId, nodeId, port, alternativeURL);
     }
 
     static PeerInfo create(const Signature::KeyPair& keypair, const Id& nodeId, int port, const std::string& alternativeURL) {
-        return create(keypair, nodeId, {}, port, alternativeURL);
+        return create(keypair, nodeId, nodeId, port, alternativeURL);
     }
 
     static PeerInfo create(const Id& nodeId, Id origin, int port, const std::string& alternativeURL) {
