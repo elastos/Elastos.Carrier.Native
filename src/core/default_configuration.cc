@@ -47,6 +47,10 @@ std::string normailize(const std::string& path) {
     }
 }
 
+void Builder::setStoragePath(const std::string& path) {
+    this->storagePath = !path.empty() ? normailize(path) : path;
+}
+
 void Builder::load(const std::string& filePath) {
     auto path = normailize(filePath);
     if (path.empty())
@@ -151,7 +155,7 @@ Sp<Configuration> Builder::build() {
     if (autoAddr6 && ip6.empty())
         ip6 = getLocalIPv6();
 
-    auto dataStorage = std::make_shared<DefaultConfiguration>(ip4, ip6,  port, normailize(storagePath), bootstrapNodes, services);
+    auto dataStorage = std::make_shared<DefaultConfiguration>(ip4, ip6,  port, storagePath, bootstrapNodes, services);
     return std::static_pointer_cast<Configuration>(dataStorage);
 }
 

@@ -504,7 +504,8 @@ std::list<PeerInfo> SqliteStorage::getPeer(const Id& peerId, int maxPeers) {
             } else if (std::strcmp(name, "port") == 0) {
                 port = sqlite3_column_int(pStmt, i);
             } else if (std::strcmp(name, "alternativeURL") == 0) {
-                alt = (char *)sqlite3_column_text(pStmt, i);
+                auto c = (char *)sqlite3_column_text(pStmt, i);
+                alt = c ? c : "";
             } else if (std::strcmp(name, "signature") == 0) {
                 signature = Blob(ptr, len);
             }
@@ -559,7 +560,8 @@ Sp<PeerInfo> SqliteStorage::getPeer(const Id& peerId, const Id& origin) {
             } else if (std::strcmp(name, "port") == 0) {
                 port = sqlite3_column_int(pStmt, i);
             } else if (std::strcmp(name, "alternativeURL") == 0) {
-                alt = (char *)sqlite3_column_text(pStmt, i);
+                auto c = (char *)sqlite3_column_text(pStmt, i);
+                alt = c ? c : "";
             } else if (std::strcmp(name, "signature") == 0) {
                 signature = Blob(ptr, len);
             }
@@ -597,9 +599,9 @@ void SqliteStorage::putPeer(const std::list<PeerInfo>& peers) {
         sqlite3_bind_int(pStmt, 6, peer.getPort());
         if (peer.hasAlternativeURL()) {
             const char* alt = peer.getAlternativeURL().c_str();
-            sqlite3_bind_text(pStmt, 7, alt, strlen(alt), NULL);
+            sqlite3_bind_text(pStmt, 7, alt, strlen(alt), SQLITE_STATIC);
         } else {
-            sqlite3_bind_text(pStmt, 7, "", 0, NULL);
+            sqlite3_bind_null(pStmt, 7);
         }
         sqlite3_bind_blob(pStmt, 8, peer.getSignature().data(), peer.getSignature().size(), SQLITE_STATIC);
         sqlite3_bind_int64(pStmt, 9, now);
@@ -635,9 +637,9 @@ void SqliteStorage::putPeer(const PeerInfo& peer, bool persistent, bool updateLa
     sqlite3_bind_int(pStmt, 6, peer.getPort());
     if (peer.hasAlternativeURL()) {
         const char *alt = peer.getAlternativeURL().c_str();
-        sqlite3_bind_text(pStmt, 7, alt, strlen(alt), NULL);
+        sqlite3_bind_text(pStmt, 7, alt, strlen(alt), SQLITE_STATIC);
     } else {
-        sqlite3_bind_text(pStmt, 7, "", 0, NULL);
+        sqlite3_bind_null(pStmt, 7);
     }
     sqlite3_bind_blob(pStmt, 8, peer.getSignature().data(), peer.getSignature().size(), SQLITE_STATIC);
     auto now = currentTimeMillis();
@@ -735,7 +737,8 @@ std::list<PeerInfo> SqliteStorage::getPersistentPeers(uint64_t lastAnnounceBefor
             } else if (std::strcmp(name, "port") == 0) {
                 port = sqlite3_column_int(pStmt, i);
             } else if (std::strcmp(name, "alternativeURL") == 0) {
-                alt = (char *)sqlite3_column_text(pStmt, i);
+                auto c = (char *)sqlite3_column_text(pStmt, i);
+                alt = c ? c : "";
             } else if (std::strcmp(name, "signature") == 0) {
                 signature = Blob(ptr, len);
             }

@@ -56,7 +56,7 @@ private:
     std::string addr6 {};
     int port = 0;
 
-    std::string dataDir = "~/.cache/carrier";
+    std::string dataDir {};
     std::string bootstrap {};
     std::string configFile {};
 
