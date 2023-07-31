@@ -57,7 +57,7 @@ const int Constants::BUCKET_CACHE_PING_MIN_INTERVAL         = 30 * 1000;
 const int Constants::STORAGE_EXPIRE_INTERVAL                = 5 * 60 * 1000;
 const int Constants::TOKEN_TIMEOUT                          = 5 * 60 * 1000;
 const int Constants::MAX_PEER_AGE                           = 120 * 60 * 1000;
-const int Constants::MAX_VALUE_AGE                          = 60 * 60 * 1000;
+const int Constants::MAX_VALUE_AGE                          = 120 * 60 * 1000;
 const int Constants::RE_ANNOUNCE_INTERVAL                    = 5 * 60 * 1000;
 
 const std::string Constants::NODE_NAME                      = "Meerkat";
