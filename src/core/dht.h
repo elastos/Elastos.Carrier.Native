@@ -26,20 +26,19 @@
 #include <list>
 #include <cstdio>
 #include <atomic>
+#include <map>
 
 #include "carrier/id.h"
-#include "carrier/node_info.h"
 #include "carrier/value.h"
-#include "carrier/lookup_option.h"
+#include "carrier/node_info.h"
 #include "carrier/peer_info.h"
-
-#include "utils/misc.h"
+#include "carrier/lookup_option.h"
+#include "carrier/types.h"
 
 #include "task/task_manager.h"
 #include "rpcserver.h"
 #include "routing_table.h"
 #include "token_manager.h"
-#include "data_storage.h"
 
 namespace elastos {
 namespace carrier {

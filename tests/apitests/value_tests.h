@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include <string>
+#include <memory>
 
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>

@@ -29,7 +29,6 @@
 #include <limits.h>
 
 #include "utils.h"
-#include "utils/misc.h"
 #include "announce_find_peer_tests.h"
 
 using namespace elastos::carrier;

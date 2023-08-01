@@ -22,6 +22,8 @@
 
 #pragma once
 
+#include <memory>
+
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
 #include <carrier/node.h>

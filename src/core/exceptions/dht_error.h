@@ -22,31 +22,16 @@
 
 #pragma once
 
-#include <chrono>
-#include <random>
-#include <functional>
+#include <string>
 #include <stdexcept>
-#include <cstring>
 
 namespace elastos {
 namespace carrier {
 
-class DhtException : public std::runtime_error {
+class DhtError : public std::runtime_error {
 public:
-    DhtException(const std::string &str = "") :
-        std::runtime_error("DhtException occurred: " + str) {}
-};
-
-class JsonException : public std::runtime_error {
-public:
-    JsonException(const std::string &str = "") :
-        std::runtime_error("JsonException occurred: " + str) {}
-};
-
-class SocketException : public DhtException {
-public:
-    SocketException(int err) :
-        DhtException(strerror(err)) {}
+    DhtError(const std::string &str = "") :
+        std::runtime_error("DHT error occurred: " + str) {}
 };
 
 } // namespace carrier
