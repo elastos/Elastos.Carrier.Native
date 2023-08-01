@@ -59,10 +59,6 @@ public:
             clear();
         }
 
-        explicit operator bool() const noexcept {
-            return !std::all_of(key.cbegin(), key.cend(), [](uint8_t i){ return !i; });
-        }
-
         bool operator==(const PrivateKey& o) const noexcept {
             return std::memcmp(key.data(), o.key.data(), BYTES) == 0;
         }
@@ -133,10 +129,6 @@ public:
 
         ~PublicKey() noexcept {
             clear();
-        }
-
-        explicit operator bool() const noexcept {
-            return !std::all_of(key.cbegin(), key.cend(), [](uint8_t i){ return !i; });
         }
 
         bool operator==(const PublicKey& o) const noexcept {
@@ -218,10 +210,6 @@ public:
             return Nonce();
         }
 
-        explicit operator bool() const noexcept {
-            return !std::all_of(nonce.cbegin(), nonce.cend(), [](uint8_t i){ return !i; });
-        }
-
         bool operator==(const Nonce& o) const noexcept {
             return std::memcmp(nonce.data(), o.nonce.data(), BYTES) == 0;
         }
@@ -291,10 +279,6 @@ public:
 
         static KeyPair fromSignatureKeyPair(const Signature::KeyPair& signKeyPair);
 
-        explicit operator bool() const noexcept {
-            return static_cast<bool>(sk);
-        }
-
         bool operator==(const KeyPair& o) const noexcept {
             return sk == o.sk;
         }
@@ -350,10 +334,6 @@ public:
 
     ~CryptoBox() noexcept {
         clear();
-    }
-
-    explicit operator bool() const noexcept {
-        return !std::all_of(key.cbegin(), key.cend(), [](uint8_t i){ return !i; });
     }
 
     bool operator==(const CryptoBox& o) const noexcept {
