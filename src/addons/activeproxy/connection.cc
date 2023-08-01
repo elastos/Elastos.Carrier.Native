@@ -258,7 +258,7 @@ void ProxyConnection::establish() noexcept {
         pc->keepAlive();
     }, KEEP_ALIVE_CHECK_INTERVAL, KEEP_ALIVE_CHECK_INTERVAL);
 
-    state = ConnectionState::Authenticating;
+    state = ConnectionState::Initializing;
 
     log->trace("Connection {} start reading from the server.", id);
     auto rc = uv_read_start((uv_stream_t*)&relay, [](uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf) {
@@ -276,7 +276,12 @@ void ProxyConnection::establish() noexcept {
     }, [](uv_stream_t* handle, ssize_t nread, const uv_buf_t* buf) {
         ProxyConnection* pc = (ProxyConnection*)handle->data;
         if (nread > 0) {
-            pc->onRelayRead((const uint8_t*)buf->base, nread);
+            if (pc->state == ConnectionState::Initializing) {
+                pc->onChallenge((const uint8_t*)buf->base, nread);
+            }
+            else {
+                pc->onRelayRead((const uint8_t*)buf->base, nread);
+            }
         } else if (nread < 0) {
             if (nread == UV_EOF) {
                 log->info("Connection {} closed by the server.", pc->id);
@@ -297,12 +302,6 @@ void ProxyConnection::establish() noexcept {
         close();
         return;
     }
-
-//    if (proxy.isAuthenticated()) {
-//        sendAttachRequest();
-//    } else {
-//        sendAuthenticateRequest();
-//    }
 }
 
 void ProxyConnection::keepAlive() noexcept
@@ -329,27 +328,35 @@ static inline size_t randomPadding(void)
     return Random::uint32(256);
 }
 
-void ProxyConnection::sendAuthenticateRequest() noexcept
+void ProxyConnection::sendAuthenticateRequest(const uint8_t* data, size_t size) noexcept
 {
     if (state == ConnectionState::Closed)
         return;
 
+    state = ConnectionState::Authenticating;
+
     const Id& nodeId = proxy.getNodeId();
     const CryptoBox::PublicKey& pk = proxy.getSessionKey();
-    const CryptoBox::Nonce& nonce = proxy.getSessionNonce();
+    nonce = CryptoBox::Nonce::random();
 
     auto domain = proxy.getDomainName();
     size_t padding = randomPadding();
 
-    std::vector<uint8_t> plain(CryptoBox::PublicKey::BYTES + CryptoBox::Nonce::BYTES + 1 + domain.size() + padding);
+    std::vector<uint8_t> plain(CryptoBox::PublicKey::BYTES + CryptoBox::Nonce::BYTES + Signature::BYTES + 1 + domain.size() + padding);
     uint8_t* ptr = plain.data();
+    // session key
     std::memcpy(ptr, pk.bytes(), pk.size());
     ptr += pk.size();
+    // nonce
     std::memcpy(ptr, nonce.bytes(), nonce.size());
     ptr += nonce.size();
-    //domain length
+    // signature challenge
+    auto challenge = proxy.getNode()->sign({data, size});
+    std::memcpy(ptr, challenge.data(), Signature::BYTES);
+    ptr += Signature::BYTES;
+    // domain length
     *ptr++ = domain.size();
-    //domain
+    // domain
     if (domain.size() > 0) {
         std::memcpy(ptr, domain.c_str(), domain.size());
         ptr += domain.size();
@@ -357,7 +364,7 @@ void ProxyConnection::sendAuthenticateRequest() noexcept
     // random padding
     Random::buffer(ptr, padding);
 
-    size_t size = PACKET_HEADER_BYTES + nodeId.size() + CryptoBox::MAC_BYTES + plain.size();
+    size = PACKET_HEADER_BYTES + nodeId.size() + CryptoBox::MAC_BYTES + plain.size();
 
     WriteRequest* request = new WriteRequest{this, size};
 
@@ -370,7 +377,7 @@ void ProxyConnection::sendAuthenticateRequest() noexcept
     // node id
     std::memcpy(ptr, nodeId.data(), nodeId.size());
     ptr += nodeId.size();
-    // encrypted: session pk, nonce
+    // encrypted: session pk, nonce, challenge signature, domain, padding
     Blob _cipher{ptr, plain.size() + CryptoBox::MAC_BYTES};
     Blob _plain{plain};
     proxy.encryptWithNode(_cipher, _plain);
@@ -396,34 +403,47 @@ void ProxyConnection::sendAuthenticateRequest() noexcept
     }
 }
 
-void ProxyConnection::sendAttachRequest() noexcept
+void ProxyConnection::sendAttachRequest(const uint8_t* data, size_t size) noexcept
 {
     if (state == ConnectionState::Closed)
         return;
 
+    state = ConnectionState::Attaching;
+
+    const Id& nodeId = proxy.getNodeId();
     const CryptoBox::PublicKey& pk = proxy.getSessionKey();
-    uint16_t port = htons(proxy.getRelayPort());
+    nonce = CryptoBox::Nonce::random();
+
+    std::vector<uint8_t> plain(CryptoBox::PublicKey::BYTES + CryptoBox::Nonce::BYTES + Signature::BYTES);
+    uint8_t* ptr = plain.data();
+    // session key
+    std::memcpy(ptr, pk.bytes(), pk.size());
+    ptr += pk.size();
+    // nonce
+    std::memcpy(ptr, nonce.bytes(), nonce.size());
+    ptr += nonce.size();
+    //signature challenge
+    auto challenge = proxy.getNode()->sign({data, size});
+    std::memcpy(ptr, challenge.data(), Signature::BYTES);
 
     size_t padding = randomPadding();
-    size_t size = PACKET_HEADER_BYTES + pk.size() + CryptoBox::MAC_BYTES + sizeof(uint16_t) + padding;
-
+    size = PACKET_HEADER_BYTES + nodeId.size() + CryptoBox::MAC_BYTES + plain.size() + padding;
     WriteRequest* request = new WriteRequest{this, size};
 
-    uint8_t* ptr = (uint8_t*)request->buf.base;
+    ptr = (uint8_t*)request->buf.base;
     // size
     *(uint16_t*)ptr = htons(size);
     ptr += sizeof(uint16_t);
     // flag
     *ptr++ = PacketFlag::attach();
-    // session key
-    std::memcpy(ptr, pk.bytes(), pk.size());
-    ptr += pk.size();
-    // encrypted: port
-    Blob _cipher{ptr, sizeof(uint16_t) + CryptoBox::MAC_BYTES};
-    Blob _plain{(const uint8_t*)&port, sizeof(uint16_t)};
-    proxy.encrypt(_cipher, _plain);
-    ptr += CryptoBox::MAC_BYTES;
-    ptr += sizeof(uint16_t);
+    // node id
+    std::memcpy(ptr, nodeId.data(), nodeId.size());
+    ptr += nodeId.size();
+    // encrypted: session pk, nonce, challenge signature
+    Blob _cipher{ptr, plain.size() + CryptoBox::MAC_BYTES};
+    Blob _plain{plain};
+    proxy.encryptWithNode(_cipher, _plain);
+    ptr += _cipher.size();
     // random padding
     Random::buffer(ptr, padding);
 
@@ -605,7 +625,7 @@ void ProxyConnection::sendDataRequest(const uint8_t* data, size_t _size) noexcep
     // encrypted: data
     Blob _cipher{ptr, _size + CryptoBox::MAC_BYTES};
     const Blob _plain{data, _size};
-    proxy.encrypt(_cipher, _plain);
+    proxy.encrypt(_cipher, _plain, nonce);
 
     // log->trace("Connection {} send DATA({} bytes) to server {}.", id, size, proxy.serverEndpoint());
     auto rc = uv_write((uv_write_t*)request, (uv_stream_t*)(&relay), &request->buf, 1, [](uv_write_t* req, int status) {
@@ -646,6 +666,20 @@ inline void vectorAppend(std::vector<uint8_t>& v, const uint8_t* data, size_t si
     size_t oldSize = v.size();
     v.resize(oldSize + size);
     std::memcpy(v.data() + oldSize, data, size);
+}
+
+void ProxyConnection::onChallenge(const uint8_t* data, size_t size) noexcept {
+    if (size < 32 || size > 256) {
+        log->error("Connection {} got challenge from the server {}, size is error!",
+                id, proxy.serverEndpoint());
+        return;
+    }
+
+    if (proxy.isAuthenticated()) {
+        sendAttachRequest(data, size);
+    } else {
+        sendAuthenticateRequest(data, size);
+    }
 }
 
 void ProxyConnection::onRelayRead(const uint8_t* data, size_t size) noexcept
@@ -716,7 +750,7 @@ void ProxyConnection::processRelayPacket(const uint8_t* packet, size_t size) noe
         uint8_t* plain = (uint8_t*)alloca(len);
         Blob _plain{plain, len};
         const Blob _cipher{packet + PACKET_HEADER_BYTES, size - PACKET_HEADER_BYTES};
-        proxy.decrypt(_plain, _cipher);
+        proxy.decrypt(_plain, _cipher, nonce);
         int code = ntohs(*(uint16_t*)plain);
         char* msg = (char*)plain + sizeof(uint16_t);
         log->error("Connection {} got ERR response from the server {}, error({}): {}",
@@ -726,6 +760,7 @@ void ProxyConnection::processRelayPacket(const uint8_t* packet, size_t size) noe
     }
 
     switch (state) {
+    case ConnectionState::Initializing:
     case ConnectionState::Connecting:
     case ConnectionState::Closed:
         assert(!"should not receive any data when connecting or closed.");
@@ -737,11 +772,19 @@ void ProxyConnection::processRelayPacket(const uint8_t* packet, size_t size) noe
         if (ack && type == PacketFlag::AUTH) {
             onAuthenticateResponse(packet, size);
             return;
-        } else if (ack && type == PacketFlag::ATTACH) {
+        } else {
+            log->error("Connection {} got a wrong packet({}), AUTH acknowledge expected.", id, flag);
+            close();
+            return;
+        }
+        break;
+
+    case ConnectionState::Attaching:
+        if (ack && type == PacketFlag::ATTACH) {
             onAttachResponse(packet, size);
             return;
         } else {
-            log->error("Connection {} got a wrong packet({}), AUTH or ATTACH acknowledge expected.", id, flag);
+            log->error("Connection {} got a wrong packet({}), ATTACH acknowledge expected.", id, flag);
             close();
             return;
         }
@@ -778,7 +821,7 @@ void ProxyConnection::processRelayPacket(const uint8_t* packet, size_t size) noe
 }
 
 const static size_t AUTH_ACK_SIZE = PACKET_HEADER_BYTES + CryptoBox::MAC_BYTES +
-    CryptoBox::PublicKey::BYTES + CryptoBox::Nonce::BYTES + sizeof(uint16_t);
+    CryptoBox::PublicKey::BYTES + sizeof(uint16_t) + 1;
 
 void ProxyConnection::onAuthenticateResponse(const uint8_t* packet, size_t size) noexcept
 {
@@ -799,25 +842,21 @@ void ProxyConnection::onAuthenticateResponse(const uint8_t* packet, size_t size)
     const uint8_t* ptr = plain.data();
     CryptoBox::PublicKey serverPk({ptr, CryptoBox::PublicKey::BYTES});
     ptr += CryptoBox::PublicKey::BYTES;
-    CryptoBox::Nonce nonce({ptr, CryptoBox::Nonce::BYTES});
-    ptr += CryptoBox::Nonce::BYTES;
     uint16_t port = ntohs(*(uint16_t*)ptr);
     ptr += sizeof(port);
-    std::vector<uint8_t> sig(Signature::BYTES);
-    memcpy(sig.data(), ptr, Signature::BYTES);
-    //domain
-    ptr += Signature::BYTES;
-    size_t len = *ptr++;
-    char domain[len + 1];
-    memcpy(domain, ptr, len);
-    domain[len] = '\0';
+    bool domainEnabled = *ptr;
 
-    onAuthorized(serverPk, nonce, port);
+    onAuthorized(serverPk, port);
 
-    log->info("announcePeer Id: {}, server: {}, port: {}, domain: {} ",
-            proxy.getPeerId().toBase58String(), proxy.getServerHost(), port, (char*)domain);
-    //TODO:: set peer pk, sk, sig
-    auto peer = PeerInfo::create(proxy.getServerId(), proxy.getNodeId(), port, domain);
+    std::string domain {};
+    if (domainEnabled) {
+        domain = proxy.getDomainName();
+    }
+
+    auto peer = PeerInfo::create(proxy.getPeerKeypair(), proxy.getServerId(), proxy.getNodeId(), port, domain);
+    log->info("-**- announcePeer Id: {}, server: {}, port: {}, domain: {} -**- ",
+            peer.getId().toBase58String(), proxy.getServerHost(), port, domain);
+
     proxy.getNode()->announcePeer(peer, true);
 
     state = ConnectionState::Idling;
@@ -861,7 +900,7 @@ void ProxyConnection::onConnectRequest(const uint8_t* packet, size_t size) noexc
     std::array<uint8_t, CONNECT_REQ_SIZE - PACKET_HEADER_BYTES - CryptoBox::MAC_BYTES> plain;
     Blob _plain{plain};
     const Blob _cipher{packet + PACKET_HEADER_BYTES, CONNECT_REQ_SIZE - PACKET_HEADER_BYTES};
-    proxy.decrypt(_plain, _cipher);
+    proxy.decrypt(_plain, _cipher, nonce);
 
     const uint8_t* ptr = plain.data();
     uint8_t addrLen = *ptr++;
@@ -894,7 +933,7 @@ void ProxyConnection::onDataRequest(const uint8_t* packet, size_t size) noexcept
 
     Blob _plain{(uint8_t*)request->buf.base, request->buf.len};
     Blob _cipher{packet + PACKET_HEADER_BYTES, size - PACKET_HEADER_BYTES};
-    proxy.decrypt(_plain, _cipher);
+    proxy.decrypt(_plain, _cipher, nonce);
 
     // log->trace("Connection {} sending {} bytes data to upstream {}", id, request->buf.len, proxy.upstreamEndpoint());
     auto rc = uv_write((uv_write_t*)request, (uv_stream_t*)(&upstream), &request->buf, 1, [](uv_write_t* req, int status) {

@@ -32,6 +32,7 @@
 #include "exceptions.h"
 #include "utils/log.h"
 #include "utils/addr.h"
+#include "utils/hex.h"
 
 namespace elastos {
 namespace carrier {
@@ -54,6 +55,9 @@ std::future<void> ActiveProxy::initialize(Sp<Node> node, const std::map<std::str
     if (!configure.count("serverPort"))
         throw std::runtime_error("Addon ActiveProxy's configure item has error: missing serverPort!");
 
+    if (!configure.count("peerPrivateKey"))
+        throw std::runtime_error("Addon ActiveProxy's configure item has error: missing peerPrivateKey!");
+
     if (!configure.count("upstreamHost"))
         throw std::runtime_error("Addon ActiveProxy's configure item has error: missing upstreamHost!");
 
@@ -67,6 +71,9 @@ std::future<void> ActiveProxy::initialize(Sp<Node> node, const std::map<std::str
     if (serverHost.empty() || serverPort == 0)
         throw std::runtime_error("Addon ActiveProxy's configure item has error: empty serverHost or serverPort is not allowed");
 
+    std::string sk = std::any_cast<std::string>(configure.at("peerPrivateKey"));
+    peerKeypair = Signature::KeyPair::fromPrivateKey(Hex::decode(sk));
+
     upstreamHost = std::any_cast<std::string>(configure.at("upstreamHost"));
     if (upstreamHost == "LOCAL-IP4-ADDRESS")
         upstreamHost = getLocalIPv4();
@@ -75,15 +82,6 @@ std::future<void> ActiveProxy::initialize(Sp<Node> node, const std::map<std::str
     upstreamPort = (uint16_t)std::any_cast<int64_t>(configure.at("upstreamPort"));
     if (upstreamHost.empty() || upstreamPort == 0)
         throw std::runtime_error("Addon ActiveProxy's configure item has error: empty upstreamHost or upstreamPort is not allowed");
-
-    if (configure.count("peerName")) {
-        peerId = Id::ofName(std::any_cast<std::string>(configure.at("peerName")));
-    } else if (configure.count("peerId")) {
-        std::string strId = std::any_cast<std::string>(configure.at("peerId"));
-        peerId = Id(strId);
-    } else {
-        peerId = Id::random();
-    }
 
     if (configure.count("domainName"))
         domainName = std::any_cast<std::string>(configure.at("domainName"));
@@ -334,10 +332,8 @@ void ActiveProxy::_connect() noexcept
     ProxyConnection* connection = new ProxyConnection {*this};
     connections.push_back(connection);
 
-    connection->onAuthorized([this](ProxyConnection* c, const CryptoBox::PublicKey& serverPk,
-            const CryptoBox::Nonce& nonce, uint16_t port) {
+    connection->onAuthorized([this](ProxyConnection* c, const CryptoBox::PublicKey& serverPk, uint16_t port) {
         this->serverPk = serverPk;
-        this->nonce = nonce;
         this->relayPort = port;
 
         this->box = CryptoBox{serverPk, this->sessionKey.privateKey() };

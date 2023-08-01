@@ -37,7 +37,9 @@ class ActiveProxy;
 
 enum class ConnectionState {
     Connecting = 0,
+    Initializing,
     Authenticating,
+    Attaching,
     Idling,
     Relaying,
     Closed
@@ -46,7 +48,7 @@ enum class ConnectionState {
 class ProxyConnection {
 public:
     using AuthorizedHandle = std::function<void(ProxyConnection*,
-            const CryptoBox::PublicKey&, const CryptoBox::Nonce&, uint16_t)>;
+            const CryptoBox::PublicKey&, uint16_t)>;
     using StatusHandler = std::function<void(ProxyConnection*)>;
 
     ProxyConnection(ActiveProxy& server) noexcept;
@@ -101,13 +103,14 @@ protected:
     void establish() noexcept;
     void keepAlive() noexcept;
 
-    void sendAuthenticateRequest() noexcept;
-    void sendAttachRequest() noexcept;
+    void sendAuthenticateRequest(const uint8_t* challenge, size_t size) noexcept;
+    void sendAttachRequest(const uint8_t* data, size_t size) noexcept;
     void sendPingRequest() noexcept;
     void sendConnectResponse(bool success) noexcept;
     void sendDisconnectRequest() noexcept;
     void sendDataRequest(const uint8_t* data, size_t size) noexcept;
 
+    void onChallenge(const uint8_t* data, size_t size) noexcept;
     void onRelayRead(const uint8_t* data, size_t size) noexcept;
     void processRelayPacket(const uint8_t* packet, size_t size) noexcept;
 
@@ -122,9 +125,9 @@ protected:
     void closeUpstream(bool force = false) noexcept;
     void startReadUpstream() noexcept;
 
-    void onAuthorized(const CryptoBox::PublicKey& serverPk, const CryptoBox::Nonce& nonce, uint16_t port) noexcept {
+    void onAuthorized(const CryptoBox::PublicKey& serverPk, uint16_t port) noexcept {
         if (authorizedHandle)
-            authorizedHandle(this, serverPk, nonce, port);
+            authorizedHandle(this, serverPk, port);
     }
 
     void onOpened() noexcept {
@@ -174,6 +177,8 @@ private:
     StatusHandler openFailedHandle;
     StatusHandler busyHandler;
     StatusHandler idleHandler;
+
+    CryptoBox::Nonce nonce;
 };
 
 } // namespace activeproxy

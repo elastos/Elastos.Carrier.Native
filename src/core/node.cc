@@ -607,11 +607,11 @@ void Node::decrypt(const Id& sender, Blob& plain, const Blob& cipher) const {
     ctx.decrypt(plain, cipher);
 }
 
-std::vector<uint8_t> Node::sign(const std::vector<uint8_t>& data) const {
+std::vector<uint8_t> Node::sign(const Blob& data) const {
     return keyPair.privateKey().sign(data);
 }
 
-bool Node::verify(const std::vector<uint8_t>& data, const std::vector<uint8_t>& signature) const {
+bool Node::verify(const Blob& data, const Blob& signature) const {
     return keyPair.publicKey().verify(signature, data);
 }
 
