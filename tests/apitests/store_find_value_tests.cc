@@ -28,24 +28,22 @@
 #include "store_find_value_tests.h"
 
 using namespace elastos::carrier;
-using namespace std::chrono_literals;
 
 namespace test {
 CPPUNIT_TEST_SUITE_REGISTRATION(StoreFindValueTests);
 
-void
-StoreFindValueTests::setUp() {
-    std::string path1 = Utils::getPwdStorage("carrier1");
-    std::string path2 = Utils::getPwdStorage("carrier2");
-    std::string path3 = Utils::getPwdStorage("carrier3");
+void StoreFindValueTests::setUp() {
+    auto path1 = Utils::getPwdStorage("node1");
+    auto path2 = Utils::getPwdStorage("node2");
+    auto path3 = Utils::getPwdStorage("node3");
 
     Utils::removeStorage(path1);
     Utils::removeStorage(path2);
     Utils::removeStorage(path3);
 
+    auto ipAddresses = Utils::getLocalIpAddresses();
     //create node1, node2 and node3
     auto b1 = DefaultConfiguration::Builder {};
-    auto ipAddresses = Utils::getLocalIpAddresses();
     b1.setIPv4Address(ipAddresses);
     b1.setListeningPort(42222);
     b1.setStoragePath(path1);
@@ -75,8 +73,7 @@ StoreFindValueTests::setUp() {
     node3->bootstrap(ni1);
 }
 
-void
-StoreFindValueTests::testValue() {
+void StoreFindValueTests::testValue() {
     auto data = Utils::getRandomData(32);
     auto val = Value::createValue(data);
 
@@ -109,8 +106,7 @@ StoreFindValueTests::testValue() {
     CPPUNIT_ASSERT(*val6 == val);
 }
 
-void
-StoreFindValueTests::testSignedValue() {
+void StoreFindValueTests::testSignedValue() {
     auto data1 = Utils::getRandomData(32);
     auto val = Value::createSignedValue(data1);
 
@@ -153,8 +149,7 @@ StoreFindValueTests::testSignedValue() {
     CPPUNIT_ASSERT(!(*val7 == val));
 }
 
-void
-StoreFindValueTests::testEncryptedValue() {
+void StoreFindValueTests::testEncryptedValue() {
     auto data1 = Utils::getRandomData(32);
     auto val = Value::createEncryptedValue(node2->getId(), data1);
     CPPUNIT_ASSERT(val.isValid());
@@ -211,8 +206,7 @@ StoreFindValueTests::testEncryptedValue() {
     CPPUNIT_ASSERT(!(*val9 == val));
 }
 
-void
-StoreFindValueTests::tearDown() {
+void StoreFindValueTests::tearDown() {
     if (node1)
         node1->stop();
     if (node2)
@@ -220,9 +214,9 @@ StoreFindValueTests::tearDown() {
     if (node3)
         node3->stop();
 
-    std::string path1 = Utils::getPwdStorage("carrier1");
-    std::string path2 = Utils::getPwdStorage("carrier2");
-    std::string path3 = Utils::getPwdStorage("carrier3");
+    auto path1 = Utils::getPwdStorage("node1");
+    auto path2 = Utils::getPwdStorage("node2");
+    auto path3 = Utils::getPwdStorage("node3");
 
     Utils::removeStorage(path1);
     Utils::removeStorage(path2);

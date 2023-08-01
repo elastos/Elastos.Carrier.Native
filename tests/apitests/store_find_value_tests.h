@@ -46,9 +46,9 @@ class StoreFindValueTests : public CppUnit::TestFixture {
     void testEncryptedValue();
 
 private:
-    std::shared_ptr<Node> node1 = nullptr;
-    std::shared_ptr<Node> node2 = nullptr;
-    std::shared_ptr<Node> node3 = nullptr;
+    std::shared_ptr<Node> node1 {};
+    std::shared_ptr<Node> node2 {};
+    std::shared_ptr<Node> node3 {};
 };
 
 }  // namespace test

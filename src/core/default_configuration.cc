@@ -39,20 +39,18 @@ namespace carrier {
 
 typedef DefaultConfiguration::Builder Builder;
 
-std::string normailize(const std::string& path) {
-    if (path.find("~") != std::string::npos) {
+const std::string expanduser(const std::string& path) {
+    if (path.find("~") != std::string::npos)
         return getenv("HOME") + path.substr(1);
-    } else {
-        return path;
-    }
+    return path;
 }
 
 void Builder::setStoragePath(const std::string& path) {
-    this->storagePath = !path.empty() ? normailize(path) : path;
+    this->storagePath = !path.empty() ? expanduser(path) : path;
 }
 
 void Builder::load(const std::string& filePath) {
-    auto path = normailize(filePath);
+    const auto& path = expanduser(filePath);
     if (path.empty())
         throw std::invalid_argument("Invalid configuration file path: " + path);
 
