@@ -128,8 +128,8 @@ public:
     void encrypt(const Id& recipient, Blob& cipher, const Blob& plain) const;
     void decrypt(const Id& sender, Blob& plain, const Blob& cipher) const;
 
-    std::vector<uint8_t> sign(const std::vector<uint8_t>& data) const;
-    bool verify(const std::vector<uint8_t>& data, const std::vector<uint8_t>& signature) const;
+    std::vector<uint8_t> sign(const Blob& data) const;
+    bool verify(const Blob& data, const Blob& signature) const;
 
     Sp<Value> getValue(const Id& valueId);
     bool removeValue(const Id& valueId);

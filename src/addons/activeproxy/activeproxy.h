@@ -95,10 +95,6 @@ public:
         return sessionKey.publicKey();
     }
 
-    const CryptoBox::Nonce& getSessionNonce() const noexcept {
-        return nonce;
-    }
-
     bool isAuthenticated() const noexcept {
         return serverPk.has_value();
     }
@@ -115,8 +111,8 @@ public:
         return relayPort;
     }
 
-    const Id& getPeerId() const noexcept {
-        return peerId;
+    const Signature::KeyPair& getPeerKeypair() const noexcept {
+        return peerKeypair;
     }
 
     const std::string& getDomainName() const noexcept {
@@ -124,19 +120,19 @@ public:
     }
 
     // encrypt/decrypt with the session context
-    void encrypt(Blob& cipher, const Blob& plain) const {
+    void encrypt(Blob& cipher, const Blob& plain, const CryptoBox::Nonce& nonce) const {
         box.encrypt(cipher, plain, nonce);
     }
 
-    std::vector<uint8_t> encrypt(const Blob& plain) const {
+    std::vector<uint8_t> encrypt(const Blob& plain, const CryptoBox::Nonce& nonce) const {
         return box.encrypt(plain, nonce);
     }
 
-    void decrypt(Blob& plain, const Blob& cipher) const {
+    void decrypt(Blob& plain, const Blob& cipher, const CryptoBox::Nonce& nonce) const {
         box.decrypt(plain, cipher, nonce);
     }
 
-    std::vector<uint8_t> decrypt(const Blob& cipher) const {
+    std::vector<uint8_t> decrypt(const Blob& cipher, const CryptoBox::Nonce& nonce) const {
         return box.decrypt(cipher, nonce);
     }
 
@@ -169,7 +165,6 @@ private:
     Sp<Node> node;
 
     CryptoBox::KeyPair sessionKey;
-    CryptoBox::Nonce nonce;
 
     std::optional<CryptoBox::PublicKey> serverPk {};
     CryptoBox box;
@@ -213,6 +208,8 @@ private:
 
     std::promise<void> startPromise {};
     std::promise<void> stopPromise {};
+
+    Signature::KeyPair peerKeypair {};
 };
 
 } // namespace activeproxy
