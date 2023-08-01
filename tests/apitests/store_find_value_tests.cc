@@ -25,7 +25,6 @@
 #include <carrier.h>
 
 #include "utils.h"
-#include "utils/misc.h"
 #include "store_find_value_tests.h"
 
 using namespace elastos::carrier;

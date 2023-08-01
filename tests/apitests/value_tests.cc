@@ -21,12 +21,12 @@
  */
 
 #include <list>
+#include <string>
 #include <iostream>
 #include <carrier.h>
 
 #include "utils.h"
 #include "value_tests.h"
-#include "utils/misc.h"
 
 using namespace elastos::carrier;
 using namespace std::chrono_literals;

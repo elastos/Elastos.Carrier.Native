@@ -28,9 +28,10 @@
 #include <winsock2.h>
 #endif
 
+#include "carrier/node.h"
 #include "utils/time.h"
 #include "utils/random_generator.h"
-#include "carrier/node.h"
+#include "exceptions/dht_error.h"
 #include "messages/message.h"
 #include "messages/error_message.h"
 #include "error_code.h"
@@ -207,7 +208,7 @@ RPCServer::bindSockets(const SocketAddress& bind4, const SocketAddress& bind6)
     if (bind4) {
         try {
             sock4 = bindSocket(bind4, bound4);
-        } catch (const DhtException& e) {
+        } catch (const DhtError& e) {
             if (log)
                 log->error("Can't bind inet socket: {}", e.what());
         }
@@ -221,7 +222,7 @@ RPCServer::bindSockets(const SocketAddress& bind4, const SocketAddress& bind6)
                 auto b6 = SocketAddress({bind6.inaddr(), bind6.inaddrLength()}, p4);
                 try {
                     sock6 = bindSocket(b6, bound6);
-                } catch (const DhtException& e) {
+                } catch (const DhtError& e) {
                     if (log)
                         log->error("Can't bind inet6 socket: {}", e.what());
                 }
@@ -230,7 +231,7 @@ RPCServer::bindSockets(const SocketAddress& bind4, const SocketAddress& bind6)
         if (sock6 == -1) {
             try {
                 sock6 = bindSocket(bind6, bound6);
-            } catch (const DhtException& e) {
+            } catch (const DhtError& e) {
                 if (log)
                     log->error("Can't bind inet6 socket: {}", e.what());
             }
@@ -238,7 +239,7 @@ RPCServer::bindSockets(const SocketAddress& bind4, const SocketAddress& bind6)
     }
 
     if (sock4 == -1 && sock6 == -1) {
-        throw DhtException("Can't bind socket");
+        throw DhtError("Can't bind socket");
     }
 }
 
@@ -315,7 +316,7 @@ RPCServer::openSockets()
                                     #endif
                                     try {
                                         ls4 = bindSocket(bound4, bound4);
-                                    } catch (const DhtException& e) {
+                                    } catch (const DhtError& e) {
                                         if (log)
                                             log->error("Can't bind inet socket: {}", e.what());
                                     }
@@ -328,7 +329,7 @@ RPCServer::openSockets()
                                     #endif
                                     try {
                                         ls6 = bindSocket(bound6, bound6);
-                                    } catch (const DhtException& e) {
+                                    } catch (const DhtError& e) {
                                         if (log)
                                             log->error("Can't bind inet6 socket: {}", e.what());
                                     }

@@ -54,6 +54,7 @@
 #include "error_code.h"
 #include "rpccall.h"
 #include "routing_table.h"
+#include "data_storage.h"
 #include "kclosest_nodes.h"
 #include "dht.h"
 
