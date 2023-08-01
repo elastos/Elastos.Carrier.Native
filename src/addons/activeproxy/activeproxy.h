@@ -100,7 +100,7 @@ public:
     }
 
     bool isAuthenticated() const noexcept {
-        return static_cast<bool>(serverPk);
+        return serverPk.has_value();
     }
 
     bool allow(SocketAddress& client) const noexcept {
@@ -171,7 +171,7 @@ private:
     CryptoBox::KeyPair sessionKey;
     CryptoBox::Nonce nonce;
 
-    CryptoBox::PublicKey serverPk;
+    std::optional<CryptoBox::PublicKey> serverPk {};
     CryptoBox box;
 
     uint16_t relayPort;

@@ -58,10 +58,6 @@ public:
             clear();
         }
 
-        explicit operator bool() const noexcept {
-            return !std::all_of(key.cbegin(), key.cend(), [](uint8_t i){ return !i; });
-        }
-
         bool operator==(const PrivateKey& o) const noexcept {
             return std::memcmp(key.data(), o.key.data(), BYTES) == 0;
         }
@@ -142,10 +138,6 @@ public:
             clear();
         }
 
-        explicit operator bool() const noexcept {
-            return !std::all_of(key.cbegin(), key.cend(), [](uint8_t i){ return !i; });
-        }
-
         bool operator==(const PublicKey& o) const noexcept {
             return std::memcmp(key.data(), o.key.data(), BYTES) == 0;
         }
@@ -223,10 +215,6 @@ public:
 
         static KeyPair fromSeed(const Blob& seed);
         static KeyPair random();
-
-        explicit operator bool() const noexcept {
-            return static_cast<bool>(sk);
-        }
 
         bool operator==(const KeyPair& o) const noexcept {
             return sk == o.sk;
