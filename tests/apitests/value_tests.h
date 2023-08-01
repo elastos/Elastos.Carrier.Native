@@ -46,8 +46,8 @@ public:
     void testEncryptedValue();
 
 private:
-    std::shared_ptr<Node> node1 = nullptr;
-    std::shared_ptr<Node> node2 = nullptr;
+    std::shared_ptr<Node> node1 {};
+    std::shared_ptr<Node> node2 {};
 };
 
 }  // namespace test

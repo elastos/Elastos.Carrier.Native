@@ -29,20 +29,18 @@
 #include "value_tests.h"
 
 using namespace elastos::carrier;
-using namespace std::chrono_literals;
 
 namespace test {
 CPPUNIT_TEST_SUITE_REGISTRATION(ValueTests);
 
-void
-ValueTests::setUp() {
-    std::string path1 = Utils::getPwdStorage("carrier.db");
-    std::string path2 = Utils::getPwdStorage("carriernode.db");
+void ValueTests::setUp() {
+    auto path1 = Utils::getPwdStorage("node1");
+    auto path2 = Utils::getPwdStorage("node2");
 
     Utils::removeStorage(path1);
     Utils::removeStorage(path2);
 
-    //create node1 and node2
+    //create and runnode1
     auto b1 = DefaultConfiguration::Builder {};
     auto ipAddresses = Utils::getLocalIpAddresses();
 
@@ -53,6 +51,7 @@ ValueTests::setUp() {
     node1 = std::make_shared<Node>(b1.build());
     node1->start();
 
+    // create and run node2.
     auto b2 = DefaultConfiguration::Builder {};
     b2.setIPv4Address(ipAddresses);
     b2.setListeningPort(42223);
@@ -62,8 +61,7 @@ ValueTests::setUp() {
     node2->start();
 }
 
-void
-ValueTests::testImmutableValue() {
+void ValueTests::testImmutableValue() {
     auto data = Utils::getRandomData(32);
     auto value = Value::createValue(data);
 
@@ -76,8 +74,7 @@ ValueTests::testImmutableValue() {
     CPPUNIT_ASSERT(value.getData() == data);
 }
 
-void
-ValueTests::testSignedValue() {
+void ValueTests::testSignedValue() {
     auto data1 = Utils::getRandomData(32);
     auto val1 = Value::createSignedValue(data1);
 
@@ -126,8 +123,7 @@ ValueTests::testSignedValue() {
     CPPUNIT_ASSERT(*val4 == val3);
 }
 
-void
-ValueTests::testEncryptedValue() {
+void ValueTests::testEncryptedValue() {
     auto data1 = Utils::getRandomData(32);
     auto val1 = Value::createEncryptedValue(node2->getId(), data1);
 
@@ -178,15 +174,14 @@ ValueTests::testEncryptedValue() {
     CPPUNIT_ASSERT(*val4 == val3);
 }
 
-void
-ValueTests::tearDown() {
+void ValueTests::tearDown() {
     if (node1)
         node1->stop();
     if (node2)
         node2->stop();
 
-    std::string path1 = Utils::getPwdStorage("carrier.db");
-    std::string path2 = Utils::getPwdStorage("carriernode.db");
+    auto path1 = Utils::getPwdStorage("node1");
+    auto path2 = Utils::getPwdStorage("node2");
 
     Utils::removeStorage(path1);
     Utils::removeStorage(path2);
