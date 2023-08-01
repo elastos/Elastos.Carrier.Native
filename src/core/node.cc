@@ -306,7 +306,7 @@ void Node::persistentAnnounce() {
             Constants::RE_ANNOUNCE_INTERVAL * 2;
     std::list<Value> vs = storage->getPersistentValues(ts);
     for (auto v : vs) {
-        log->debug("Re-announce the value: {}", v.getId());
+        log->debug("Re-announce the value: {}", static_cast<std::string>(v.getId()));
         storage->updateValueLastAnnounce(v.getId());
         futures.emplace_back(doStoreValue(v));
     }
@@ -316,13 +316,9 @@ void Node::persistentAnnounce() {
 
     std::list<PeerInfo> ps = storage->getPersistentPeers(ts);
     for (auto p : ps) {
-        log->debug("Re-announce the peer: {}", p.getId());
+        log->debug("Re-announce the peer: {}", static_cast<std::string>(p.getId()));
         storage->updatePeerLastAnnounce(p.getId(), p.getOrigin());
         futures.emplace_back(doAnnouncePeer(p));
-    }
-
-    for (std::list<std::future<void>>::iterator it = futures.begin(); it != futures.end(); it++) {
-        (*it).get();
     }
 }
 

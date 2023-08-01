@@ -123,8 +123,7 @@ SqliteStorage::~SqliteStorage() {
 }
 
 void SqliteStorage::expire() {
-    std::string delPeers = "DELETE FROM peers WHERE timestamp < ?";
-    const char *sqls[2] = { "DELETE FROM valores WHERE timestamp < ?",  delPeers.c_str()};
+    const char *sqls[2] = { "DELETE FROM valores WHERE persistent != TRUE and timestamp < ?",  "DELETE FROM peers WHERE persistent != TRUE and timestamp < ?"};
     uint64_t ts[2];
     ts[0] = currentTimeMillis() - Constants::MAX_VALUE_AGE;
     ts[1] = currentTimeMillis() - Constants::MAX_PEER_AGE;
@@ -470,7 +469,7 @@ std::list<PeerInfo> SqliteStorage::getPeer(const Id& peerId, int maxPeers) {
         throw std::runtime_error("Prepare sqlite failed.");
     }
 
-    uint64_t when = currentTimeMillis() - Constants::MAX_VALUE_AGE;
+    uint64_t when = currentTimeMillis() - Constants::MAX_PEER_AGE;
     sqlite3_bind_blob(pStmt, 1, peerId.data(), peerId.size(), SQLITE_STATIC);
     sqlite3_bind_int64(pStmt, 2, when);
     sqlite3_bind_int(pStmt, 3, maxPeers);
@@ -526,7 +525,7 @@ Sp<PeerInfo> SqliteStorage::getPeer(const Id& peerId, const Id& origin) {
         throw std::runtime_error("Prepare sqlite failed.");
     }
 
-    const uint64_t when = currentTimeMillis() - Constants::MAX_VALUE_AGE;
+    const uint64_t when = currentTimeMillis() - Constants::MAX_PEER_AGE;
     sqlite3_bind_blob(pStmt, 1, peerId.data(), peerId.size(), SQLITE_STATIC);
     sqlite3_bind_blob(pStmt, 2, origin.data(), origin.size(), SQLITE_STATIC);
     sqlite3_bind_int64(pStmt, 3, when);
