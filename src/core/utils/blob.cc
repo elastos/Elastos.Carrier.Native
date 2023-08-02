@@ -24,13 +24,13 @@
 #include <string>
 
 #include "carrier/blob.h"
-#include "utils/hex.h"
+#include "crypto/hex.h"
 
 namespace elastos {
 namespace carrier {
 
 const std::string Blob::toHexString() const {
-    return "0x" + Hex::encode(_ptr, _size);
+    return Hex::encode(_ptr, _size, true);
 }
 
 }

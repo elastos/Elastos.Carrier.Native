@@ -23,9 +23,9 @@
 #include <string>
 #include <sstream>
 
+#include "crypto/hex.h"
 #include "announce_peer_request.h"
 #include "serializers.h"
-#include "utils/hex.h"
 
 namespace elastos {
 namespace carrier {

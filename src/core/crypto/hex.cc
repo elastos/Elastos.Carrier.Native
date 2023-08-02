@@ -20,49 +20,30 @@
  * SOFTWARE.
  */
 
-#include "utils/hex.h"
-#include <stdexcept>
+#include <sodium.h>
+#include "crypto/hex.h"
 
 namespace elastos {
 namespace carrier {
 
-const Hex::HexMap Hex::hex_map = {};
-
-ssize_t Hex::encode(const uint8_t* data, size_t data_size, char* out, size_t out_size)
+ssize_t Hex::encode(const uint8_t* data, size_t length, char* buf, size_t bufLen)
 {
-    if (out_size < data_size * 2 + 1)
+    if (bufLen < length *2 + 1)
         return -1;
-
-    for (size_t i = 0; i < data_size; i++) {
-        auto b = out + i * 2;
-        const auto& m = hex_map[data[i]];
-        *((uint16_t*)b) = *((uint16_t*)&m);
-    }
-
-    out[data_size * 2] = 0;
-    return data_size * 2;
+    sodium_bin2hex(buf,  bufLen, data, length);
+    return length * 2;
 }
 
-ssize_t Hex::decode(const char* data, size_t data_size, uint8_t* out, size_t out_size)
+ssize_t Hex::decode(const char* data, size_t length, uint8_t* buf, size_t bufLen)
 {
-    if (data_size % 2 != 0 || out_size < data_size / 2)
+    if (bufLen % 2 != 0 || bufLen < length /2 )
         return -1;
 
-    auto hex2bin = [](char c) -> uint8_t {
-        if (c >= 'a' && c <= 'f')
-            return 10 + c - 'a';
-        else if (c >= 'A' && c <= 'F')
-            return 10 + c - 'A';
-        else if (c >= '0' && c <= '9')
-            return c - '0';
-        else
-            throw std::domain_error("not an hex character");
-    };
+    auto rc =  sodium_hex2bin(buf, bufLen, data, length, nullptr, nullptr, nullptr);
+    if (rc == -1)
+        throw std::domain_error("not an hex character");
 
-    for (size_t i = 0; i < (data_size / 2); i++)
-        out[i] = (hex2bin(data[2*i]) << 4) | hex2bin(data[2*i+1]);
-
-    return data_size / 2;
+    return length / 2;
 }
 
 } // namespace carrier

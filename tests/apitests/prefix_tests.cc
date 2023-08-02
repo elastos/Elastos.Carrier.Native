@@ -28,7 +28,7 @@
 
 #include <carrier.h>
 
-#include "utils/hex.h"
+#include "crypto/hex.h"
 #include "prefix_tests.h"
 
 namespace test {

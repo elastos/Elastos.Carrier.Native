@@ -28,7 +28,7 @@
 
 #include <carrier.h>
 
-#include "utils/hex.h"
+#include "crypto/hex.h"
 #include "id_tests.h"
 
 namespace test {
@@ -73,7 +73,7 @@ void IdTests::testIdFromBytes() {
     auto id = Id(binId);
 
     auto hexStr = id.toHexString().substr(2);
-    CPPUNIT_ASSERT(std::memcmp(binId.data(), Hex::decode(hexStr.c_str(), hexStr.size()).data(), ID_BYTES) == 0);
+    CPPUNIT_ASSERT(std::memcmp(binId.data(), Hex::decode(hexStr).data(), ID_BYTES) == 0);
 
     std::array<uint8_t, 20> binId2;
     std::generate_n(binId2.begin(), 20, [&]{ return dist(rd); });

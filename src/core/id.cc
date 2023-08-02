@@ -26,10 +26,10 @@
 #include <algorithm>
 
 #include "carrier/id.h"
-#include "utils/hex.h"
 #include "utils/random_generator.h"
 #include "crypto/base58.h"
 #include "crypto/shasum.h"
+#include "crypto/hex.h"
 
 namespace elastos {
 namespace carrier {
@@ -183,7 +183,7 @@ bool Id::operator<(const Id& other) const {
 }
 
 const std::string Id::toHexString() const {
-    return "0x" + Hex::encode(bytes);
+    return Hex::encode(bytes, true);
 }
 
 const std::string Id::toBase58String() const {
@@ -209,13 +209,14 @@ void Id::fromBase58String(const std::string& str) {
 }
 
 void Id::fromHexString(const std::string& str) {
-    constexpr size_t PREFIX_LENGTH = 2;
-    auto pos = str.find("0x") == 0 ? PREFIX_LENGTH : 0;
+    const std::string substr = "0x";
+    auto prefix = str.substr(0, substr.length()) == substr;
+    auto pos = prefix ? substr.length() : 0;
+
     if (str.length() != ID_BYTES * 2 + pos)
         throw std::out_of_range("Hex ID string should be 64 characters long.");
 
-    auto data = Hex::decode(str.c_str() + pos, ID_BYTES * 2);
-    std::memcpy(bytes.data(), data.data(), bytes.size());
+    Hex::decode(str.c_str() + pos, ID_BYTES * 2, bytes.data(), ID_BYTES);
 }
 
 }

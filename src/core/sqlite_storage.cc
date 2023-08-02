@@ -22,7 +22,7 @@
 
 #include "carrier/id.h"
 #include "carrier/peer_info.h"
-#include "utils/hex.h"
+#include "crypto/hex.h"
 #include "constants.h"
 #include "scheduler.h"
 #include "sqlite_storage.h"

@@ -22,7 +22,7 @@
 
 #include <sstream>
 
-#include "utils/hex.h"
+#include "crypto/hex.h"
 #include "serializers.h"
 #include "store_value_request.h"
 

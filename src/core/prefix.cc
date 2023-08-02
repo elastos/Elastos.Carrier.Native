@@ -21,7 +21,7 @@
 */
 
 #include "carrier/prefix.h"
-#include "utils/hex.h"
+#include "crypto/hex.h"
 
 namespace elastos {
 namespace carrier {
