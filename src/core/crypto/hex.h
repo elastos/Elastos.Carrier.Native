@@ -40,7 +40,7 @@ namespace carrier {
 class Hex {
 public:
     // convert hex string to binary data
-    static char* encode(const uint8_t* data, size_t length, char* buf, size_t bufLen);
+    static ssize_t encode(const uint8_t* data, size_t length, char* buf, size_t bufLen);
 
     static std::string encode(const uint8_t* data, size_t length, bool needPrefix = false) {
         assert(length > 0);

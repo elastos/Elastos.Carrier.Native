@@ -26,18 +26,23 @@
 namespace elastos {
 namespace carrier {
 
-char* Hex::encode(const uint8_t* data, size_t length, char* buf, size_t bufLen)
+ssize_t Hex::encode(const uint8_t* data, size_t length, char* buf, size_t bufLen)
 {
-    assert(bufLen >= length * 2 + 1);
-    return sodium_bin2hex(buf,  bufLen, data, length);
+    if (bufLen < length *2 + 1)
+        return -1;
+    sodium_bin2hex(buf,  bufLen, data, length);
+    return length * 2;
 }
 
 int Hex::decode(const char* data, size_t length, uint8_t* buf, size_t bufLen)
 {
-    assert(bufLen >= length /2 );
+    if (bufLen < length /2 )
+        return -1;
+
     auto rc =  sodium_hex2bin(buf, bufLen, data, length, nullptr, nullptr, nullptr);
     if (rc == -1)
         throw std::domain_error("not an hex character");
+
     return 0;
 }
 
