@@ -30,7 +30,7 @@
 namespace elastos {
 namespace carrier {
 
-static int VERSION = 5;
+static int VERSION = 4;
 static std::string SET_USER_VERSION = "PRAGMA user_version = " + std::to_string(VERSION);
 static std::string GET_USER_VERSION = "PRAGMA user_version";
 
@@ -151,7 +151,7 @@ void SqliteStorage::init(const std::string& path, Scheduler& scheduler) {
     // we should check the user version, do the schema update,
     // then increase the user_version;
     int userVersion = getUserVersion();
-    if (userVersion < 5) {
+    if (userVersion < 4) {
         if (sqlite3_exec(sqlite_store, "DROP INDEX IF EXISTS idx_valores_timpstamp", 0, 0, 0) != 0
             || sqlite3_exec(sqlite_store, "DROP TABLE IF EXISTS valores", 0, 0, 0) != 0
             || sqlite3_exec(sqlite_store, "DROP INDEX IF EXISTS idx_peers_timpstamp", 0, 0, 0) != 0

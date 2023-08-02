@@ -153,7 +153,7 @@ void ProxyConnection::close() noexcept
 
     log->debug("Connection {} is closing...", id);
 
-    if (old <= ConnectionState::Authenticating)
+    if (old <= ConnectionState::Attaching)
         onOpenFailed();
 
     if (old == ConnectionState::Relaying)
@@ -328,6 +328,18 @@ static inline size_t randomPadding(void)
     return Random::uint32(256);
 }
 
+/*
+ * AUTH packet payload:
+ *   - plain
+ *     - clientNodeId
+ *   - encrypted
+ *     - sessionPk[client]
+ *     - connectionNonce
+ *     - signature[challenge]
+ *     - domain length[uint8]
+ *     - domain[optional]
+ *     - padding
+ */
 void ProxyConnection::sendAuthenticateRequest(const uint8_t* data, size_t size) noexcept
 {
     if (state == ConnectionState::Closed)
@@ -403,6 +415,17 @@ void ProxyConnection::sendAuthenticateRequest(const uint8_t* data, size_t size) 
     }
 }
 
+/*
+ * ATTACH packet:
+ *   - plain
+ *     - clientNodeId
+ *   - encrypted
+ *     - sessionPk[client]
+ *     - connectionNonce
+ *     - signature[challenge]
+ *   - plain
+ *     - padding
+ */
 void ProxyConnection::sendAttachRequest(const uint8_t* data, size_t size) noexcept
 {
     if (state == ConnectionState::Closed)
@@ -468,6 +491,11 @@ void ProxyConnection::sendAttachRequest(const uint8_t* data, size_t size) noexce
     }
 }
 
+/*
+ * PING packet:
+ *   - plain
+ *     - padding
+ */
 void ProxyConnection::sendPingRequest() noexcept
 {
     if (state == ConnectionState::Closed)
@@ -514,6 +542,12 @@ static uint8_t randomBoolean(bool v)
     return v ? i | 0x01 : i & 0xFE;
 }
 
+/*
+ * CONNECTACK packet payload:
+ * - plain
+ *   - success[uint8]
+ *   - padding
+ */
 void ProxyConnection::sendConnectResponse(bool success) noexcept
 {
     if (state == ConnectionState::Closed)
@@ -567,6 +601,11 @@ void ProxyConnection::sendConnectResponse(bool success) noexcept
     }
 }
 
+/*
+ * DISCONNECT packet:
+ *   - plain
+ *     - padding
+ */
 void ProxyConnection::sendDisconnectRequest() noexcept
 {
     if (state == ConnectionState::Closed)
@@ -607,6 +646,11 @@ void ProxyConnection::sendDisconnectRequest() noexcept
     }
 }
 
+/*
+ * DATA packet payload:
+ * - encrypted
+ *   - data
+ */
 void ProxyConnection::sendDataRequest(const uint8_t* data, size_t _size) noexcept
 {
     if (state == ConnectionState::Closed)
@@ -668,6 +712,11 @@ inline void vectorAppend(std::vector<uint8_t>& v, const uint8_t* data, size_t si
     std::memcpy(v.data() + oldSize, data, size);
 }
 
+/*
+ * Challenge packet
+ * - plain
+ *   - Random challenge bytes
+ */
 void ProxyConnection::onChallenge(const uint8_t* data, size_t size) noexcept {
     if (size < 32 || size > 256) {
         log->error("Connection {} got challenge from the server {}, size is error!",
@@ -820,6 +869,13 @@ void ProxyConnection::processRelayPacket(const uint8_t* packet, size_t size) noe
     }
 }
 
+/*
+ * AUTHACK packet payload:
+ * - encrypted
+ *   - sessionPk[server]
+ *   - port[uint16]
+ *   - domainEnabled[uint8]
+ */
 const static size_t AUTH_ACK_SIZE = PACKET_HEADER_BYTES + CryptoBox::MAC_BYTES +
     CryptoBox::PublicKey::BYTES + sizeof(uint16_t) + 1;
 
@@ -865,6 +921,9 @@ void ProxyConnection::onAuthenticateResponse(const uint8_t* packet, size_t size)
     log->info("Connection {} opened.", id);
 }
 
+/*
+ * No payload
+ */
 const static size_t ATTACH_ACK_SIZE = PACKET_HEADER_BYTES;
 
 void ProxyConnection::onAttachResponse(const uint8_t* packet, size_t size) noexcept
@@ -874,6 +933,9 @@ void ProxyConnection::onAttachResponse(const uint8_t* packet, size_t size) noexc
     onOpened();
 }
 
+/*
+ * No payload
+ */
 void ProxyConnection::onPingResponse(const uint8_t* packet, size_t size) const noexcept
 {
     log->debug("Connection {} got PING ACK from server {}", id, proxy.serverEndpoint());
@@ -882,6 +944,13 @@ void ProxyConnection::onPingResponse(const uint8_t* packet, size_t size) const n
     // so nothing to do here.
 }
 
+/*
+ * CONNECT packet payload:
+ * - encrypted
+ *   - addrlen[uint8]
+ *   - addr[16 bytes both for IPv4 or IPv6]
+ *   - port[uint16]
+ */
 const static size_t CONNECT_REQ_SIZE = PACKET_HEADER_BYTES + CryptoBox::MAC_BYTES + 1 + 16 + 2;
 
 void ProxyConnection::onConnectRequest(const uint8_t* packet, size_t size) noexcept
@@ -919,12 +988,20 @@ void ProxyConnection::onConnectRequest(const uint8_t* packet, size_t size) noexc
     }
 }
 
+/*
+ * No payload
+ */
 void ProxyConnection::onDisconnectRequest(const uint8_t* packet, size_t size) noexcept
 {
     log->debug("Connection {} got DISCONNECT from server {}", id, proxy.serverEndpoint());
     closeUpstream(true);
 }
 
+/*
+ * DATA packet payload:
+ * - encrypted
+ *   - data
+ */
 void ProxyConnection::onDataRequest(const uint8_t* packet, size_t size) noexcept
 {
     // log->trace("Connection {} got DATA({}) from server {}", id, size, proxy.serverEndpoint());
