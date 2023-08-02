@@ -34,16 +34,16 @@ ssize_t Hex::encode(const uint8_t* data, size_t length, char* buf, size_t bufLen
     return length * 2;
 }
 
-int Hex::decode(const char* data, size_t length, uint8_t* buf, size_t bufLen)
+ssize_t Hex::decode(const char* data, size_t length, uint8_t* buf, size_t bufLen)
 {
-    if (bufLen < length /2 )
+    if (bufLen % 2 != 0 || bufLen < length /2 )
         return -1;
 
     auto rc =  sodium_hex2bin(buf, bufLen, data, length, nullptr, nullptr, nullptr);
     if (rc == -1)
         throw std::domain_error("not an hex character");
 
-    return 0;
+    return length / 2;
 }
 
 } // namespace carrier

@@ -32,7 +32,7 @@
 #include "exceptions.h"
 #include "utils/log.h"
 #include "utils/addr.h"
-#include "utils/hex.h"
+#include "crypto/hex.h"
 
 namespace elastos {
 namespace carrier {

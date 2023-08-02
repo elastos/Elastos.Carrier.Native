@@ -66,7 +66,7 @@ public:
     }
 
     // convert binary data to hex string
-    static int decode(const char* data, size_t length, uint8_t* buf, size_t bufLen);
+    static ssize_t decode(const char* data, size_t length, uint8_t* buf, size_t bufLen);
 
     static std::vector<uint8_t> decode(const std::string& str) {
         assert(str.length() > 0);
