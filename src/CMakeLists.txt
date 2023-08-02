@@ -26,7 +26,6 @@ list(APPEND CARRIER_SOURCES
     core/utils/addr.cc
     core/utils/blob.cc
     core/utils/log.cc
-    core/utils/hex.cc
     core/utils/socket_address.cc
     core/utils/json_to_any.cc
     core/crypto/base58.cc
@@ -34,6 +33,7 @@ list(APPEND CARRIER_SOURCES
     core/crypto/signature.cc
     core/crypto/shasum.cc
     core/crypto/random.cc
+    core/crypto/hex.cc
     core/messages/message.cc
     core/messages/announce_peer_request.cc
     core/messages/error_message.cc

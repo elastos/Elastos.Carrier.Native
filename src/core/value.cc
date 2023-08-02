@@ -23,7 +23,7 @@
 #include <sstream>
 
 #include "carrier/value.h"
-#include "utils/hex.h"
+#include "crypto/hex.h"
 #include "crypto/shasum.h"
 #include "exceptions/state_error.h"
 #include "serializers.h"

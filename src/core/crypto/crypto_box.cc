@@ -29,6 +29,7 @@
 #include <sodium.h>
 #include "carrier/crypto_box.h"
 #include "crypto/random.h"
+#include "crypto/hex.h"
 #include "exceptions/crypto_error.h"
 
 namespace elastos {
@@ -52,19 +53,8 @@ static_assert(CryptoBox::SYMMETRIC_KEY_BYTES == crypto_box_BEFORENMBYTES,
 static_assert(CryptoBox::MAC_BYTES == crypto_box_MACBYTES,
     "Inappropriate CryptoBox MAC size definition.");
 
-static std::string to_hex_string(const uint8_t* bin, size_t len)
-{
-    std::string hex;
-
-    hex.reserve(len * 2 + 4);
-    hex.append("0x");
-    sodium_bin2hex(hex.data() + 2, len * 2, bin, len);
-    return hex;
-}
-
 CryptoBox::PrivateKey::PrivateKey(const Blob& sk)
 {
-    assert(sk.size() == BYTES);
     if (sk.size() != BYTES)
         throw std::invalid_argument("Invaild raw private key size.");
 
@@ -73,7 +63,7 @@ CryptoBox::PrivateKey::PrivateKey(const Blob& sk)
 
 CryptoBox::PrivateKey::operator std::string() const noexcept
 {
-    return to_hex_string(key.data(), key.size());
+    return Hex::encode(key.data(), key.size(), true);
 }
 
 CryptoBox::PrivateKey CryptoBox::PrivateKey::fromSignatureKey(const Signature::PrivateKey& signSk)
@@ -94,7 +84,7 @@ CryptoBox::PublicKey::PublicKey(const Blob& pk)
 
 CryptoBox::PublicKey::operator std::string() const noexcept
 {
-    return to_hex_string(key.data(), key.size());
+    return Hex::encode(key.data(), key.size(), true);
 }
 
 CryptoBox::PublicKey CryptoBox::PublicKey::fromSignatureKey(const Signature::PublicKey& signPk)
@@ -132,7 +122,7 @@ CryptoBox::Nonce CryptoBox::Nonce::random()
 
 CryptoBox::Nonce::operator std::string() const noexcept
 {
-    return to_hex_string(nonce.data(), nonce.size());
+    return Hex::encode(nonce.data(), nonce.size(), true);
 }
 
 CryptoBox::KeyPair::KeyPair() noexcept

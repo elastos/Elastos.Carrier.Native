@@ -22,7 +22,7 @@
 
 #include <nlohmann/json.hpp>
 
-#include "utils/hex.h"
+#include "crypto/hex.h"
 #include "message.h"
 #include "serializers.h"
 #include "find_value_response.h"

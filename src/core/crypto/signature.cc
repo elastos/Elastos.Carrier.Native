@@ -27,6 +27,7 @@
 
 #include <sodium.h>
 #include "carrier/signature.h"
+#include "crypto/hex.h"
 
 namespace elastos {
 namespace carrier {
@@ -43,16 +44,6 @@ static_assert(Signature::KeyPair::SEED_BYTES == crypto_sign_SEEDBYTES,
 static_assert(Signature::BYTES == crypto_sign_BYTES,
     "Inappropriate Signature size definition.");
 
-static std::string to_hex_string(const uint8_t* bin, size_t len)
-{
-    std::string hex;
-
-    hex.reserve(len * 2 + 4);
-    hex.append("0x");
-    sodium_bin2hex(hex.data() + 2, len * 2, bin, len);
-    return hex;
-}
-
 Signature::PrivateKey::PrivateKey(const Blob& sk)
 {
     assert(sk.size() == BYTES);
@@ -64,7 +55,7 @@ Signature::PrivateKey::PrivateKey(const Blob& sk)
 
 Signature::PrivateKey::operator std::string() const noexcept
 {
-    return to_hex_string(key.data(), key.size());
+    return Hex::encode(key.data(), key.size(), true);
 }
 
 void Signature::PrivateKey::sign(const Blob& data, Blob& signature) const
@@ -87,7 +78,7 @@ Signature::PublicKey::PublicKey(const Blob& pk)
 
 Signature::PublicKey::operator std::string() const noexcept
 {
-    return to_hex_string(key.data(), key.size());
+    return Hex::encode(key.data(), key.size(), true);
 }
 
 bool Signature::PublicKey::verify(const Blob& data, const Blob& signature) const

@@ -24,8 +24,6 @@
 
 #include <array>
 #include <vector>
-#include <memory>
-#include <algorithm>
 
 #include "def.h"
 #include "blob.h"
@@ -46,10 +44,9 @@ public:
 
         PrivateKey(const Blob& sk);
 
-        PrivateKey(const PrivateKey& o) noexcept :
-                PrivateKey(o.blob()) {}
-        PrivateKey(PrivateKey&& o) noexcept :
-                PrivateKey(o.blob()) {
+        PrivateKey(const PrivateKey& o) noexcept : PrivateKey(o.blob()) {}
+
+        PrivateKey(PrivateKey&& o) noexcept : PrivateKey(o.blob()) {
             o.clear();
         }
 
@@ -118,10 +115,9 @@ public:
 
         PublicKey(const Blob& pk);
 
-        PublicKey(const PublicKey& o) noexcept :
-                PublicKey(o.blob()) {}
-        PublicKey(PublicKey&& o) noexcept :
-                PublicKey(o.blob()) {
+        PublicKey(const PublicKey& o) noexcept : PublicKey(o.blob()) {}
+
+        PublicKey(PublicKey&& o) noexcept : PublicKey(o.blob()) {
             o.clear();
         }
 
@@ -190,10 +186,9 @@ public:
 
         Nonce(const Blob& pk);
 
-        Nonce(const Nonce& o) noexcept :
-                Nonce(o.blob()) {}
-        Nonce(Nonce&& o) noexcept :
-                Nonce(o.blob()) {
+        Nonce(const Nonce& o) noexcept : Nonce(o.blob()) {}
+
+        Nonce(Nonce&& o) noexcept : Nonce(o.blob()) {
             o.clear();
         }
 
@@ -206,9 +201,6 @@ public:
         }
 
         static Nonce random();
-        static Nonce zero() {
-            return Nonce();
-        }
 
         bool operator==(const Nonce& o) const noexcept {
             return std::memcmp(nonce.data(), o.nonce.data(), BYTES) == 0;
@@ -325,10 +317,9 @@ public:
 
     CryptoBox(const PublicKey& pk, const PrivateKey& sk);
 
-    CryptoBox(const CryptoBox& o) noexcept :
-            key(o.key) {}
-    CryptoBox(CryptoBox&& o) noexcept :
-            key(o.key) {
+    CryptoBox(const CryptoBox& o) noexcept : key(o.key) {}
+
+    CryptoBox(CryptoBox&& o) noexcept :key(o.key) {
         o.clear();
     }
 

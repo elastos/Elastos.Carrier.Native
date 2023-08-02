@@ -31,7 +31,7 @@
 #include <utf8proc.h>
 
 #include "command.h"
-#include "utils/hex.h"
+#include "crypto/hex.h"
 
 class AnnouncePeerCommand : public Command {
 public:
