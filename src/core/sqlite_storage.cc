@@ -86,7 +86,7 @@ static std::string SELECT_VALUE = "SELECT * from valores \
 static std::string UPDATE_VALUE_LAST_ANNOUNCE = "UPDATE valores \
         SET timestamp=?, announced = ? WHERE id = ?";
 
-static std::string GET_VALUES = "SELECT id from valores ORDER BY id WHERE timestamp >= ?";
+static std::string GET_VALUES = "SELECT id from valores WHERE timestamp >= ? ORDER BY id";
 
 static std::string GET_PERSISTENT_VALUES = "SELECT * FROM valores WHERE persistent = true AND announced <= ?";
 
@@ -110,7 +110,7 @@ static std::string SELECT_PEER_WITH_SRC = "SELECT * from peers \
 static std::string UPDATE_PEER_LAST_ANNOUNCE = "UPDATE peers \
         SET timestamp=?, announced = ? WHERE id = ? and origin = ?";
 
-static std::string GET_PEERS = "SELECT DISTINCT id from peers ORDER BY id WHERE timestamp >= ?";
+static std::string GET_PEERS = "SELECT DISTINCT id from peers WHERE timestamp >= ? ORDER BY id";
 
 static std::string GET_PERSISTENT_PEERS = "SELECT * FROM peers WHERE persistent = true AND announced <= ?";
 
