@@ -45,29 +45,36 @@ static const uint32_t IDLE_CHECK_INTERVAL = 60000;  // 1 minute
 static const uint32_t MAX_IDLE_TIME = 300000;       // 3 minutes
 
 std::future<void> ActiveProxy::initialize(Sp<Node> node, const std::map<std::string, std::any>& configure) {
-    //get value from configure
-    if (!configure.count("serverId"))
-        throw std::runtime_error("Addon ActiveProxy's configure item has error: missing serverId!");
-
-    if (!configure.count("serverHost"))
-        throw std::runtime_error("Addon ActiveProxy's configure item has error: missing serverHost!");
-
-    if (!configure.count("serverPort"))
-        throw std::runtime_error("Addon ActiveProxy's configure item has error: missing serverPort!");
+    if (!configure.count("serverPeerId"))
+        throw std::invalid_argument("Addon ActiveProxy's configure item has error: missing serverPeerId!");
 
     if (!configure.count("peerPrivateKey"))
-        throw std::runtime_error("Addon ActiveProxy's configure item has error: missing peerPrivateKey!");
+        throw std::invalid_argument("Addon ActiveProxy's configure item has error: missing peerPrivateKey!");
 
     if (!configure.count("upstreamHost"))
-        throw std::runtime_error("Addon ActiveProxy's configure item has error: missing upstreamHost!");
+        throw std::invalid_argument("Addon ActiveProxy's configure item has error: missing upstreamHost!");
 
     if (!configure.count("upstreamPort"))
-        throw std::runtime_error("Addon ActiveProxy's configure item has error: missing upstreamPort!");
+        throw std::invalid_argument("Addon ActiveProxy's configure item has error: missing upstreamPort!");
 
-    std::string strId = std::any_cast<std::string>(configure.at("serverId"));
-    serverId = Id(strId);
-    serverHost = std::any_cast<std::string>(configure.at("serverHost"));
-    serverPort = (uint16_t)std::any_cast<int64_t>(configure.at("serverPort"));
+    std::string strId = std::any_cast<std::string>(configure.at("serverPeerId"));
+
+    auto future = node->findPeer(Id(strId), 1);
+    auto peers = future.get();
+    if (peers.empty())
+        throw std::invalid_argument("Addon ActiveProxy's can find peer: " + strId + "!");
+
+    auto peer = peers.front();
+    serverPort = peer.getPort();
+    serverId = peer.getNodeId();
+
+    auto future2 = node->findNode(serverId);
+    auto nodes = future2.get();
+    if (nodes.empty())
+        throw std::invalid_argument("Addon ActiveProxy's can find node: " + serverId.toBase58String() + "!");
+    auto ni = nodes.front();
+    serverHost = ni->getAddress().host();
+
     if (serverHost.empty() || serverPort == 0)
         throw std::runtime_error("Addon ActiveProxy's configure item has error: empty serverHost or serverPort is not allowed");
 
@@ -81,11 +88,10 @@ std::future<void> ActiveProxy::initialize(Sp<Node> node, const std::map<std::str
         upstreamHost = getLocalIPv6();
     upstreamPort = (uint16_t)std::any_cast<int64_t>(configure.at("upstreamPort"));
     if (upstreamHost.empty() || upstreamPort == 0)
-        throw std::runtime_error("Addon ActiveProxy's configure item has error: empty upstreamHost or upstreamPort is not allowed");
+        throw std::invalid_argument("Addon ActiveProxy's configure item has error: empty upstreamHost or upstreamPort is not allowed");
 
     if (configure.count("domainName"))
         domainName = std::any_cast<std::string>(configure.at("domainName"));
-
 
     //init data
     log->setLevel(Level::Info);
