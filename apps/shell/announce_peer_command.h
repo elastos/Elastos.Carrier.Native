@@ -39,7 +39,7 @@ public:
 
 protected:
     void setupOptions() override {
-        add_option("-p, --persistent", persistent, "Persistent peer, default is false.");
+        add_flag("-p, --persistent", persistent, "Persistent peer, default is false.");
         add_option("-k, --private-key", privateKey, "The private key.");
         add_option("-n, --node-id", nodeId, "The node id.");
         add_option("-a, --alternative-url", alt, "The alternative URL.");
@@ -66,7 +66,7 @@ protected:
         auto future = node->announcePeer(peer, persistent);
         future.get();
         std::cout << "Peer " + peer.getId().toBase58String() << " announced with private key " <<
-                Hex::encode(peer.getPrivateKey().blob());
+                Hex::encode(peer.getPrivateKey().blob()) << std::endl;
     };
 
 private:
