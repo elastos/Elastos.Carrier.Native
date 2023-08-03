@@ -108,7 +108,9 @@ std::vector<uint8_t> Value::getSignData() const {
     auto size = (isEncrypted() ? Id::BYTES : 0)  + CryptoBox::Nonce::BYTES +
             sizeof(sequenceNumber) + data.size();
 
-    std::vector<uint8_t> toSign(size);
+    std::vector<uint8_t> toSign {};
+    toSign.reserve(size);
+
     if (isEncrypted())
         toSign.insert(toSign.end(), recipient.value().cbegin(), recipient.value().cend());
 
