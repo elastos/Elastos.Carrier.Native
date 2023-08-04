@@ -19,6 +19,11 @@
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 * SOFTWARE.
 */
+
+#ifndef _WIN32
+#include <arpa/inet.h>
+#endif
+
 #include <sstream>
 #include <stdexcept>
 #include <utf8proc.h>
