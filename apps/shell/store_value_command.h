@@ -55,16 +55,40 @@ protected:
                 if (recipient.empty()) {
                     value = Value::createSignedValue(data);
                 } else {
-                    auto recipientId = Id(recipient);
+                    Id recipientId;
+                    try {
+                        recipientId = Id(recipient);
+                    } catch(const std::out_of_range &e) {
+                        std::cout << "Invalid recipient: " << static_cast<std::string>(recipientId) << std::endl;
+                        return;
+                    }
                     value = Value::createEncryptedValue(recipientId, data);
                 }
             } else {
                 value = Value::createValue(data);
             }
         } else {
-            auto id = Id(target);
-            value = *(node->getValue(id));
-            value = value.update(data);
+            Id id;
+            try {
+                id = Id(target);
+            } catch(const std::out_of_range &e) {
+                std::cout << "Invalid value id to be update: " << static_cast<std::string>(id) << std::endl;
+                return;
+            }
+
+            try {
+                value = *(node->getValue(id));
+            } catch(const std::invalid_argument &e) {
+                std::cout << "Invalid target id: " << e.what() << std::endl;
+                return;
+            }
+
+            try {
+                value = value.update(data);
+            } catch (const std::runtime_error &e) {
+                std::cout << "Can not update the value: " << e.what() << std::endl;
+                return;
+            }
         }
 
         auto future = node->storeValue(value, persistent);
