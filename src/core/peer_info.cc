@@ -102,19 +102,23 @@ std::ostream& operator<< (std::ostream& os, const PeerInfo& pi) {
 }
 
 std::vector<uint8_t> PeerInfo::getSignData() const {
-    auto size = Id::BYTES * 2  + sizeof(port);
+    auto size = Id::BYTES * 2  + sizeof(uint16_t);
 
     if (hasAlternativeURL())
         size += alternativeURL.value().size();
 
-    std::vector<uint8_t> toSign {};
-    toSign.reserve(size);
-    toSign.insert(toSign.begin(), nodeId.cbegin(), nodeId.cend());
-    toSign.insert(toSign.end(), origin.cbegin(), origin.cend());
-    toSign.insert(toSign.end(), (uint8_t*)(&port), (uint8_t*)(&port) + sizeof(port));
+    std::vector<uint8_t> toSign(size);
+    uint8_t* ptr = toSign.data();
+    std::memcpy(ptr, nodeId.data(), Id::BYTES );
+    ptr += Id::BYTES;
+    std::memcpy(ptr, origin.data(), Id::BYTES );
+    ptr += Id::BYTES;
+    *(uint16_t*)ptr = htons(port);
 
-    if (hasAlternativeURL())
-        toSign.insert(toSign.end(), alternativeURL.value().cbegin(), alternativeURL.value().cend());
+    if (hasAlternativeURL()) {
+        ptr += sizeof(uint16_t);
+        std::memcpy(ptr, alternativeURL.value().data(), alternativeURL.value().size());
+    }
     return toSign;
 }
 
@@ -122,8 +126,8 @@ bool PeerInfo::isValid() const {
     if (signature.size() != Signature::BYTES)
             return false;
 
-    auto pk = publicKey.toSignatureKey();
-    return Signature::verify(getSignData(), signature, pk);
+   auto pk = publicKey.toSignatureKey();
+   return Signature::verify(getSignData(), signature, pk);
 }
 
 }
