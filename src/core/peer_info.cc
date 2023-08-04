@@ -102,7 +102,7 @@ std::ostream& operator<< (std::ostream& os, const PeerInfo& pi) {
 }
 
 std::vector<uint8_t> PeerInfo::getSignData() const {
-    auto size = Id::BYTES * 2  + sizeof(port);
+    auto size = Id::BYTES * 2  + sizeof(uint16_t);
 
     if (hasAlternativeURL())
         size += alternativeURL.value().size();
@@ -115,8 +115,10 @@ std::vector<uint8_t> PeerInfo::getSignData() const {
     ptr += Id::BYTES;
     *(uint16_t*)ptr = htons(port);
 
-    if (hasAlternativeURL())
-        toSign.insert(toSign.end(), alternativeURL.value().cbegin(), alternativeURL.value().cend());
+    if (hasAlternativeURL()) {
+        ptr += sizeof(uint16_t);
+        std::memcpy(ptr, alternativeURL.value().data(), alternativeURL.value().size());
+    }
     return toSign;
 }
 
