@@ -89,8 +89,8 @@ struct Constants {
     // Node software name and version
     ///////////////////////////////////////////////////////////////////////////
     static const std::string    NODE_NAME;
+    static const std::string    NODE_SHORT_NAME;
     static const int            NODE_VERSION;
-    static const int            VERSION                    = 1;
 
     ///////////////////////////////////////////////////////////////////////////
     // Development environment

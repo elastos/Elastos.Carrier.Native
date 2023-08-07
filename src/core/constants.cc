@@ -58,9 +58,10 @@ const int Constants::STORAGE_EXPIRE_INTERVAL                = 5 * 60 * 1000;
 const int Constants::TOKEN_TIMEOUT                          = 5 * 60 * 1000;
 const int Constants::MAX_PEER_AGE                           = 120 * 60 * 1000;
 const int Constants::MAX_VALUE_AGE                          = 120 * 60 * 1000;
-const int Constants::RE_ANNOUNCE_INTERVAL                    = 5 * 60 * 1000;
+const int Constants::RE_ANNOUNCE_INTERVAL                   = 5 * 60 * 1000;
 
 const std::string Constants::NODE_NAME                      = "Meerkat";
+const std::string Constants::NODE_SHORT_NAME                = "MK";
 const int Constants::NODE_VERSION                           = 1;
 const std::string Constants::ENVIRONMENT_PROPERTY           = "elastos.carrier.enviroment";
 
