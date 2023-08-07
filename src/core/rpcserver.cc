@@ -35,6 +35,7 @@
 #include "messages/message.h"
 #include "messages/error_message.h"
 #include "error_code.h"
+#include "constants.h"
 #include "rpcserver.h"
 #include "dht.h"
 
@@ -463,7 +464,8 @@ void RPCServer::dispatchCall(Sp<RPCCall>& call) {
 
 void RPCServer::sendMessage(Sp<Message> msg) {
     msg->setId(node.getId());
-    msg->setVersion(Constants::VERSION);
+    auto short_name = Constants::NODE_SHORT_NAME;
+    msg->setVersion(Version::build(short_name, Constants::NODE_VERSION));
 
     auto call = msg->getAssociatedCall();
     if (call != nullptr) {

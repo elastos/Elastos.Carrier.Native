@@ -38,9 +38,9 @@ const char* version() {
     return PACKAGE_VERSION;
 }
 
-std::map<std::string, std::string> names {{"MK", "Meerkat"}};
+std::map<std::string, std::string> names {{"OR", "Orca"}, {"MK", "Meerkat"}};
 
-int Version::build(std::string& name, int version) {
+int Version::build(std::string &name, int version) {
     std::transform(name.cbegin(), name.cend(), name.begin(), // write to the same location
         [](unsigned char c) { return std::toupper(c); });
 
@@ -49,7 +49,7 @@ int Version::build(std::string& name, int version) {
     std::memcpy(nameBytes.data(), name.data(), name.size());
 
     return (int)nameBytes[0] << 24 | (int)nameBytes[1] << 16 |
-            (version & 0x0000FFFF);
+            version & 0x0000FF00 | version & 0x000000FF;
 }
 
 const std::string Version::toString(int version) {
@@ -62,7 +62,8 @@ const std::string Version::toString(int version) {
     code[2] = 0;
 
     std::string n = std::string(code);
-    std::string v = std::to_string(version & 0x0000ffff);
+    std::string v = std::to_string((version & 0x0000ff00) |
+				(version & 0x000000ff));
 
     auto result = names.find(n);
     return result != names.end() ? (result->second + "/" + v) : (n + "/" + v);
