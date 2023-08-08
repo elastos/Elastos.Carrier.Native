@@ -48,6 +48,7 @@ list(APPEND APITESTS_SOURCES
     value_tests.cc
     nodeinfo_tests.cc
     peerinfo_tests.cc
+    peerinfo_announce_tests.cc
     prefix_tests.cc
     crypto_tests.cc
     log_tests.cc
