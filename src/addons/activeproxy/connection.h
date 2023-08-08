@@ -42,6 +42,7 @@ enum class ConnectionState {
     Attaching,
     Idling,
     Relaying,
+    Closing,
     Closed
 };
 
