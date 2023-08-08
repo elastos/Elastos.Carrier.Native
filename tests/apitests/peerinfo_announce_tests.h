@@ -22,39 +22,29 @@
 
 #pragma once
 
+#include <memory>
+#include <carrier.h>
+
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
 
 namespace test {
 
-class PeerInfoTests : public CppUnit::TestFixture {
-    CPPUNIT_TEST_SUITE(PeerInfoTests);
-    CPPUNIT_TEST(testInvalidPeer);
-    CPPUNIT_TEST(testCreate1);
-    CPPUNIT_TEST(testCreate2);
-    CPPUNIT_TEST(testCreate3);
-    CPPUNIT_TEST(testCreate4);
-    CPPUNIT_TEST(testCreate5);
-    CPPUNIT_TEST(testCreate6);
-    CPPUNIT_TEST(testCreate7);
-    CPPUNIT_TEST(testCreate8);
-    CPPUNIT_TEST(testEqualOperator);
+class PeerInfoAnnounceTests : public CppUnit::TestFixture {
+    CPPUNIT_TEST_SUITE(PeerInfoAnnounceTests);
+    CPPUNIT_TEST(testAnnounceAndFind);
     CPPUNIT_TEST_SUITE_END();
 
  public:
-    void setUp() {}
-    void tearDown() {}
+    void setUp();
+    void tearDown();
 
-    void testInvalidPeer();
-    void testCreate1();
-    void testCreate2();
-    void testCreate3();
-    void testCreate4();
-    void testCreate5();
-    void testCreate6();
-    void testCreate7();
-    void testCreate8();
-    void testEqualOperator();
+    void testAnnounceAndFind();
+
+private:
+    std::shared_ptr<Node> node1 {};
+    std::shared_ptr<Node> node2 {};
+    std::shared_ptr<Node> node3 {};
 };
 
 }  // namespace test

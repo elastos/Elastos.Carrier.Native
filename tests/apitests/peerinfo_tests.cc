@@ -29,7 +29,7 @@ using namespace elastos::carrier;
 namespace test {
 CPPUNIT_TEST_SUITE_REGISTRATION(PeerInfoTests);
 
-void PeerInfoTests::testFalsity() {
+void PeerInfoTests::testInvalidPeer() {
     auto peerId = Id::random();
     auto nodeId = Id::random();
     auto origin = Id::random();
