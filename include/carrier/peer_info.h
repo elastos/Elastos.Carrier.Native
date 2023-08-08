@@ -130,6 +130,10 @@ public:
 
     bool operator==(const PeerInfo& other) const;
 
+    bool operator!=(const PeerInfo& other) const {
+        return !(*this == other);
+    }
+
     bool operator<(const PeerInfo& other) const {
         int rc = publicKey.compareTo(other.publicKey);
         if (rc != 0)

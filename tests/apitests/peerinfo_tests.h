@@ -29,14 +29,32 @@ namespace test {
 
 class PeerInfoTests : public CppUnit::TestFixture {
     CPPUNIT_TEST_SUITE(PeerInfoTests);
-    CPPUNIT_TEST(testPeerInfo);
+    CPPUNIT_TEST(testFalsity);
+    CPPUNIT_TEST(testCreate1);
+    CPPUNIT_TEST(testCreate2);
+    CPPUNIT_TEST(testCreate3);
+    CPPUNIT_TEST(testCreate4);
+    CPPUNIT_TEST(testCreate5);
+    CPPUNIT_TEST(testCreate6);
+    CPPUNIT_TEST(testCreate7);
+    CPPUNIT_TEST(testCreate8);
+    CPPUNIT_TEST(testEqualOperator);
     CPPUNIT_TEST_SUITE_END();
 
  public:
-    void setUp();
-    void tearDown();
+    void setUp() {}
+    void tearDown() {}
 
-    void testPeerInfo();
+    void testFalsity();
+    void testCreate1();
+    void testCreate2();
+    void testCreate3();
+    void testCreate4();
+    void testCreate5();
+    void testCreate6();
+    void testCreate7();
+    void testCreate8();
+    void testEqualOperator();
 };
 
 }  // namespace test
