@@ -45,9 +45,6 @@ static const uint32_t IDLE_CHECK_INTERVAL = 60000;  // 1 minute
 static const uint32_t MAX_IDLE_TIME = 300000;       // 3 minutes
 
 std::future<void> ActiveProxy::initialize(Sp<Node> node, const std::map<std::string, std::any>& configure) {
-    if (!configure.count("serverPeerId"))
-        throw std::invalid_argument("Addon ActiveProxy's configure item has error: missing serverPeerId!");
-
     if (!configure.count("peerPrivateKey"))
         throw std::invalid_argument("Addon ActiveProxy's configure item has error: missing peerPrivateKey!");
 
@@ -57,30 +54,6 @@ std::future<void> ActiveProxy::initialize(Sp<Node> node, const std::map<std::str
     if (!configure.count("upstreamPort"))
         throw std::invalid_argument("Addon ActiveProxy's configure item has error: missing upstreamPort!");
 
-    std::string strId = std::any_cast<std::string>(configure.at("serverPeerId"));
-
-    auto future = node->findPeer(Id(strId), 1);
-    auto peers = future.get();
-    if (peers.empty())
-        throw std::invalid_argument("Addon ActiveProxy's can find peer: " + strId + "!");
-
-    auto peer = peers.front();
-    serverPort = peer.getPort();
-    serverId = peer.getNodeId();
-
-    auto future2 = node->findNode(serverId);
-    auto nodes = future2.get();
-    if (nodes.empty())
-        throw std::invalid_argument("Addon ActiveProxy's can find node: " + serverId.toBase58String() + "!");
-    auto ni = nodes.front();
-    serverHost = ni->getAddress().host();
-
-    if (serverHost.empty() || serverPort == 0)
-        throw std::runtime_error("Addon ActiveProxy's configure item has error: empty serverHost or serverPort is not allowed");
-
-    std::string sk = std::any_cast<std::string>(configure.at("peerPrivateKey"));
-    peerKeypair = Signature::KeyPair::fromPrivateKey(Hex::decode(sk));
-
     upstreamHost = std::any_cast<std::string>(configure.at("upstreamHost"));
     if (upstreamHost == "LOCAL-IP4-ADDRESS")
         upstreamHost = getLocalIPv4();
@@ -89,6 +62,43 @@ std::future<void> ActiveProxy::initialize(Sp<Node> node, const std::map<std::str
     upstreamPort = (uint16_t)std::any_cast<int64_t>(configure.at("upstreamPort"));
     if (upstreamHost.empty() || upstreamPort == 0)
         throw std::invalid_argument("Addon ActiveProxy's configure item has error: empty upstreamHost or upstreamPort is not allowed");
+
+    if (configure.count("serverPeerId")) {
+        std::string strId = std::any_cast<std::string>(configure.at("serverPeerId"));
+
+        log->info("Addon ActiveProxy finding peer...");
+        auto future = node->findPeer(Id(strId), 1);
+        auto peers = future.get();
+        if (peers.empty())
+            throw std::invalid_argument("Addon ActiveProxy can't find peer: " + strId + "!");
+
+        auto peer = peers.front();
+        serverPort = peer.getPort();
+        serverId = peer.getNodeId();
+
+        log->info("Addon ActiveProxy finding node...");
+        auto future2 = node->findNode(serverId);
+        auto nodes = future2.get();
+        if (nodes.empty())
+            throw std::invalid_argument("Addon ActiveProxy can't find node: " + serverId.toBase58String() + "!");
+        auto ni = nodes.front();
+        serverHost = ni->getAddress().host();
+    }
+    else if (configure.count("serverId") && configure.count("serverHost") && configure.count("serverPort")) {
+        std::string strId = std::any_cast<std::string>(configure.at("serverId"));
+        serverId = Id(strId);
+        serverHost = std::any_cast<std::string>(configure.at("serverHost"));
+        serverPort = (uint16_t)std::any_cast<int64_t>(configure.at("serverPort"));
+    }
+    else {
+        throw std::invalid_argument("Addon ActiveProxy's configure item has error: missing serverPeerId!");
+    }
+
+    if (serverHost.empty() || serverPort == 0)
+        throw std::runtime_error("Addon ActiveProxy's configure item has error: empty serverHost or serverPort is not allowed");
+
+    std::string sk = std::any_cast<std::string>(configure.at("peerPrivateKey"));
+    peerKeypair = Signature::KeyPair::fromPrivateKey(Hex::decode(sk));
 
     if (configure.count("domainName"))
         domainName = std::any_cast<std::string>(configure.at("domainName"));
