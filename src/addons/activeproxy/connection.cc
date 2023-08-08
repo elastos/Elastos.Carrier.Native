@@ -145,11 +145,11 @@ std::string ProxyConnection::status() const noexcept
 
 void ProxyConnection::close() noexcept
 {
-    if (state == ConnectionState::Closed)
+    if (state == ConnectionState::Closing || state == ConnectionState::Closed)
         return;
 
     ConnectionState old = state;
-    state = ConnectionState::Closed;
+    state = ConnectionState::Closing;
 
     log->debug("Connection {} is closing...", id);
 
@@ -192,6 +192,7 @@ void ProxyConnection::close() noexcept
     }
 
     onClosed();
+    state = ConnectionState::Closed;
 }
 
 int ProxyConnection::connectServer() noexcept
@@ -342,7 +343,7 @@ static inline size_t randomPadding(void)
  */
 void ProxyConnection::sendAuthenticateRequest(const uint8_t* data, size_t size) noexcept
 {
-    if (state == ConnectionState::Closed)
+    if (state == ConnectionState::Closing || state == ConnectionState::Closed)
         return;
 
     state = ConnectionState::Authenticating;
@@ -428,7 +429,7 @@ void ProxyConnection::sendAuthenticateRequest(const uint8_t* data, size_t size) 
  */
 void ProxyConnection::sendAttachRequest(const uint8_t* data, size_t size) noexcept
 {
-    if (state == ConnectionState::Closed)
+    if (state == ConnectionState::Closing || state == ConnectionState::Closed)
         return;
 
     state = ConnectionState::Attaching;
@@ -498,7 +499,7 @@ void ProxyConnection::sendAttachRequest(const uint8_t* data, size_t size) noexce
  */
 void ProxyConnection::sendPingRequest() noexcept
 {
-    if (state == ConnectionState::Closed)
+    if (state == ConnectionState::Closing || state == ConnectionState::Closed)
         return;
 
     size_t padding = randomPadding();
@@ -550,7 +551,7 @@ static uint8_t randomBoolean(bool v)
  */
 void ProxyConnection::sendConnectResponse(bool success) noexcept
 {
-    if (state == ConnectionState::Closed)
+    if (state == ConnectionState::Closing || state == ConnectionState::Closed)
         return;
 
     size_t padding = randomPadding();
@@ -608,7 +609,7 @@ void ProxyConnection::sendConnectResponse(bool success) noexcept
  */
 void ProxyConnection::sendDisconnectRequest() noexcept
 {
-    if (state == ConnectionState::Closed)
+    if (state == ConnectionState::Closing || state == ConnectionState::Closed)
         return;
 
     size_t padding = randomPadding();
@@ -653,7 +654,7 @@ void ProxyConnection::sendDisconnectRequest() noexcept
  */
 void ProxyConnection::sendDataRequest(const uint8_t* data, size_t _size) noexcept
 {
-    if (state == ConnectionState::Closed)
+    if (state == ConnectionState::Closing || state == ConnectionState::Closed)
         return;
 
     size_t size = PACKET_HEADER_BYTES + CryptoBox::MAC_BYTES + _size;
@@ -822,7 +823,8 @@ void ProxyConnection::processRelayPacket(const uint8_t* packet, size_t size) noe
             onAuthenticateResponse(packet, size);
             return;
         } else {
-            log->error("Connection {} got a wrong packet({}), AUTH acknowledge expected.", id, flag);
+            log->error("Connection {} got a wrong packet type: {}(0x{:x}), AUTH acknowledge expected.",
+                            id,  PacketFlag::getTypeString(type), flag);
             close();
             return;
         }
@@ -833,7 +835,8 @@ void ProxyConnection::processRelayPacket(const uint8_t* packet, size_t size) noe
             onAttachResponse(packet, size);
             return;
         } else {
-            log->error("Connection {} got a wrong packet({}), ATTACH acknowledge expected.", id, flag);
+            log->error("Connection {} got a wrong packet type: {}(0x{:x}), ATTACH acknowledge expected.",
+                            id,  PacketFlag::getTypeString(type), flag);
             close();
             return;
         }
@@ -847,7 +850,8 @@ void ProxyConnection::processRelayPacket(const uint8_t* packet, size_t size) noe
             onConnectRequest(packet, size);
             return;
         } else {
-            log->error("Connection {} got a wrong packet({}), PING acknowledge or CONNECT expected.", id, flag);
+            log->error("Connection {} got a wrong packet type: {}(0x{:x}), PING acknowledge or CONNECT expected.",
+                            id,  PacketFlag::getTypeString(type), flag);
             close();
             return;
         }
@@ -861,7 +865,8 @@ void ProxyConnection::processRelayPacket(const uint8_t* packet, size_t size) noe
             onDisconnectRequest(packet, size);
             return;
         } else {
-            log->error("Connection {} got a wrong packet({}), DATA or DISCONNECT expected.", id, flag);
+            log->error("Connection {} got a wrong packet type: {}(0x{:x}), DATA or DISCONNECT expected.",
+                            id,  PacketFlag::getTypeString(type), flag);
             close();
             return;
         }
@@ -1089,7 +1094,7 @@ void ProxyConnection::openUpstream() noexcept
 
 void ProxyConnection::closeUpstream(bool force) noexcept
 {
-    if (state == ConnectionState::Closed)
+    if (state == ConnectionState::Closing || state == ConnectionState::Closed)
         return;
 
     log->debug("Connection {} closing upstream {}", id, proxy.upstreamEndpoint());

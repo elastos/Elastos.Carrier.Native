@@ -116,6 +116,26 @@ public:
         return ERR;
     }
 
+    const static std::string getTypeString(uint8_t type) {
+        switch (type) {
+            case AUTH:
+                return "auth";
+            case ATTACH:
+                return "attach";
+            case PING:
+                return "ping";
+            case CONNECT:
+                return "connect";
+            case DISCONNECT:
+                return "disconnect";
+            case DATA:
+                return "data";
+            case ERR:
+            default:
+                return "err";
+        }
+    }
+
 private:
     // [MIN, MAX]
     const static uint8_t AUTH_MIN       = AUTH;
