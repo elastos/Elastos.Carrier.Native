@@ -43,7 +43,7 @@ namespace activeproxy {
 
 using Logger = elastos::carrier::Logger;
 
-static std::shared_ptr<Logger> log = Logger::get("AcriveProxy");
+static std::shared_ptr<Logger> log;
 
 const static size_t PACKET_HEADER_BYTES = sizeof(uint16_t) + sizeof(uint8_t);
 const static uint32_t KEEP_ALIVE_INTERVAL = 60000;      // 60 seconds
@@ -114,6 +114,7 @@ struct ShutdownRequest {
 ProxyConnection::ProxyConnection(ActiveProxy& proxy) noexcept :
         id(lastConnectionId++), proxy(proxy)
 {
+    log = Logger::get("ProxyConnection");
     log->trace("Connection {} created.", id);
 }
 
