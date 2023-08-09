@@ -48,7 +48,8 @@ std::future<void> ActiveProxy::initialize(Sp<Node> node, const std::map<std::str
     log = Logger::get("AcriveProxy");
 
     if (configure.count("logLevel")) {
-        log->setLevel(std::any_cast<std::string>(configure.at("logLevel")));
+        logLevel = std::any_cast<std::string>(configure.at("logLevel"));
+        log->setLevel(logLevel);
     }
 
     if (!configure.count("peerPrivateKey"))
