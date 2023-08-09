@@ -40,11 +40,13 @@ namespace activeproxy {
 
 using Logger = elastos::carrier::Logger;
 
-static std::shared_ptr<Logger> log = Logger::get("AcriveProxy");
+static std::shared_ptr<Logger> log;
 static const uint32_t IDLE_CHECK_INTERVAL = 60000;  // 1 minute
 static const uint32_t MAX_IDLE_TIME = 300000;       // 3 minutes
 
 std::future<void> ActiveProxy::initialize(Sp<Node> node, const std::map<std::string, std::any>& configure) {
+    log = Logger::get("AcriveProxy");
+    
     if (!configure.count("peerPrivateKey"))
         throw std::invalid_argument("Addon ActiveProxy's configure item has error: missing peerPrivateKey!");
 
@@ -104,8 +106,6 @@ std::future<void> ActiveProxy::initialize(Sp<Node> node, const std::map<std::str
         domainName = std::any_cast<std::string>(configure.at("domainName"));
 
     //init data
-    log->setLevel(Level::Info);
-
     this->node = node;
 
     auto addrs = SocketAddress::resolve(serverHost, serverPort);
