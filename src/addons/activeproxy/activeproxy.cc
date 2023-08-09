@@ -46,7 +46,11 @@ static const uint32_t MAX_IDLE_TIME = 300000;       // 3 minutes
 
 std::future<void> ActiveProxy::initialize(Sp<Node> node, const std::map<std::string, std::any>& configure) {
     log = Logger::get("AcriveProxy");
-    
+
+    if (configure.count("logLevel")) {
+        log->setLevel(std::any_cast<std::string>(configure.at("logLevel")));
+    }
+
     if (!configure.count("peerPrivateKey"))
         throw std::invalid_argument("Addon ActiveProxy's configure item has error: missing peerPrivateKey!");
 

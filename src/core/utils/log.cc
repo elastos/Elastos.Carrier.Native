@@ -99,33 +99,38 @@ void Logger::setDefaultSettings(std::any value) {
     }
 }
 
-void Logger::setLogFile(std::string filename) {
+void Logger::setLogFile(const std::string& filename) {
     if (!filename.empty())
         userSettings.fileSink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(filename);
 }
 
-void Logger::setLogLevel(std::string level) {
-    static std::unordered_map<std::string, level::level_enum> levelMap = {
-        { "trace", level::trace },
-        { "debug", level::debug },
-        { "info", level::info },
-        { "warn", level::warn },
-        { "err", level::err },
-        { "critical", level::critical },
-        { "off", level::off },
-    };
+static std::unordered_map<std::string, level::level_enum> levelMap = {
+    { "trace", level::trace },
+    { "debug", level::debug },
+    { "info", level::info },
+    { "warn", level::warn },
+    { "err", level::err },
+    { "critical", level::critical },
+    { "off", level::off },
+};
 
+void Logger::setLogLevel(const std::string& level) {
     if (levelMap.count(level))
         userSettings.defalutLevel = levelMap[level];
 }
 
-void Logger::setLogPattern(std::string pattern) {
+void Logger::setLogPattern(const std::string& pattern) {
     userSettings.pattern = pattern;
 }
 
 void Logger::setLevel(Level level) {
     auto log_level =  spdlog::level::level_enum(level);
     spd_logger->set_level(log_level);
+}
+
+void Logger::setLevel(const std::string& level) {
+    if (levelMap.count(level))
+        spd_logger->set_level(levelMap[level]);
 }
 
 bool Logger::isEnabled(Level level) {

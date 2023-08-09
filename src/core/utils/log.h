@@ -123,11 +123,11 @@ public:
 
     static void setDefaultSettings(std::any settings);
 
-    static void setLogFile(std::string file);
+    static void setLogFile(const std::string& file);
 
-    static void setLogLevel(std::string level);
+    static void setLogLevel(const std::string& level);
 
-    static void setLogPattern(std::string pattern);
+    static void setLogPattern(const std::string& pattern);
 
     //---- Print -----
     template<typename... Args>
@@ -173,6 +173,8 @@ public:
     }
 
     void setLevel(Level level);
+
+    void setLevel(const std::string& level);
 
     bool isEnabled(Level level);
 
