@@ -153,6 +153,10 @@ public:
         return node->decrypt(serverId, cipher);
     }
 
+    const std::string& getLogLevel() const {
+        return logLevel;
+    }
+
 protected:
     void onStop() noexcept;
     void onIteration() noexcept;
@@ -210,6 +214,8 @@ private:
     std::promise<void> stopPromise {};
 
     Signature::KeyPair peerKeypair {};
+
+    std::string logLevel {};
 };
 
 } // namespace activeproxy

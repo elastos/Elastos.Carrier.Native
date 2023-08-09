@@ -115,6 +115,8 @@ ProxyConnection::ProxyConnection(ActiveProxy& proxy) noexcept :
         id(lastConnectionId++), proxy(proxy)
 {
     log = Logger::get("ProxyConnection");
+    log->setLevel(proxy.getLogLevel());
+
     log->trace("Connection {} created.", id);
 }
 
