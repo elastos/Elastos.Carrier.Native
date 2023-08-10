@@ -23,15 +23,15 @@
 #pragma once
 
 #include <memory>
+#include <carrier.h>
 
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
-#include <carrier/node.h>
 
 namespace test {
 
-class StoreFindValueTests : public CppUnit::TestFixture {
-    CPPUNIT_TEST_SUITE(StoreFindValueTests);
+class ValueStoreTests : public CppUnit::TestFixture {
+    CPPUNIT_TEST_SUITE(ValueStoreTests);
     CPPUNIT_TEST(testValue);
     CPPUNIT_TEST(testSignedValue);
     CPPUNIT_TEST(testEncryptedValue);

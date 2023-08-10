@@ -46,6 +46,7 @@ list(APPEND APITESTS_SOURCES
     task/closest_candidates_tests.cc
     id_tests.cc
     value_tests.cc
+    value_store_tests.cc
     nodeinfo_tests.cc
     peerinfo_tests.cc
     peerinfo_announce_tests.cc
@@ -53,7 +54,6 @@ list(APPEND APITESTS_SOURCES
     crypto_tests.cc
     log_tests.cc
     storage_tests.cc
-    store_find_value_tests.cc
     announce_find_peer_tests.cc
     address_tests.cc
     node_api_tests.cc

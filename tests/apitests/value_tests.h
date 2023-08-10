@@ -22,32 +22,33 @@
 
 #pragma once
 
-#include <memory>
-
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
-#include <carrier/node.h>
 
 namespace test {
 
 class ValueTests : public CppUnit::TestFixture {
     CPPUNIT_TEST_SUITE(ValueTests);
-    CPPUNIT_TEST(testImmutableValue);
-    CPPUNIT_TEST(testSignedValue);
-    CPPUNIT_TEST(testEncryptedValue);
+    CPPUNIT_TEST(testImmutable);
+    CPPUNIT_TEST(testSigned1);
+    CPPUNIT_TEST(testSigned2);
+    CPPUNIT_TEST(testSigned3);
+    CPPUNIT_TEST(testEncrypted1);
+    CPPUNIT_TEST(testEncrypted2);
+    CPPUNIT_TEST(testEncrypted3);
     CPPUNIT_TEST_SUITE_END();
 
 public:
-    void setUp();
-    void tearDown();
+    void setUp() {}
+    void tearDown() {}
 
-    void testImmutableValue();
-    void testSignedValue();
-    void testEncryptedValue();
-
-private:
-    std::shared_ptr<Node> node1 {};
-    std::shared_ptr<Node> node2 {};
+    void testImmutable();
+    void testSigned1();
+    void testSigned2();
+    void testSigned3();
+    void testEncrypted1();
+    void testEncrypted2();
+    void testEncrypted3();
 };
 
 }  // namespace test

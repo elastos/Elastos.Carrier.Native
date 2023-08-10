@@ -20,9 +20,6 @@
  * SOFTWARE.
  */
 
-#include <list>
-#include <string>
-#include <iostream>
 #include <carrier.h>
 
 #include "utils.h"
@@ -33,35 +30,7 @@ using namespace elastos::carrier;
 namespace test {
 CPPUNIT_TEST_SUITE_REGISTRATION(ValueTests);
 
-void ValueTests::setUp() {
-    auto path1 = Utils::getPwdStorage("node1");
-    auto path2 = Utils::getPwdStorage("node2");
-
-    Utils::removeStorage(path1);
-    Utils::removeStorage(path2);
-
-    //create and runnode1
-    auto b1 = DefaultConfiguration::Builder {};
-    auto ipAddresses = Utils::getLocalIpAddresses();
-
-    b1.setIPv4Address(ipAddresses);
-    b1.setListeningPort(42222);
-    b1.setStoragePath(path1);
-
-    node1 = std::make_shared<Node>(b1.build());
-    node1->start();
-
-    // create and run node2.
-    auto b2 = DefaultConfiguration::Builder {};
-    b2.setIPv4Address(ipAddresses);
-    b2.setListeningPort(42223);
-    b2.setStoragePath(path2);
-
-    node2 = std::make_shared<Node>(b2.build());
-    node2->start();
-}
-
-void ValueTests::testImmutableValue() {
+void ValueTests::testImmutable() {
     auto data = Utils::getRandomData(32);
     auto value = Value::createValue(data);
 
@@ -74,117 +43,117 @@ void ValueTests::testImmutableValue() {
     CPPUNIT_ASSERT(value.getData() == data);
 }
 
-void ValueTests::testSignedValue() {
-    auto data1 = Utils::getRandomData(32);
-    auto val1 = Value::createSignedValue(data1);
+void ValueTests::testSigned1() {
+    auto data = Utils::getRandomData(32);
+    auto value = Value::createSignedValue(data);
 
-    CPPUNIT_ASSERT(val1.isValid());
-    CPPUNIT_ASSERT(val1.isMutable());
-    CPPUNIT_ASSERT(val1.isSigned());
-    CPPUNIT_ASSERT(!val1.isEncrypted());
-    CPPUNIT_ASSERT(val1.hasPrivateKey());
-    CPPUNIT_ASSERT(!val1.getSignature().empty());
-    CPPUNIT_ASSERT(val1.getSequenceNumber() == 0);
-    CPPUNIT_ASSERT(val1.getData() == data1);
-
-    auto valueId = val1.getId();
-    auto future = node1->storeValue(val1);
-    future.get();
-
-    auto futureValue = node1->findValue(valueId, LookupOption::ARBITRARY);
-    auto val2 = futureValue.get();
-
-    CPPUNIT_ASSERT(val1 == *val2);
-
-    //update signed value
-    auto data2 = Utils::getRandomData(64);
-    auto val3 = val1.update(data2);
-
-    CPPUNIT_ASSERT(val3.isValid());
-    CPPUNIT_ASSERT(val3.isMutable());
-    CPPUNIT_ASSERT(val3.isSigned());
-    CPPUNIT_ASSERT(!val3.isEncrypted());
-    CPPUNIT_ASSERT(val3.hasPrivateKey());
-    CPPUNIT_ASSERT(val3.getPublicKey() == val1.getPublicKey());
-    CPPUNIT_ASSERT(val3.getNonce() == val1.getNonce());
-    CPPUNIT_ASSERT(val3.getPrivateKey() == val1.getPrivateKey());
-    CPPUNIT_ASSERT(val3.getSignature() != val1.getSignature());
-    CPPUNIT_ASSERT(val3.getData() == data2);
-    CPPUNIT_ASSERT(val3.getSequenceNumber() == 1);
-    CPPUNIT_ASSERT(val3.getId() == val1.getId());
-
-    auto p3 = node1->storeValue(val3);
-    p3.get();
-
-    auto p4 = node1->findValue(valueId, LookupOption::ARBITRARY);
-    auto val4 = p4.get();
-    CPPUNIT_ASSERT(val4);
-
-    CPPUNIT_ASSERT(*val4 == val3);
+    CPPUNIT_ASSERT(value.isValid());
+    CPPUNIT_ASSERT(value.isMutable());
+    CPPUNIT_ASSERT(value.isSigned());
+    CPPUNIT_ASSERT(!value.isEncrypted());
+    CPPUNIT_ASSERT(value.hasPrivateKey());
+    CPPUNIT_ASSERT(!value.getSignature().empty());
+    CPPUNIT_ASSERT(value.getSequenceNumber() == 0);
+    CPPUNIT_ASSERT(value.getData() == data);
 }
 
-void ValueTests::testEncryptedValue() {
-    auto data1 = Utils::getRandomData(32);
-    auto val1 = Value::createEncryptedValue(node2->getId(), data1);
+void ValueTests::testSigned2() {
+    auto data = Utils::getRandomData(32);
+    auto keypair = Signature::KeyPair::random();
+    auto nonce = CryptoBox::Nonce::random();
+    auto value = Value::createSignedValue(keypair, nonce, data);
 
-    CPPUNIT_ASSERT(val1.isValid());
-    CPPUNIT_ASSERT(val1.isMutable());
-    CPPUNIT_ASSERT(val1.isSigned());
-    CPPUNIT_ASSERT(val1.isEncrypted());
-    CPPUNIT_ASSERT(val1.hasPrivateKey());
-    CPPUNIT_ASSERT(val1.getRecipient() == node2->getId());
-    CPPUNIT_ASSERT(!val1.getSignature().empty());
-    CPPUNIT_ASSERT(val1.getSequenceNumber() == 0);
-    CPPUNIT_ASSERT(val1.getData() != data1); // encrypted data.
-
-    auto valueId = val1.getId();
-    auto future = node1->storeValue(val1);
-    future.get();
-
-    auto futureValue = node1->findValue(valueId, LookupOption::ARBITRARY);
-    auto val2 = futureValue.get();
-
-    CPPUNIT_ASSERT(val1 == *val2);
-
-    //update encrypted value
-    auto data2 = Utils::getRandomData(64);
-    auto val3 = val1.update(data2);
-
-    CPPUNIT_ASSERT(val3.isValid());
-    CPPUNIT_ASSERT(val3.isMutable());
-    CPPUNIT_ASSERT(val3.isSigned());
-    CPPUNIT_ASSERT(val3.isEncrypted());
-    CPPUNIT_ASSERT(val3.hasPrivateKey());
-    CPPUNIT_ASSERT(val3.getPublicKey() == val1.getPublicKey());
-    CPPUNIT_ASSERT(val3.getRecipient()== node2->getId());
-    CPPUNIT_ASSERT(val3.getNonce() == val1.getNonce());
-    CPPUNIT_ASSERT(val3.getSignature() != val1.getSignature());
-    CPPUNIT_ASSERT(val3.getRecipient() == val1.getRecipient());
-    CPPUNIT_ASSERT(val3.getData() != data2);
-    CPPUNIT_ASSERT(val3.getSequenceNumber() == 1);
-    CPPUNIT_ASSERT(val3.getId() == val1.getId());
-
-    auto p3 = node1->storeValue(val3);
-    p3.get();
-
-    auto p4 = node1->findValue(valueId, LookupOption::ARBITRARY);
-    auto val4 = p4.get();
-    CPPUNIT_ASSERT(val4);
-
-    CPPUNIT_ASSERT(*val4 == val3);
+    CPPUNIT_ASSERT(value.isValid());
+    CPPUNIT_ASSERT(value.isMutable());
+    CPPUNIT_ASSERT(value.isSigned());
+    CPPUNIT_ASSERT(!value.isEncrypted());
+    CPPUNIT_ASSERT(value.hasPrivateKey());
+    CPPUNIT_ASSERT(value.getPublicKey() == keypair.publicKey());
+    CPPUNIT_ASSERT(value.getPrivateKey() == keypair.privateKey());
+    CPPUNIT_ASSERT(value.getNonce() == nonce);
+    CPPUNIT_ASSERT(!value.getSignature().empty());
+    CPPUNIT_ASSERT(value.getSequenceNumber() == 0);
+    CPPUNIT_ASSERT(value.getData() == data);
 }
 
-void ValueTests::tearDown() {
-    if (node1)
-        node1->stop();
-    if (node2)
-        node2->stop();
+void ValueTests::testSigned3() {
+    auto data = Utils::getRandomData(32);
+    auto keypair = Signature::KeyPair::random();
+    auto nonce = CryptoBox::Nonce::random();
+    int sequenceNumber = 55;
+    auto value = Value::createSignedValue(keypair, nonce, sequenceNumber, data);
 
-    auto path1 = Utils::getPwdStorage("node1");
-    auto path2 = Utils::getPwdStorage("node2");
+    CPPUNIT_ASSERT(value.isValid());
+    CPPUNIT_ASSERT(value.isMutable());
+    CPPUNIT_ASSERT(value.isSigned());
+    CPPUNIT_ASSERT(!value.isEncrypted());
+    CPPUNIT_ASSERT(value.hasPrivateKey());
+    CPPUNIT_ASSERT(value.getPublicKey() == keypair.publicKey());
+    CPPUNIT_ASSERT(value.getPrivateKey() == keypair.privateKey());
+    CPPUNIT_ASSERT(value.getNonce() == nonce);
+    CPPUNIT_ASSERT(!value.getSignature().empty());
+    CPPUNIT_ASSERT(value.getSequenceNumber() == sequenceNumber);
+    CPPUNIT_ASSERT(value.getData() == data);
+}
 
-    Utils::removeStorage(path1);
-    Utils::removeStorage(path2);
+void ValueTests::testEncrypted1() {
+    auto data = Utils::getRandomData(32);
+    auto keypair = Signature::KeyPair::random();
+    auto nodeId = keypair.publicKey();
+    auto value = Value::createEncryptedValue(nodeId, data);
+
+    CPPUNIT_ASSERT(value.isValid());
+    CPPUNIT_ASSERT(value.isMutable());
+    CPPUNIT_ASSERT(value.isSigned());
+    CPPUNIT_ASSERT(value.isEncrypted());
+    CPPUNIT_ASSERT(value.hasPrivateKey());
+    CPPUNIT_ASSERT(value.getRecipient() == nodeId);
+    CPPUNIT_ASSERT(!value.getSignature().empty());
+    CPPUNIT_ASSERT(value.getSequenceNumber() == 0);
+    CPPUNIT_ASSERT(value.getData() != data); // encrypted data.
+}
+
+void ValueTests::testEncrypted2() {
+    auto data = Utils::getRandomData(32);
+    auto keypair = Signature::KeyPair::random();
+    auto nodeId = keypair.publicKey();
+    auto nonce = CryptoBox::Nonce::random();
+    auto value = Value::createEncryptedValue(keypair, nodeId, nonce, data);
+
+    CPPUNIT_ASSERT(value.isValid());
+    CPPUNIT_ASSERT(value.isMutable());
+    CPPUNIT_ASSERT(value.isSigned());
+    CPPUNIT_ASSERT(value.isEncrypted());
+    CPPUNIT_ASSERT(value.hasPrivateKey());
+    CPPUNIT_ASSERT(value.getPublicKey() == keypair.publicKey());
+    CPPUNIT_ASSERT(value.getPrivateKey() == keypair.privateKey());
+    CPPUNIT_ASSERT(value.getNonce() == nonce);
+    CPPUNIT_ASSERT(value.getRecipient() == nodeId);
+    CPPUNIT_ASSERT(!value.getSignature().empty());
+    CPPUNIT_ASSERT(value.getSequenceNumber() == 0);
+    CPPUNIT_ASSERT(value.getData() != data); // encrypted data.
+}
+
+void ValueTests::testEncrypted3() {
+    auto data = Utils::getRandomData(32);
+    auto keypair = Signature::KeyPair::random();
+    auto nodeId = keypair.publicKey();
+    auto nonce = CryptoBox::Nonce::random();
+    int sequenceNumber = 55;
+    auto value = Value::createEncryptedValue(keypair, nodeId, nonce, sequenceNumber, data);
+
+    CPPUNIT_ASSERT(value.isValid());
+    CPPUNIT_ASSERT(value.isMutable());
+    CPPUNIT_ASSERT(value.isSigned());
+    CPPUNIT_ASSERT(value.isEncrypted());
+    CPPUNIT_ASSERT(value.hasPrivateKey());
+    CPPUNIT_ASSERT(value.getPublicKey() == keypair.publicKey());
+    CPPUNIT_ASSERT(value.getPrivateKey() == keypair.privateKey());
+    CPPUNIT_ASSERT(value.getNonce() == nonce);
+    CPPUNIT_ASSERT(value.getRecipient() == nodeId);
+    CPPUNIT_ASSERT(!value.getSignature().empty());
+    CPPUNIT_ASSERT(value.getSequenceNumber() == sequenceNumber);
+    CPPUNIT_ASSERT(value.getData() != data); // encrypted data.
 }
 
 }  // namespace test
