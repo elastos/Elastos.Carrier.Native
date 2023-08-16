@@ -52,9 +52,6 @@ std::future<void> ActiveProxy::initialize(Sp<Node> node, const std::map<std::str
         log->setLevel(logLevel);
     }
 
-    if (!configure.count("peerPrivateKey"))
-        throw std::invalid_argument("Addon ActiveProxy's configure item has error: missing peerPrivateKey!");
-
     if (!configure.count("upstreamHost"))
         throw std::invalid_argument("Addon ActiveProxy's configure item has error: missing upstreamHost!");
 
@@ -104,8 +101,10 @@ std::future<void> ActiveProxy::initialize(Sp<Node> node, const std::map<std::str
     if (serverHost.empty() || serverPort == 0)
         throw std::runtime_error("Addon ActiveProxy's configure item has error: empty serverHost or serverPort is not allowed");
 
-    std::string sk = std::any_cast<std::string>(configure.at("peerPrivateKey"));
-    peerKeypair = Signature::KeyPair::fromPrivateKey(Hex::decode(sk));
+    if (configure.count("peerPrivateKey")) {
+        std::string sk = std::any_cast<std::string>(configure.at("peerPrivateKey"));
+        peerKeypair = Signature::KeyPair::fromPrivateKey(Hex::decode(sk));
+    }
 
     if (configure.count("domainName"))
         domainName = std::any_cast<std::string>(configure.at("domainName"));

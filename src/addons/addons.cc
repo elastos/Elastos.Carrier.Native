@@ -43,7 +43,7 @@ bool loadAddons(Sp<Node> node, std::map<std::string, std::any>& addons) {
             addon = std::make_shared<activeproxy::ActiveProxy>();
         }
 
-        if (addon != nullptr) {
+        if (addon) {
             auto configure = std::any_cast<std::map<std::string, std::any>>(value);
             g_addons[name] = addon;
             try {
