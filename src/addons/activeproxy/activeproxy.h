@@ -28,6 +28,7 @@
 #include <vector>
 #include <memory>
 #include <cstdint>
+#include <optional>
 #include <thread>
 
 #include "carrier.h"
@@ -111,7 +112,7 @@ public:
         return relayPort;
     }
 
-    const Signature::KeyPair& getPeerKeypair() const noexcept {
+    const std::optional<Signature::KeyPair>& getPeerKeypair() const noexcept {
         return peerKeypair;
     }
 
@@ -213,7 +214,7 @@ private:
     std::promise<void> startPromise {};
     std::promise<void> stopPromise {};
 
-    Signature::KeyPair peerKeypair {};
+    std::optional<Signature::KeyPair> peerKeypair {};
 
     std::string logLevel {};
 };

@@ -917,11 +917,13 @@ void ProxyConnection::onAuthenticateResponse(const uint8_t* packet, size_t size)
         domain = proxy.getDomainName();
     }
 
-    auto peer = PeerInfo::create(proxy.getPeerKeypair(), proxy.getServerId(), proxy.getNodeId(), port, domain);
-    log->info("-**- announcePeer Id: {}, server: {}, port: {}, domain: {} -**- ",
-            peer.getId().toBase58String(), proxy.getServerHost(), port, domain);
+    if (proxy.getPeerKeypair().has_value()) {
+        auto peer = PeerInfo::create(proxy.getPeerKeypair().value(), proxy.getServerId(), proxy.getNodeId(), port, domain);
+        log->info("-**- announcePeer Id: {}, server: {}, port: {}, domain: {} -**- ",
+                peer.getId().toBase58String(), proxy.getServerHost(), port, domain);
 
-    proxy.getNode()->announcePeer(peer, true);
+        proxy.getNode()->announcePeer(peer, true);
+    }
 
     state = ConnectionState::Idling;
     onOpened();
