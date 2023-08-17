@@ -120,16 +120,20 @@ void Builder::load(const std::string& filePath) {
         if (!_services.is_array())
             throw std::invalid_argument("Config file error: services");
 
+        int index = 0;
         for (const auto& service: _services) {
+            std::string err = "Config file error: can't find services[" + std::to_string(index) + "]'s ";
             if (!service.contains("name"))
-                throw std::invalid_argument("Config file error: service name");
-
-            if (!service.contains("configuration"))
-                throw std::invalid_argument("Config file error: service configuration");
+                throw std::invalid_argument("Config file error: can't find services[" + std::to_string(index) + "]'s 'name' field.");
 
             auto name = service["name"].get<std::string>();
+            if (!service.contains("configuration"))
+                throw std::invalid_argument("Config file error: can't find service " + name +"'s 'configuration' field.");
+
             auto configuration = service["configuration"].get<nlohmann::json>();
             services[name] = jsonToAny(configuration);
+
+            index++;
         }
 
     }

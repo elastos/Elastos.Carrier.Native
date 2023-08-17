@@ -39,7 +39,7 @@ public:
     virtual bool isInitialized() = 0;
 };
 
-CARRIER_PUBLIC bool loadAddons(Sp<Node> node, std::map<std::string, std::any>& addons);
+CARRIER_PUBLIC void loadAddons(Sp<Node> node, std::map<std::string, std::any>& addons);
 CARRIER_PUBLIC void unloadAddons();
 CARRIER_PUBLIC std::map<std::string, std::shared_ptr<Addon>>& getAddons();
 
