@@ -29,16 +29,33 @@ namespace test {
 
 class NodeInfoTests : public CppUnit::TestFixture {
     CPPUNIT_TEST_SUITE(NodeInfoTests);
-    CPPUNIT_TEST(testNodeInfo4);
-    CPPUNIT_TEST(testNodeInfo6);
+    CPPUNIT_TEST(test1);
+    CPPUNIT_TEST(test2);
+    CPPUNIT_TEST(test3);
+    CPPUNIT_TEST(test4);
+    CPPUNIT_TEST(test5);
+    CPPUNIT_TEST(test6);
+    CPPUNIT_TEST(testIPv6);
+    CPPUNIT_TEST(testEquals);
+    CPPUNIT_TEST(testMatches1);
+    CPPUNIT_TEST(testMatches2);
+
     CPPUNIT_TEST_SUITE_END();
 
  public:
-    void setUp();
-    void tearDown();
+    void setUp() {}
+    void tearDown() {}
 
-    void testNodeInfo4();
-    void testNodeInfo6();
+    void test1();
+    void test2();
+    void test3();
+    void test4();
+    void test5();
+    void test6();
+    void testIPv6();
+    void testEquals();
+    void testMatches1();
+    void testMatches2();
 };
 
 }  // namespace test

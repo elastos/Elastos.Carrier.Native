@@ -20,13 +20,8 @@
  * SOFTWARE.
  */
 
-#include <iostream>
 #include <string>
-#include <nlohmann/json.hpp>
 #include <carrier.h>
-
-#include "utils.h"
-#include "serializers.h"
 #include "nodeinfo_tests.h"
 
 using namespace elastos::carrier;
@@ -34,73 +29,138 @@ using namespace elastos::carrier;
 namespace test {
 CPPUNIT_TEST_SUITE_REGISTRATION(NodeInfoTests);
 
-void
-NodeInfoTests::setUp() {
+void NodeInfoTests::test1() {
+    auto id = Id::random().blob();
+    auto ip = "192.168.1.100";
+    auto port = 12345;
+    auto address = SocketAddress(ip, port);
+
+    auto node = NodeInfo(id, Blob(address.inaddr(), address.inaddrLength()), port);
+    CPPUNIT_ASSERT(node.getId().blob() == id);
+    CPPUNIT_ASSERT(node.getAddress() == address);
+    CPPUNIT_ASSERT(node.getAddress().host() == ip);
+    CPPUNIT_ASSERT(node.getAddress().port() == port);
+    CPPUNIT_ASSERT(node.getPort() == port);
+    CPPUNIT_ASSERT(node.getVersion() == 0);
+    CPPUNIT_ASSERT(node.isIPv4());
 }
 
-void
-NodeInfoTests::testNodeInfo4() {
-    auto id1 = Id::random();
-    std::string address1 = "251.251.251.251";
-    auto node1 = NodeInfo(id1, address1, 65535);
-    CPPUNIT_ASSERT_EQUAL(id1, node1.getId());
-    CPPUNIT_ASSERT_EQUAL(65535, node1.getPort());
-    CPPUNIT_ASSERT(Utils::addressEquals(address1,  node1.getAddress().host()));
+void NodeInfoTests::test2() {
+    auto id = Id::random().toHexString();
+    auto ip = "192.168.1.100";
+    auto port = 12345;
 
-    nlohmann::json object1 = node1;
-    NodeInfo node2 = object1;
-
-    CPPUNIT_ASSERT_EQUAL(node1.getId(), node2.getId());
-    CPPUNIT_ASSERT_EQUAL(node1.getPort(), node2.getPort());
-    CPPUNIT_ASSERT_EQUAL(node1.getAddress().toString(), node2.getAddress().toString());
-
-    auto id2 = Id::random();
-    auto address2 = "192.168.1.2";
-    auto node3 = NodeInfo(id2, address2, 1232);
-    CPPUNIT_ASSERT_EQUAL(id2, node3.getId());
-    CPPUNIT_ASSERT_EQUAL(1232, node3.getPort());
-    CPPUNIT_ASSERT(Utils::addressEquals(address2,  node3.getAddress().host()));
-
-    nlohmann::json object2 = node3;
-    NodeInfo node4 = object2;
-
-    CPPUNIT_ASSERT_EQUAL(node3.getId(), node4.getId());
-    CPPUNIT_ASSERT_EQUAL(node3.getPort(), node4.getPort());
-    CPPUNIT_ASSERT_EQUAL(node3.getAddress().toString(), node4.getAddress().toString());
+    auto node = NodeInfo(id, ip, port);
+    CPPUNIT_ASSERT(node.getId().toHexString() == id);
+    CPPUNIT_ASSERT(node.getAddress().host() == ip);
+    CPPUNIT_ASSERT(node.getAddress().port() == port);
+    CPPUNIT_ASSERT(node.getPort() == port);
+    CPPUNIT_ASSERT(node.getVersion() == 0);
+    CPPUNIT_ASSERT(node.isIPv4());
 }
 
-void
-NodeInfoTests::testNodeInfo6() {
-    auto id1 = Id::random();
-    std::string address1 = "2001:0db8:85a3:8070:6543:8a2e:0370:7334";
-    auto node1 = NodeInfo(id1, address1, 65535);
-    CPPUNIT_ASSERT_EQUAL(id1, node1.getId());
-    CPPUNIT_ASSERT_EQUAL(65535, node1.getPort());
-    CPPUNIT_ASSERT(Utils::addressEquals(address1, node1.getAddress().host()));
+void NodeInfoTests::test3() {
+    auto id = Id::random();
+    auto ip = "192.168.1.100";
+    auto port = 12345;
+    auto version = 9;
 
-    nlohmann::json object1 = node1;
-    NodeInfo node2 = object1;
-
-    CPPUNIT_ASSERT_EQUAL(node1.getId(), node2.getId());
-    CPPUNIT_ASSERT_EQUAL(node1.getPort(), node2.getPort());
-    CPPUNIT_ASSERT_EQUAL(node1.getAddress().toString(), node2.getAddress().toString());
-
-    auto id2 = Id::random();
-    auto address2 = "2001:0db8:85a3:0000:0000:8a2e:0370:7332";
-    auto node3 = NodeInfo(id2, address2, 1232);
-    CPPUNIT_ASSERT_EQUAL(id2, node3.getId());
-    CPPUNIT_ASSERT_EQUAL(1232, node3.getPort());
-    CPPUNIT_ASSERT(Utils::addressEquals(address2, node3.getAddress().host()));
-
-    nlohmann::json object2 = node3;
-    NodeInfo node4 = object2;
-
-    CPPUNIT_ASSERT_EQUAL(node3.getId(), node4.getId());
-    CPPUNIT_ASSERT_EQUAL(node3.getPort(), node4.getPort());
-    CPPUNIT_ASSERT_EQUAL(node3.getAddress().toString(), node4.getAddress().toString());
+    auto node = NodeInfo(id, ip, port);
+    node.setVersion(version);
+    CPPUNIT_ASSERT(node.getId() == id);
+    CPPUNIT_ASSERT(node.getAddress().host() == ip);
+    CPPUNIT_ASSERT(node.getAddress().port() == port);
+    CPPUNIT_ASSERT(node.getPort() == port);
+    CPPUNIT_ASSERT(node.getVersion() == version);
 }
 
-void
-NodeInfoTests::tearDown() {
+void NodeInfoTests::test4() {
+    auto id = Id::random();
+    auto ip = "192.168.1.100";
+    auto port = 12345;
+    auto address = SocketAddress(ip, port);
+
+    auto node = NodeInfo(id, Blob(address.inaddr(), address.inaddrLength()), port);
+    CPPUNIT_ASSERT(node.getId() == id);
+    CPPUNIT_ASSERT(node.getAddress() == address);
+    CPPUNIT_ASSERT(node.getAddress().host() == ip);
+    CPPUNIT_ASSERT(node.getAddress().port() == port);
+    CPPUNIT_ASSERT(node.getPort() == port);
 }
+
+void NodeInfoTests::test5() {
+    auto id = Id::random();
+    auto ip = "192.168.1.100";
+    auto port = 12345;
+    auto address = SocketAddress(ip, port);
+
+    auto node = NodeInfo(id, address.addr());
+    CPPUNIT_ASSERT(node.getId() == id);
+    CPPUNIT_ASSERT(node.getAddress() == address);
+    CPPUNIT_ASSERT(node.getAddress().host() == ip);
+    CPPUNIT_ASSERT(node.getAddress().port() == port);
+    CPPUNIT_ASSERT(node.getPort() == port);
+}
+
+void NodeInfoTests::test6() {
+    auto id = Id::random();
+    auto ip = "192.168.1.100";
+    auto port = 12345;
+    auto address = SocketAddress(ip, port);
+
+    auto node = NodeInfo(id, address);
+    CPPUNIT_ASSERT(node.getId() == id);
+    CPPUNIT_ASSERT(node.getAddress() == address);
+    CPPUNIT_ASSERT(node.getAddress().host() == ip);
+    CPPUNIT_ASSERT(node.getAddress().port() == port);
+    CPPUNIT_ASSERT(node.getPort() == port);
+}
+
+void NodeInfoTests::testIPv6() {
+    auto id = Id::random();
+    auto ip = "2001:0db8:85a3:8070:6543:8a2e:0370:7334";
+    auto port = 12345;
+    auto version = 5;
+
+    auto node = NodeInfo(id, ip, port);
+    node.setVersion(version);
+    CPPUNIT_ASSERT(node.getId() == id);
+    // CPPUNIT_ASSERT(node.getAddress().host() == ip);
+    CPPUNIT_ASSERT(node.getAddress().port() == port);
+    CPPUNIT_ASSERT(node.getPort() == port);
+    CPPUNIT_ASSERT(node.getVersion() == version);
+    CPPUNIT_ASSERT(node.isIPv6());
+}
+
+void  NodeInfoTests::testEquals() {
+    auto id = Id::random();
+    auto ip = "192.168.1.100";
+    auto port = 12345;
+
+    auto node1 = NodeInfo(id, ip, port);
+    auto node2 = NodeInfo(id, ip, port);
+    CPPUNIT_ASSERT(node1 == node2);
+    CPPUNIT_ASSERT(node1.equals(node2));
+}
+
+void  NodeInfoTests::testMatches1() {
+    auto ip = "192.168.1.100";
+    auto port = 12345;
+
+    auto node1 = NodeInfo(Id::random(), ip, port);
+    auto node2 = NodeInfo(Id::random(), ip, port);
+    CPPUNIT_ASSERT(!node1.equals(node2));
+    CPPUNIT_ASSERT(node1.match(node2));
+}
+
+void  NodeInfoTests::testMatches2() {
+    auto id = Id::random();
+    auto port = 12345;
+
+    auto node1 = NodeInfo(Id::random(), "192.168.1.100", port);
+    auto node2 = NodeInfo(Id::random(), "192.168.1.100", port);
+    CPPUNIT_ASSERT(!node1.equals(node2));
+    CPPUNIT_ASSERT(node1.match(node2));
+}
+
 }  // namespace test

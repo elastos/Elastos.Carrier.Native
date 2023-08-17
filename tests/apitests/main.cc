@@ -46,6 +46,7 @@
 #include <CLI/CLI.hpp>
 
 using namespace std;
+using namespace CppUnit;
 
 struct Options {
     bool wait_for_attach {false};
@@ -72,7 +73,7 @@ static Options parseArgs(int argc, char **argv)
 {
     Options options;
 
-    CLI::App app("Elastos Carrier test case", "tests");
+    CLI::App app("Carrier test case", "tests");
     app.add_option("-d, --debug", options.wait_for_attach, "Wait for debugger to attach");
 
     try {
@@ -116,23 +117,26 @@ int main(int argc, char* argv[])
 #ifdef _WIN32
     WSADATA wsaData;
     int err = WSAStartup(MAKEWORD(2, 2), &wsaData);
-    if (err)
-        throw std::runtime_error(gai_strerror(err));
+    if (err) {
+        std::cout << "WSAStartup failed with error: " << err << std::endl;
+        return -1;
+    }
 #endif
 
-    CppUnit::TestFactoryRegistry &registry = CppUnit::TestFactoryRegistry::getRegistry();
-    CppUnit::Test *suite = registry.makeTest();
+    TestFactoryRegistry& registry = TestFactoryRegistry::getRegistry();
+    auto suite = registry.makeTest();
     if (suite->countTestCases() == 0) {
-        std::cout << "No test cases specified for suite" << std::endl;
-        return 1;
+        std::cout << "No test cases specified for this suite" << std::endl;
+        return -1;
     }
-    CppUnit::TextUi::TestRunner runner;
+
+    TextUi::TestRunner runner;
     runner.addTest(suite);
-    auto result = runner.run() ? 0 : 1;
+    auto result = runner.run();
 
 #ifdef _WIN32
     WSACleanup();
 #endif
 
-    return result;
+    return result ? 0: -1;
 }

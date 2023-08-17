@@ -874,6 +874,9 @@ void ProxyConnection::processRelayPacket(const uint8_t* packet, size_t size) noe
             return;
         }
         break;
+    case ConnectionState::Closing:
+    default:
+        break;
     }
 }
 
