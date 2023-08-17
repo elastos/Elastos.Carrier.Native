@@ -74,7 +74,7 @@ std::future<void> ActiveProxy::initialize(Sp<Node> node, const std::map<std::str
         auto future = node->findPeer(Id(strId), 1);
         auto peers = future.get();
         if (peers.empty())
-            throw std::invalid_argument("Addon ActiveProxy can't find peer: " + strId + "!");
+            throw std::invalid_argument("Addon ActiveProxy can't find a server peer: " + strId + "!");
 
         auto peer = peers.front();
         serverPort = peer.getPort();

@@ -41,9 +41,8 @@
 using namespace std::chrono_literals;
 using namespace elastos::carrier;
 
-static Sp<Node> g_node = nullptr;
 static bool broke = false;
-static ApplicationLock lock;
+ApplicationLock lock;
 
 struct Options {
     bool help {false}; // print help and exit
@@ -116,14 +115,21 @@ static Sp<Configuration> initConfigure(Options& options)
 static Sp<Node> initCarrierNode(Sp<Configuration> config)
 {
     auto node = std::make_shared<Node>(config);
-    try {
+    if (node) {
         node->start();
-    } catch(std::exception& e) {
-        std::cout << e.what() << std::endl;
-        return nullptr;
+    }
+    else {
+        throw std::runtime_error("Can't create a Node.");
     }
 
     return node;
+}
+
+static void checkAnotherInstance(Sp<Configuration> config) {
+    std::string lockfile = config->getStoragePath() + "/lock";
+    if(lock.acquire(lockfile) < 0) {
+        throw std::runtime_error("Another instance already running.");
+    }
 }
 
 static void daemonize() {
@@ -145,13 +151,13 @@ static void daemonize() {
 #endif
 }
 
-static void stop()
+static void stop(Sp<Node> node)
 {
+    std::cout << "Launcher stoping....." << std::endl;
     unloadAddons();
 
-    if (g_node != nullptr) {
-        g_node->stop();
-        g_node = nullptr;
+    if (node != nullptr) {
+        node->stop();
     }
 }
 
@@ -194,26 +200,25 @@ int main(int argc, char *argv[])
 
     setupSignals();
 
-    auto config = initConfigure(options);
+    Sp<Node> node = nullptr;
+    try {
+        auto config = initConfigure(options);
 
-    std::string lockfile = config->getStoragePath() + "/lock";
-    if(lock.acquire(lockfile) < 0) {
-        std::cout << "Another instance already running." << std::endl;
+        checkAnotherInstance(config);
+
+        node = initCarrierNode(config);
+
+        loadAddons(node, config->getServices());
+
+    } catch(std::exception& e) {
+        std::cout << e.what() << std::endl;
+        stop(node);
         std::exit(-1);
-    }
-
-    g_node = initCarrierNode(config);
-    if (!g_node)
-        return 0;
-
-    if (!loadAddons(g_node, config->getServices())) {
-        stop();
-        return 0;
     }
 
     while (!broke)
         std::this_thread::sleep_for(1000ms);
 
-    stop();
+    stop(node);
     return 0;
 }

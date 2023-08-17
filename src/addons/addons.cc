@@ -28,14 +28,14 @@ namespace carrier {
 
 std::map<std::string, std::shared_ptr<Addon>> g_addons {};
 
-bool loadAddons(Sp<Node> node, std::map<std::string, std::any>& addons) {
+void loadAddons(Sp<Node> node, std::map<std::string, std::any>& addons) {
     if (addons.empty())
-        return true;
+        return;
 
     for (auto& [name, value] : addons) {
         if (value.type() != typeid(std::map<std::string, std::any>)) {
-            std::cout << "Addon '" << name << "': invalid configure! " << std::endl;
-            return false;
+            throw "Addon '" + name + "': invalid configure! ";
+            return;
         }
 
         std::shared_ptr<Addon> addon = nullptr;
@@ -46,16 +46,11 @@ bool loadAddons(Sp<Node> node, std::map<std::string, std::any>& addons) {
         if (addon) {
             auto configure = std::any_cast<std::map<std::string, std::any>>(value);
             g_addons[name] = addon;
-            try {
-                auto future = addon->initialize(node, configure);
-                future.get();
-            } catch(...) {
-                return false;
-            }
+
+            auto future = addon->initialize(node, configure);
+            future.get();
         }
     }
-
-    return true;
 }
 
 void unloadAddons() {
