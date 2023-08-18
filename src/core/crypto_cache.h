@@ -39,7 +39,7 @@ public:
 
 private:
     CryptoContext load(const Id& key) override {
-        auto encryptedPublicKey = CryptoBox::PublicKey::fromSignatureKey(*key.toKey());
+        auto encryptedPublicKey = key.toEncryptionKey();
         return CryptoContext(encryptedPublicKey, keypair);
     };
 
