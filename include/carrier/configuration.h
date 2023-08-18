@@ -49,7 +49,7 @@ public:
 
     virtual std::vector<Sp<NodeInfo>>& getBootstrapNodes() = 0;
 
-    virtual std::map<std::string, std::any>& getServices() = 0;
+    virtual std::map<std::string, std::any>& getAddons() = 0;
 };
 
 } // namespace carrier

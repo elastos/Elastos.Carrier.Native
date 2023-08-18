@@ -36,7 +36,7 @@ public:
     DefaultConfiguration() = delete;
     DefaultConfiguration(const std::string& ip4, const std::string& ip6, int port,
         std::string path, std::vector<Sp<NodeInfo>> nodes, std::map<std::string, std::any> _services)
-        : storagePath(path), bootstrapNodes(nodes), services(_services) {
+        : storagePath(path), bootstrapNodes(nodes), addons(_services) {
             try {
                 if (!ip4.empty())
                     addr4 = SocketAddress(ip4, port);
@@ -65,8 +65,8 @@ public:
         return bootstrapNodes;
     }
 
-    std::map<std::string, std::any>& getServices() override {
-        return services;
+    std::map<std::string, std::any>& getAddons() override {
+        return addons;
     }
 
     class CARRIER_PUBLIC Builder {
@@ -138,7 +138,7 @@ public:
         int port = 39001;
         std::string storagePath {};
         std::vector<Sp<NodeInfo>> bootstrapNodes {};
-        std::map<std::string, std::any> services {};
+        std::map<std::string, std::any> addons {};
     };
 
 private:
@@ -147,7 +147,7 @@ private:
 
     std::string storagePath {};
     std::vector<Sp<NodeInfo>> bootstrapNodes {};
-    std::map<std::string, std::any> services {};
+    std::map<std::string, std::any> addons {};
 };
 
 } // namespace carrier
