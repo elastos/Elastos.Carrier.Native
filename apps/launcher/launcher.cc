@@ -208,7 +208,7 @@ int main(int argc, char *argv[])
 
         node = initCarrierNode(config);
 
-        loadAddons(node, config->getServices());
+        loadAddons(node, config->getAddons());
 
     } catch(std::exception& e) {
         std::cout << e.what() << std::endl;

@@ -115,23 +115,22 @@ void Builder::load(const std::string& filePath) {
         }
     }
 
-    if (root.contains("services")) {
-        const auto _services = root["services"];
-        if (!_services.is_array())
-            throw std::invalid_argument("Config file error: services");
+    if (root.contains("addons")) {
+        const auto _addons = root["addons"];
+        if (!_addons.is_array())
+            throw std::invalid_argument("Config file error: addons");
 
         int index = 0;
-        for (const auto& service: _services) {
-            std::string err = "Config file error: can't find services[" + std::to_string(index) + "]'s ";
-            if (!service.contains("name"))
-                throw std::invalid_argument("Config file error: can't find services[" + std::to_string(index) + "]'s 'name' field.");
+        for (const auto& addon: _addons) {
+            if (!addon.contains("name"))
+                throw std::invalid_argument("Config file error: can't find addons[" + std::to_string(index) + "]'s 'name' field.");
 
-            auto name = service["name"].get<std::string>();
-            if (!service.contains("configuration"))
-                throw std::invalid_argument("Config file error: can't find service " + name +"'s 'configuration' field.");
+            auto name = addon["name"].get<std::string>();
+            if (!addon.contains("configuration"))
+                throw std::invalid_argument("Config file error: can't find addon " + name +"'s 'configuration' field.");
 
-            auto configuration = service["configuration"].get<nlohmann::json>();
-            services[name] = jsonToAny(configuration);
+            auto configuration = addon["configuration"].get<nlohmann::json>();
+            addons[name] = jsonToAny(configuration);
 
             index++;
         }
@@ -147,7 +146,7 @@ void Builder::reset() {
     port = 39001;
     storagePath = {};
     bootstrapNodes.clear();
-    services.clear();
+    addons.clear();
 }
 
 Sp<Configuration> Builder::build() {
@@ -157,7 +156,7 @@ Sp<Configuration> Builder::build() {
     if (autoAddr6 && ip6.empty())
         ip6 = getLocalIPv6();
 
-    auto dataStorage = std::make_shared<DefaultConfiguration>(ip4, ip6,  port, storagePath, bootstrapNodes, services);
+    auto dataStorage = std::make_shared<DefaultConfiguration>(ip4, ip6,  port, storagePath, bootstrapNodes, addons);
     return std::static_pointer_cast<Configuration>(dataStorage);
 }
 

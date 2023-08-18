@@ -21,7 +21,7 @@ Here is an example configuration file for Carrier Super Node for your reference.
 			"address": "155.138.245.211",
 			"port": 39001
 		}
-		// more bootstrap nodes. 
+		// more bootstrap nodes.
   ],
 	"services": [
     {
@@ -29,7 +29,7 @@ Here is an example configuration file for Carrier Super Node for your reference.
       "configuration": {
         "port": 8090,
         "portMappingRange": "20000-22000"
-      } 
+      }
     }
   ]
 }
@@ -53,6 +53,12 @@ An application, named "`Launcher`," is utilized as a daemon service running as a
   "ipv6": false,
   "dataDir": "./data",
 
+  "logger": {
+    "level": "info",
+    "logFile": "./data/carrier.log", //if output to console， please delete this line
+    "pattern": "[%Y-%m-%d %T] [%n] %^[%l] %v%$"
+  },
+
   "bootstraps": [
     {
       "id": "HZXXs9LTfNQjrDKvvexRhuMk8TTJhYCfrHwaj3jUzuhZ",
@@ -62,13 +68,13 @@ An application, named "`Launcher`," is utilized as a daemon service running as a
 	  // more bootstrap nodes
   ],
 
-  "services": [
+  "addons": [
     {
       "name": "ActiveProxy",
       "configuration": {
-        "serverId": "YOUR-TARGET-CARRIER-SUPER-NODE-ID",
-        "serverHost": "TARGET-CARRIER-SUPER-IP-ADDRESS-OR-HOSTNAME",
-        "serverPort": "TARGET-ACTIVE-PROXY-SERVICE-PORT",
+        "serverPeerId" : "TARGET-ACTIVE-PROXY-SERVICE-PEER-ID",
+        "peerPrivateKey": "YOUR-LOCAL-CLIENT-PEER-PRIVATE-KEY",
+        "domainName": "YOUR-DOMAIN-NAME",
         "upstreamHost": "YOUR-SERIVCE-IP-ADDRESS", // local IP address
         "upstreamPort": "YOUR-SERVICE-PORT"
       }
@@ -81,12 +87,12 @@ An application, named "`Launcher`," is utilized as a daemon service running as a
 
 </aside>
 
-Here are the explanations for the fields used in “services” part of the service configuration file:
+Here are the explanations for the fields used in “addons” part of the service configuration file:
 
 - **Name:** The name of the target service.
-- **configuration.serverId:** The Node ID of the target super carrier node.
-- **configuration.serverHost:** The IP address of the carrier super node.
-- **configuration.serverPort:** The active port number of the proxy service.
+- **configuration.serverPeerId:** The Peer ID of the target super carrier node.
+- **configuration.peerPrivateKey:** The peer private key of the local client.
+- **configuration.domainName:** Your domain name.
 - **configuration.upstreamHost:** The host name or IP address of the local service to be mapped out.
 - **configuration.upstreamPort:** The port number of the local service to be mapped out.
 
@@ -111,13 +117,13 @@ Deploy a local website service on a Raspberry Pi device in a LAN environment. Th
 	  // more bootstrap nodes
   ],
 
-  "services": [
+  "addons": [
     {
       "name": "ActiveProxy",
       "configuration": {
-        "serverId": "HZXXs9LTfNQjrDKvvexRhuMk8TTJhYCfrHwaj3jUzuhZ",
-        "serverHost": "155.138.245.211",
-        "serverPort": 8090,
+        "serverPeerId" : "5vVM1nrCwFh3QqAgbvF3bRgYQL5a2vpFjngwxkiS8Ja6",
+        "peerPrivateKey": "491451cb71b5595996b45ffeb46970523611de9c1810042f3a0eb8c1db7f8d3b94afd835c8d3c89b33ebbfab45335fe623d1267d4a48cc28e2be85ca52ee88d6",
+        "domainName": "abc.pc2.net",
         "upstreamHost": "192.168.1.101", // local IP address of your raspberry device
         "upstreamPort": 80 // http-based website.
       }
