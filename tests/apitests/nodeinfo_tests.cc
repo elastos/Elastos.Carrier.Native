@@ -43,6 +43,7 @@ void NodeInfoTests::test1() {
     CPPUNIT_ASSERT(node.getPort() == port);
     CPPUNIT_ASSERT(node.getVersion() == 0);
     CPPUNIT_ASSERT(node.isIPv4());
+    CPPUNIT_ASSERT(!node.isIPv6());
 }
 
 void NodeInfoTests::test2() {
@@ -57,6 +58,7 @@ void NodeInfoTests::test2() {
     CPPUNIT_ASSERT(node.getPort() == port);
     CPPUNIT_ASSERT(node.getVersion() == 0);
     CPPUNIT_ASSERT(node.isIPv4());
+    CPPUNIT_ASSERT(!node.isIPv6());
 }
 
 void NodeInfoTests::test3() {
@@ -72,6 +74,8 @@ void NodeInfoTests::test3() {
     CPPUNIT_ASSERT(node.getAddress().port() == port);
     CPPUNIT_ASSERT(node.getPort() == port);
     CPPUNIT_ASSERT(node.getVersion() == version);
+    CPPUNIT_ASSERT(node.isIPv4());
+    CPPUNIT_ASSERT(!node.isIPv6());
 }
 
 void NodeInfoTests::test4() {
@@ -130,6 +134,7 @@ void NodeInfoTests::testIPv6() {
     CPPUNIT_ASSERT(node.getPort() == port);
     CPPUNIT_ASSERT(node.getVersion() == version);
     CPPUNIT_ASSERT(node.isIPv6());
+    CPPUNIT_ASSERT(!node.isIPv4());
 }
 
 void  NodeInfoTests::testEquals() {
@@ -139,8 +144,9 @@ void  NodeInfoTests::testEquals() {
 
     auto node1 = NodeInfo(id, ip, port);
     auto node2 = NodeInfo(id, ip, port);
-    CPPUNIT_ASSERT(node1 == node2);
     CPPUNIT_ASSERT(node1.equals(node2));
+    CPPUNIT_ASSERT(node1 == node2);
+
 }
 
 void  NodeInfoTests::testMatches1() {
@@ -149,18 +155,19 @@ void  NodeInfoTests::testMatches1() {
 
     auto node1 = NodeInfo(Id::random(), ip, port);
     auto node2 = NodeInfo(Id::random(), ip, port);
+    CPPUNIT_ASSERT(node1.matches(node2));
     CPPUNIT_ASSERT(!node1.equals(node2));
-    CPPUNIT_ASSERT(node1.match(node2));
+    CPPUNIT_ASSERT(node1 != node2);
 }
 
 void  NodeInfoTests::testMatches2() {
     auto id = Id::random();
-    auto port = 12345;
 
-    auto node1 = NodeInfo(Id::random(), "192.168.1.100", port);
-    auto node2 = NodeInfo(Id::random(), "192.168.1.100", port);
+    auto node1 = NodeInfo(id, "192.168.1.100", 12345);
+    auto node2 = NodeInfo(id, "192.168.1.101", 12346);
+    CPPUNIT_ASSERT(node1.matches(node2));
     CPPUNIT_ASSERT(!node1.equals(node2));
-    CPPUNIT_ASSERT(node1.match(node2));
+    CPPUNIT_ASSERT(node1 != node2);
 }
 
 }  // namespace test

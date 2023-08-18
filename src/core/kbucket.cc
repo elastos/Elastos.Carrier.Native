@@ -43,7 +43,7 @@ void KBucket::_put(Sp<KBucketEntry> newEntry) {
 
         // Node id and address conflict
         // Log the conflict and keep the existing entry
-        if (entry->match(*newEntry)) {
+        if (entry->matches(*newEntry)) {
             log->info("New node {} claims same ID or IP as  {}, might be impersonation attack or IP change. " \
                       "ignoring until old entry times out", newEntry->toString(), entry->toString());
             return;
@@ -110,7 +110,7 @@ void KBucket::_update(Sp<KBucketEntry> toRefresh) {
 
 void KBucket::_update(Sp<KBucketEntry> toRemove, Sp<KBucketEntry> toInsert) {
     if (toInsert != nullptr && anyMatch([&](Sp<KBucketEntry>& entry) {
-        return toInsert->match(*entry);
+        return toInsert->matches(*entry);
     })) {
         return;
     }
