@@ -163,8 +163,8 @@ protected:
         reachable = newValue;
     }
 
-    bool match(const KBucketEntry& other) const {
-        return NodeInfo::match(other);
+    bool matches(const KBucketEntry& other) const {
+        return NodeInfo::matches(other);
     }
     bool equals(const KBucketEntry& other) const {
         return NodeInfo::equals(static_cast<NodeInfo>(other));

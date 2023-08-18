@@ -75,7 +75,7 @@ public:
     bool isIPv4() const noexcept { return sockaddr.family() == AF_INET;  }
     bool isIPv6() const noexcept { return sockaddr.family() == AF_INET6; }
 
-    virtual bool match(const NodeInfo& other) const {
+    virtual bool matches(const NodeInfo& other) const {
         return nodeId == other.nodeId || sockaddr == other.sockaddr;
     }
 
@@ -87,6 +87,10 @@ public:
         return equals(other);
     }
 
+    bool operator!=(const NodeInfo& other) const {
+        return !equals(other);
+    }
+
     operator std::string() const;
     friend std::ostream& operator<< (std::ostream& s, const NodeInfo& ni);
 
@@ -95,8 +99,8 @@ public:
     }
 
 private:
-    Id nodeId;
-    SocketAddress sockaddr;
+    Id nodeId {};
+    SocketAddress sockaddr {};
     int version {0};
 };
 
