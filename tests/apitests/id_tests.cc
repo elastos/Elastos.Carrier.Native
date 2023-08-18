@@ -20,125 +20,103 @@
  * SOFTWARE.
  */
 
-#include <iostream>
 #include <string>
-#include <cctype>
 #include <algorithm>
-#include <random>
-
 #include <carrier.h>
-
-#include "crypto/hex.h"
 #include "id_tests.h"
 
 namespace test {
 CPPUNIT_TEST_SUITE_REGISTRATION(IdTests);
 
-typedef elastos::carrier::Id    Id;
-typedef elastos::carrier::Hex   Hex;
+using namespace elastos::carrier;
 
-void
-IdTests::setUp() {
+void IdTests::test1() {
+    auto pk = Signature::KeyPair::random().publicKey();
+    auto id = Id(pk.blob());
+    CPPUNIT_ASSERT(id.toSignatureKey() == pk);
+    CPPUNIT_ASSERT(id == Id(pk));
 }
 
-void IdTests::testIdFromHexString() {
-    std::string hexWithPrefix = "0x71e1b2ecdf528b623192f899d984c53f2b13508e21ccd53de5d7158672820636";
-    Id id = Id(hexWithPrefix);
-    CPPUNIT_ASSERT(hexWithPrefix == id.toHexString());
-
-    std::string hexWithoutPrefix = "F897B6CB7969005520E6F6101EB5466D9859926A51653365E36C4A3C42E5DE6F";
-    id = Id::ofHex(hexWithoutPrefix);
-    std::transform(hexWithoutPrefix.begin(), hexWithoutPrefix.end(), hexWithoutPrefix.begin(), tolower);
-    CPPUNIT_ASSERT(hexWithoutPrefix == id.toHexString().substr(2));
-
-    std::string hexWithPrefix2 = "0x71E1B2ECDF528B623192F899D984C53F2B13508E21CCD53DE5D71586728206";
-    CPPUNIT_ASSERT_THROW_MESSAGE("Hex ID string should be 64 characters long.", new Id(hexWithPrefix2), std::out_of_range);
-
-    std::string hexWithoutPrefix2 = "f897b6cb7969005520e6f6101eb5466d9859926a51653365e36c4a3c42e5de";
-    CPPUNIT_ASSERT_THROW_MESSAGE("Hex ID string should be 64 characters long.", Id::ofHex(hexWithoutPrefix2), std::out_of_range);
-
-    std::string hexWithPrefix3 = "0x71E1B2ECDR528B623192F899D984C53F2B13508E21CCD53DE5D7158672820636";
-    CPPUNIT_ASSERT_THROW_MESSAGE("not an hex character", new Id(hexWithPrefix3), std::domain_error);
-
-    std::string hexWithoutPrefix3 = "f897b6cb7969005520e6f6101ebx466d9859926a51653365e36c4a3c42e5de6f";
-    CPPUNIT_ASSERT_THROW_MESSAGE("not an hex character", Id::ofHex(hexWithoutPrefix3), std::domain_error);
+void IdTests::test2() {
+    auto pk = Signature::KeyPair::random().publicKey();
+    auto id = Id(pk);
+    CPPUNIT_ASSERT(id.toSignatureKey() == pk);
 }
 
-void IdTests::testIdFromBytes() {
-    std::random_device rd;
-    std::uniform_int_distribution<unsigned short> dist(0, 9);
+void IdTests::test3() {
+    // Test constructor for ID string with "0x" prefix.
+    auto idstring = "0x71e1b2ecdf528b623192f899d984c53f2b13508e21ccd53de5d7158672820636";
+    auto id1 = Id(idstring);
+    CPPUNIT_ASSERT(id1.toHexString() == idstring);
 
-    std::array<uint8_t, ID_BYTES> binId;
-    std::generate_n(binId.begin(), ID_BYTES, [&]{ return dist(rd); });
-    auto id = Id(binId);
-
-    auto hexStr = id.toHexString().substr(2);
-    CPPUNIT_ASSERT(std::memcmp(binId.data(), Hex::decode(hexStr).data(), ID_BYTES) == 0);
-
-    std::array<uint8_t, 20> binId2;
-    std::generate_n(binId2.begin(), 20, [&]{ return dist(rd); });
-    CPPUNIT_ASSERT_THROW_MESSAGE("Binary id should be 32 bytes long.", new Id(binId2), std::invalid_argument);
-}
-
-void IdTests::testIdFromId() {
-    Id id1 = Id::random();
-    Id id2 = Id(id1);
-
-    CPPUNIT_ASSERT(id1.toHexString() == id2.toHexString());
+    auto id2 = Id::ofHex(idstring);
+    CPPUNIT_ASSERT(id2.toHexString() == idstring);
     CPPUNIT_ASSERT(id1 == id2);
+}
 
-    id2 = Id::random();
-    CPPUNIT_ASSERT(id1 != id2);
+void IdTests::test4() {
+    // Test constructor for ID string without "0x" prefix;
+    auto idstring = "71e1b2ecdf528b623192f899d984c53f2b13508e21ccd53de5d7158672820636";
+    auto id = Id::ofHex(idstring);
+    CPPUNIT_ASSERT(id.toHexString().substr(2) == idstring);
+}
+
+void IdTests::test5() {
+    std::string idstring = "F897B6CB7969005520E6F6101EB5466D9859926A51653365E36C4A3C42E5DE6F";
+    auto id = Id::ofHex(idstring);
+    std::transform(idstring.begin(), idstring.end(), idstring.begin(), tolower);
+    CPPUNIT_ASSERT(id.toHexString().substr(2) == idstring);
+}
+
+void IdTests::test6() {
+    Id id1 = Id::random();
+    Id id2 = Id::random();
+    Id id3 = Id(id1);
+
+    CPPUNIT_ASSERT(id1 == id3);
+    CPPUNIT_ASSERT(id2 != id3);
+    CPPUNIT_ASSERT(id1.toHexString() == id3.toHexString());
+    CPPUNIT_ASSERT(id2.toHexString() != id3.toHexString());
+}
+
+void IdTests::testOutOfRangeError() {
+    auto idstring1 = "0x71E1B2ECDF528B623192F899D984C53F2B13508E21CCD53DE5D71586728206";
+    CPPUNIT_ASSERT_THROW_MESSAGE("Hex ID string should be 64 characters long.",
+        new Id(idstring1), std::out_of_range);
+
+    auto idstring2 = "f897b6cb7969005520e6f6101eb5466d9859926a51653365e36c4a3c42e5de";
+    CPPUNIT_ASSERT_THROW_MESSAGE("Hex ID string should be 64 characters long.",
+        new Id(idstring2), std::out_of_range);
+}
+
+void IdTests::testDomainError() {
+    auto idstring1 = "0x71E1B2ECDR528B623192F899D984C53F2B13508E21CCD53DE5D7158672820636";
+    CPPUNIT_ASSERT_THROW_MESSAGE("not an hex character", new Id(idstring1), std::domain_error);
+
+    auto idstring2 = "f897b6cb7969005520e6f6101ebx466d9859926a51653365e36c4a3c42e5de6f";
+    CPPUNIT_ASSERT_THROW_MESSAGE("not an hex character", Id::ofHex(idstring2), std::domain_error);
+
+    std::array<uint8_t, 20> binId;
+    std::generate_n(binId.begin(), 20, []{ return 1; });
+    CPPUNIT_ASSERT_THROW_MESSAGE("Binary id should be 32 bytes long.", new Id(binId), std::invalid_argument);
 }
 
 void IdTests::testDistance() {
     Id id1 = Id("0x00000000f528d6132c15787ed16f09b08a4e7de7e2c5d3838974711032cb7076");
     Id id2 = Id("0x00000000f0a8d6132c15787ed16f09b08a4e7de7e2c5d3838974711032cb7076");
+    auto distance = "0x0000000005800000000000000000000000000000000000000000000000000000";
 
-    CPPUNIT_ASSERT("0x0000000005800000000000000000000000000000000000000000000000000000" == Id::distance(id1, id2).toHexString());
-
-    //todo: test
-    /*for (int i = 0; i < 1000; i++) {
-        id1 = Id.random();
-        id2 = Id.random();
-
-        Id id3 = id1.distance(id2);
-        BigInteger n = id1.toInteger().xor(id2.toInteger());
-        assertTrue(id3.toInteger().equals(n));
-    }*/
-    //end test
+    CPPUNIT_ASSERT(Id::distance(id1,id2) == Id(distance));
+    CPPUNIT_ASSERT(Id::distance(id1, id2).toHexString() == distance);
 }
 
 void IdTests::testThreeWayCompare() {
-    Id id = Id("0x4833af415161cbd0a3ef83aa59a55fbadc9bd520a886a8ca214a3d09b6676cb8");
+    Id id0 = Id("0x4833af415161cbd0a3ef83aa59a55fbadc9bd520a886a8ca214a3d09b6676cb8");
     Id id1 = Id("0x4833af415161cbd0a3ef83aa59a55fbadc9bd520a886a8fa214a3d09b6676cb8");
     Id id2 = Id("0x4833af415161cbd0a3ef83aa59a55fbadc9bd520a885a8ca214a3d09b6676cb8");
 
-    CPPUNIT_ASSERT(id.threeWayCompare(id1, id2) < 0);
-
-    id1 = Id("0xf833af415161cbd0a3ef83aa59a55fbadc9bd520b886a8ca214a3d09b6676cb8");
-    id2 = Id("0xf833af415161cbd0a3ef83aa59a55fbadc9bd520b886a8ca214a3d09b6676cb8");
-
-    CPPUNIT_ASSERT(id.threeWayCompare(id1, id2) == 0);
-
-    id1 = Id("0x4833af415161cbd0a3ef83aa59a55f1adc9bd520a886a8ca214a3d09b6676cb8");
-    id2 = Id("0x4833af415161cbd0a3ef83aa59a55fcadc9bd520a886a8ca214a3d09b6676cb8");
-
-    CPPUNIT_ASSERT(id.threeWayCompare(id1, id2) > 0);
-
-    //todo: test
-    /*for (int i = 0; i < 1000; i++) {
-        id1 = Id.random();
-        id2 = Id.random();
-        int d = id.threeWayCompare(id1, id2);
-
-        Id d1 = id.distance(id1);
-        Id d2 = id.distance(id2);
-        int n = d1.toInteger().compareTo(d2.toInteger());
-
-        assertEquals(n, d);
-    }*/
-    //end test
+    CPPUNIT_ASSERT(id0.threeWayCompare(id1, id2) < 0);
+    CPPUNIT_ASSERT(id0.threeWayCompare(id1, id1) == 0);
 }
 
 void IdTests::testBitsEqual() {
@@ -174,7 +152,4 @@ void IdTests::testBitsCopy() {
     }
 }
 
-void
-IdTests::tearDown() {
-}
 }  // namespace test
