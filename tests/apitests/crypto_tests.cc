@@ -151,9 +151,9 @@ void CryptoTester::testPublicKey()
 {
     auto keyPair = Signature::KeyPair();
     auto id = Id(keyPair.publicKey());
-    auto pk = id.toKey();
+    auto pk = id.toSignatureKey();
 
-    CPPUNIT_ASSERT(keyPair.publicKey() == *pk);
+    CPPUNIT_ASSERT(keyPair.publicKey() == pk);
 }
 
 void CryptoTester::testCrytoContext()

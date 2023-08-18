@@ -47,11 +47,11 @@ public:
     static Id MAX_ID;
 
     Id() noexcept = default;
-    Id(const Id& id) = default;
+    Id(const Id& id) noexcept = default;
 
     Id(const Blob& id) {
-        if (!id || id.size() != ID_BYTES)
-            throw std::invalid_argument("Binary id should be " + std::to_string(ID_BYTES) + " bytes long.");
+        if (id.empty() || id.size() != ID_BYTES)
+            throw std::invalid_argument("The binary id should be " + std::to_string(ID_BYTES) + " bytes long.");
 
         std::memcpy(bytes.data(), id.ptr(), id.size());
     }
@@ -80,11 +80,7 @@ public:
     }
 
     const Blob blob() const noexcept {
-        return static_cast<bool>(*this) ? Blob(bytes) : Blob();
-    }
-
-    Sp<Signature::PublicKey> toKey() const {
-        return std::make_shared<Signature::PublicKey>(blob());
+        return Blob(bytes);
     }
 
     static Id ofHex(const std::string& hexId);
