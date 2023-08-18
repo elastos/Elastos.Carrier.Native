@@ -29,9 +29,14 @@ namespace test {
 
 class IdTests : public CppUnit::TestFixture {
     CPPUNIT_TEST_SUITE(IdTests);
-    CPPUNIT_TEST(testIdFromHexString);
-    CPPUNIT_TEST(testIdFromBytes);
-    CPPUNIT_TEST(testIdFromId);
+    CPPUNIT_TEST(test1);
+    CPPUNIT_TEST(test2);
+    CPPUNIT_TEST(test3);
+    CPPUNIT_TEST(test4);
+    CPPUNIT_TEST(test5);
+    CPPUNIT_TEST(test6);
+    CPPUNIT_TEST(testOutOfRangeError);
+    CPPUNIT_TEST(testDomainError);
     CPPUNIT_TEST(testDistance);
     CPPUNIT_TEST(testThreeWayCompare);
     CPPUNIT_TEST(testBitsEqual);
@@ -39,12 +44,17 @@ class IdTests : public CppUnit::TestFixture {
     CPPUNIT_TEST_SUITE_END();
 
  public:
-    void setUp();
-    void tearDown();
+    void setUp() {}
+    void tearDown() {}
 
-    void testIdFromHexString();
-    void testIdFromBytes();
-    void testIdFromId();
+    void test1();
+    void test2();
+    void test3();
+    void test4();
+    void test5();
+    void test6();
+    void testOutOfRangeError();
+    void testDomainError();
     void testDistance();
     void testThreeWayCompare();
     void testBitsEqual();

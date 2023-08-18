@@ -54,33 +54,22 @@ Id Id::ofBase58(const std::string& base58Id) {
     return id;
 }
 
-Id Id::ofName(std::string name) {
-    std::transform(name.begin(), name.end(), name.begin(), ::tolower);
-
-    int len = strlen(name.c_str());
-    std::vector<uint8_t> data(len);
-    std::memcpy((void*)data.data(), name.c_str(), len);
-    auto d = SHA256::digest(data);
-    auto id = Id(d);
-    return id;
-}
-
 Id Id::random() {
-    Id id;
-    auto a = reinterpret_cast<uint32_t*>(id.bytes.data());
-    auto b = reinterpret_cast<uint32_t*>(id.bytes.data()+ ID_BYTES);
+    std::vector<uint8_t> buf(ID_BYTES);
+    auto a = reinterpret_cast<uint32_t*>(buf.data());
+    auto b = reinterpret_cast<uint32_t*>(buf.data()+ ID_BYTES);
 
     RandomGenerator<uint32_t> generator;
     std::generate(a, b, generator);
-    return id;
+    return Id(buf);
 }
 
 Id Id::distance(const Id& to) const {
-    Id id;
+    std::vector<uint8_t> buf(ID_BYTES);
     for (int i = 0; i < ID_BYTES; i++)
-        id.bytes[i] = bytes[i] ^ to.bytes[i];
+        buf[i] = bytes[i] ^ to.bytes[i];
 
-    return id;
+    return Id(buf);
 }
 
 Id Id::distance(const Id& id1, const Id& id2) {
