@@ -155,7 +155,7 @@ static void run()
             } else {
                 std::cout << "       find node " << j << ": get node";
                 for (auto ni: nis)
-                    std::cout << " [" << static_cast<std::string>(*ni) << "] ";
+                    std::cout << " [" << ni->toString() << "] ";
                 std::cout << "" << std::endl;
             }
             std::this_thread::sleep_for(std::chrono::milliseconds(options.interval * 1000));

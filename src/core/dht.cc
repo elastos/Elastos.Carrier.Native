@@ -327,8 +327,8 @@ void DHT::received(Sp<Message> msg) {
             // That means we are certain that the node either changed its
             // node ID or does some ID-spoofing.
             // In either case we don't want it in our routing table
-            log->warn("force-removing routing table entry {} because ID-change was detected; new ID {}", knownEntry->toString(),
-                    static_cast<std::string>(id));
+            log->warn("force-removing routing table entry {} because ID-change was detected; new ID {}",
+                knownEntry->toString(), id.toString());
             routingTable.remove(knownId);
 
             // might be pollution attack, check other entries in the same bucket too in case
@@ -532,7 +532,7 @@ void DHT::onAnnouncePeer(const Sp<Message>& msg) {
 
     auto peer = request->getPeer();
     log->debug("Received an announce peer request from {}, saving peer {}", request->getOrigin().toString(),
-                    request->getTarget());
+                request->getTarget().toString());
     node.getStorage()->putPeer(peer);
 
     auto response = std::make_shared<AnnouncePeerResponse>(request->getTxid());

@@ -27,11 +27,11 @@
 namespace elastos {
 namespace carrier {
 
-NodeInfo::operator std::string() const {
+std::string NodeInfo::toString() const {
     std::stringstream ss;
     ss.str().reserve(80);
 
-    ss << "<" << nodeId.toBase58String()
+    ss << "<" << nodeId.toString()
         << "," << sockaddr.host()
         << "," << std::to_string(sockaddr.port())
         << ">";
@@ -40,7 +40,7 @@ NodeInfo::operator std::string() const {
 }
 
 std::ostream& operator<< (std::ostream& os, const NodeInfo& ni) {
-    os << static_cast<std::string>(ni);
+    os << ni.toString();
     return os;
 }
 

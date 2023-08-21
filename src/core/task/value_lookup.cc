@@ -75,17 +75,17 @@ void ValueLookup::callResponsed(RPCCall* call, Sp<Message> message) {
         auto value = response->getValue();
         auto id = value.getId();
         if (!(id == getTarget())) {
-            log->warn("Responsed value id {} mismatched with expected {}", static_cast<std::string>(id), static_cast<std::string>(getTarget()));
+            log->warn("Responsed value id {} mismatched with expected {}", id.toString(), getTarget().toString());
             return;
         }
         if (!value.isValid()) {
-            log->warn("Responsed value {} is invalid, signature mismatch", static_cast<std::string>(id));
+            log->warn("Responsed value {} is invalid, signature mismatch", id.toString());
             return;
         }
 
         if (expectedSequence >= 0 && value.getSequenceNumber() < expectedSequence) {
             log->warn("Responsed value {} is outdated, sequence {}, expected {}",
-                    static_cast<std::string>(id), value.getSequenceNumber(), expectedSequence);
+                    id.toString(), value.getSequenceNumber(), expectedSequence);
             return;
         }
 

@@ -84,7 +84,7 @@ void NodeApiTester::testSelfNodes() {
     std::cout << "ni2 size: " << ni2.size() << std::endl;
     CPPUNIT_ASSERT_MESSAGE("Node not found!", ni2.size());
     for (auto ni: ni2) {
-        std::cout << "ni: " << static_cast<std::string>(*ni) << std::endl;
+        std::cout << "ni: " << ni->toString() << std::endl;
     }
 #endif
 
@@ -116,21 +116,21 @@ void NodeApiTester::testSelfNodes() {
     auto val = future2.get();
     CPPUNIT_ASSERT_MESSAGE("Value not found!", val != nullptr);
     CPPUNIT_ASSERT_MESSAGE("Value is invalid!", val->isValid());
-    std::cout << "Value: " << static_cast<std::string>(*val) << std::endl;
+    std::cout << "Value: " << val->toString() << std::endl;
 
     std::cout << "Trying to find SignedValue with Id: " << signedValue.getId().toBase58String() << std::endl;
     future2 = node1->findValue(signedValue.getId());
     val = future2.get();
     CPPUNIT_ASSERT_MESSAGE("SignedValue not found!", val != nullptr);
     CPPUNIT_ASSERT_MESSAGE("SignedValue is invalid!", val->isValid());
-    std::cout << "SignedValue: " << static_cast<std::string>(*val) << std::endl;
+    std::cout << "SignedValue: " << val->toString() << std::endl;
 
     std::cout << "Trying to find EncryptedValue with Id: " << encryptedValue.getId().toBase58String() << std::endl;
     future2 = node1->findValue(encryptedValue.getId());
     val = future2.get();
     CPPUNIT_ASSERT_MESSAGE("EncryptedValue not found!", val != nullptr);
     CPPUNIT_ASSERT_MESSAGE("EncryptedValue is invalid!", val->isValid());
-    std::cout << "EncryptedValue: " << static_cast<std::string>(*val) << std::endl;
+    std::cout << "EncryptedValue: " << val->toString() << std::endl;
 #endif
 
 #if 1
@@ -147,7 +147,7 @@ void NodeApiTester::testSelfNodes() {
     val = future2.get();
     CPPUNIT_ASSERT_MESSAGE("updatevalue not found!", val != nullptr);
     CPPUNIT_ASSERT_MESSAGE("updatevalue is invalid!", val->isValid());
-    std::cout << "updatevalue: " << static_cast<std::string>(*val) << std::endl;
+    std::cout << "updatevalue: " << val->toString() << std::endl;
 #endif
 
 #if 1
@@ -187,7 +187,7 @@ void NodeApiTester::testSelfNodes() {
     auto peers = future4.get();
     CPPUNIT_ASSERT_MESSAGE("Peer1 not found!", !peers.empty());
     for (auto& peer: peers) {
-        std::cout << "Peer1: " << static_cast<std::string>(peer) << std::endl;
+        std::cout << "Peer1: " << peer.toString() << std::endl;
         CPPUNIT_ASSERT_MESSAGE("Peer1 is invalid!", peer.isValid());
     }
 
@@ -196,7 +196,7 @@ void NodeApiTester::testSelfNodes() {
     peers = future4.get();
     CPPUNIT_ASSERT_MESSAGE("Peer2 not found!", !peers.empty());
     for (auto& peer: peers) {
-        std::cout << "Peer2: " << static_cast<std::string>(peer) << std::endl;
+        std::cout << "Peer2: " << peer.toString() << std::endl;
         CPPUNIT_ASSERT_MESSAGE("Peer2 is invalid!", peer.isValid());
     }
 

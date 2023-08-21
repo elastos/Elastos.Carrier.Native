@@ -86,13 +86,13 @@ bool PeerInfo::operator==(const PeerInfo& other) const {
     return publicKey == other.publicKey && signature == other.signature;
 }
 
-PeerInfo::operator std::string() const {
+std::string PeerInfo::toString() const {
     std::stringstream ss;
     ss.str().reserve(128);
-    ss << "<" << publicKey.toBase58String() << "," << nodeId.toBase58String() << ",";
+    ss << "<" << publicKey.toString() << "," << nodeId.toString() << ",";
 
     if (isDelegated())
-        ss<< origin.toBase58String() << ",";
+        ss<< origin.toString() << ",";
     ss << std::to_string(port);
     if (hasAlternativeURL())
         ss << "," << alternativeURL.value();
@@ -102,7 +102,7 @@ PeerInfo::operator std::string() const {
 }
 
 std::ostream& operator<< (std::ostream& os, const PeerInfo& pi) {
-    os << static_cast<std::string>(pi);
+    os << pi.toString();
     return os;
 }
 

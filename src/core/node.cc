@@ -113,7 +113,7 @@ void Node::writeIdFile(const std::string& idPath) {
     if (!os.is_open())
         throw std::runtime_error("Failed to open file " + idPath);
 
-    auto idstr = static_cast<std::string>(id);
+    auto idstr = id.toString();
     os.write(idstr.c_str(), idstr.size());
     os.close();
 }
@@ -175,7 +175,7 @@ Node::Node(std::shared_ptr<Configuration> _config): config(_config)
         writeIdFile(idPath);
     }
 
-    log->info("Carrier Kademlia node {}", static_cast<std::string>(id));
+    log->info("Carrier Kademlia node {}", id.toString());
 
     encryptionKeyPair = CryptoBox::KeyPair::fromSignatureKeyPair(keyPair);
 
@@ -190,7 +190,7 @@ void Node::bootstrap(const NodeInfo& node) {
     // checkArgument(node != null, "Invalid bootstrap node");
 
     if (node.getId() == id) {
-        log->warn("Can not bootstrap from local node: {}", node.getId());
+        log->warn("Can not bootstrap from local node: {}", node.getId().toString());
         return;
     }
 
@@ -205,7 +205,7 @@ void Node::start() {
         return;
 
     setStatus(NodeStatus::Stopped, NodeStatus::Initializing);
-    log->info("Carrier node {} is starting...", static_cast<std::string>(id));
+    log->info("Carrier node {} is starting...", id.toString());
 
     if (config->ipv4Address()) {
         dht4 = std::make_shared<DHT>(DHT::Type::IPV4, *this, config->ipv4Address());
@@ -262,7 +262,7 @@ void Node::stop() {
     if (status == NodeStatus::Stopped)
         return;
 
-    log->info("Carrier Kademlia node {} is stopping...", static_cast<std::string>(id));
+    log->info("Carrier Kademlia node {} is stopping...", id.toString());
 
     for (auto any : scheduledActions) {
         auto job = std::any_cast<Sp<Scheduler::Job>>(any);
@@ -294,7 +294,7 @@ void Node::stop() {
     }
 
     setStatus(NodeStatus::Running, NodeStatus::Stopped);
-    log->info("Carrier Kademlia node {} stopped", static_cast<std::string>(id));
+    log->info("Carrier Kademlia node {} stopped", id.toString());
 }
 
 void Node::persistentAnnounce() {
@@ -306,7 +306,7 @@ void Node::persistentAnnounce() {
             Constants::RE_ANNOUNCE_INTERVAL * 2;
     std::list<Value> vs = storage->getPersistentValues(ts);
     for (auto v : vs) {
-        log->debug("Re-announce the value: {}", static_cast<std::string>(v.getId()));
+        log->debug("Re-announce the value: {}", v.getId().toString());
         storage->updateValueLastAnnounce(v.getId());
         futures.emplace_back(doStoreValue(v));
     }
@@ -316,7 +316,7 @@ void Node::persistentAnnounce() {
 
     std::list<PeerInfo> ps = storage->getPersistentPeers(ts);
     for (auto p : ps) {
-        log->debug("Re-announce the peer: {}", static_cast<std::string>(p.getId()));
+        log->debug("Re-announce the peer: {}", p.getId().toString());
         storage->updatePeerLastAnnounce(p.getId(), p.getOrigin());
         futures.emplace_back(doAnnouncePeer(p));
     }
@@ -627,7 +627,7 @@ Sp<DHT> Node::getDHT(int type) const noexcept {
 std::string Node::toString() const {
     std::string str {};
 
-    str.append("Node: ").append(id).append(1, '\n');
+    str.append("Node: ").append(id.toString()).append(1, '\n');
     if (dht4 != nullptr)
         str.append(dht4->toString());
 

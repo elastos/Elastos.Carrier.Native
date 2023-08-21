@@ -38,7 +38,7 @@ Id Id::MIN_ID = Id::zero();
 Id Id::MAX_ID = Id::ofHex("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
 
 std::ostream& operator<< (std::ostream& os, const Id& id) {
-    os << static_cast<std::string>(id);
+    os << id.toString();
     return os;
 }
 
@@ -171,15 +171,15 @@ bool Id::operator<(const Id& other) const {
     return std::lexicographical_compare(bytes.begin(), bytes.end(), other.bytes.begin(), other.bytes.end());
 }
 
-const std::string Id::toHexString() const {
+std::string Id::toHexString() const {
     return Hex::encode(bytes, true);
 }
 
-const std::string Id::toBase58String() const {
+std::string Id::toBase58String() const {
     return base58_encode((uint8_t*)bytes.data(), bytes.size());
 }
 
-const std::string Id::toBinaryString() const {
+std::string Id::toBinaryString() const {
     std::string str {};
 
     for(int i = 0; i < ID_BYTES * 8; i++) {

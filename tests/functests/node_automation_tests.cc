@@ -90,7 +90,7 @@ void NodeAutomationTester::testAutomaticNode() {
     auto future2 = node->findValue(value.getId());
     auto val = future2.get();
     CPPUNIT_ASSERT(value == *val);
-    std::cout << "Find value: " << static_cast<std::string>(*val) << std::endl;
+    std::cout << "Find value: " << val->toString() << std::endl;
 
     std::cout << "----------" << std::endl;
     std::cout << "Trying to announce peer " << std::endl;

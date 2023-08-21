@@ -128,6 +128,8 @@ public:
 
     bool isValid() const;
 
+    std::string toString() const;
+
     bool operator==(const PeerInfo& other) const;
 
     bool operator!=(const PeerInfo& other) const {
@@ -147,7 +149,10 @@ public:
         return rc < 0;
     }
 
-    operator std::string() const;
+    operator std::string() const {
+        return toString();
+    }
+
     friend std::ostream& operator<< (std::ostream& s, const PeerInfo& pi);
 
 private:

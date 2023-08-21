@@ -83,6 +83,8 @@ public:
         return nodeId == other.nodeId && sockaddr == other.sockaddr;;
     }
 
+    std::string toString() const;
+
     bool operator==(const NodeInfo& other) const {
         return equals(other);
     }
@@ -91,7 +93,10 @@ public:
         return !equals(other);
     }
 
-    operator std::string() const;
+    operator std::string() const {
+        return toString();
+    }
+
     friend std::ostream& operator<< (std::ostream& s, const NodeInfo& ni);
 
     void setVersion(int version) {

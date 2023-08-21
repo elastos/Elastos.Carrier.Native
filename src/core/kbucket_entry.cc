@@ -106,9 +106,13 @@ nlohmann::json KBucketEntry::toJson() const {
 std::string KBucketEntry::toString() const {
     auto now = currentTimeMillis();
     std::string str {};
-    str.append(static_cast<std::string>(getId())).append(1, '@').append(getAddress().host());
-    str.append(";seen:").append(std::to_string(now - lastSeen));
-    str.append(";age:").append(std::to_string(now - created));
+    str.append(getId().toString())
+        .append(1, '@')
+        .append(getAddress().host())
+        .append(";seen:")
+        .append(std::to_string(now - lastSeen))
+        .append(";age:")
+        .append(std::to_string(now - created));
 
     if (lastSend > 0)
         str.append(";sent:" + std::to_string(now - lastSend));

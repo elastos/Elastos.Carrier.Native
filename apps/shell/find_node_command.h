@@ -53,10 +53,10 @@ protected:
         auto nodeinfos = future.get();
         std::cout << "----------------------------------------------" << std::endl;
         if (nodeinfos.empty()) {
-                std::cout << " Not found node [" << static_cast<std::string>(id) << "]" << std::endl;
+                std::cout << " Not found node [" << id << "]" << std::endl;
         } else {
             for (auto ni: nodeinfos)
-                std::cout << static_cast<std::string>(*ni) << std::endl;
+                std::cout << ni->toString() << std::endl;
         }
         std::cout << "----------------------------------------------" << std::endl;
     };

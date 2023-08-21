@@ -70,7 +70,7 @@ void Task::removeListener(TaskListener listener) {
 
 void Task::start() {
     if (setState({State::INITIAL, State::QUEUED}, State::RUNNING)) {
-        log->debug("Task starting: {}", static_cast<std::string>(*this));
+        log->debug("Task starting: {}", toString());
         this->startTime = currentTimeMillis();
 
         prepare();
@@ -82,7 +82,7 @@ void Task::start() {
 void Task::cancel() {
     if (setState({State::INITIAL, State::QUEUED, State::RUNNING}, State::CANCELED)) {
         this->finishTime = currentTimeMillis();
-        log->debug("Task canceled: {}", static_cast<std::string>(*this));
+        log->debug("Task canceled: {}", toString());
 
         notifyCompletionListeners();
     }
@@ -94,7 +94,7 @@ void Task::cancel() {
 void Task::finish() {
     if (setState({State::INITIAL, State::QUEUED, State::RUNNING}, State::FINISHED)) {
         this->finishTime = currentTimeMillis();
-        log->debug("Task finished: {}", static_cast<std::string>(*this));
+        log->debug("Task finished: {}", toString());
 
         notifyCompletionListeners();
     }
@@ -124,7 +124,7 @@ void Task::serializedUpdate() {
     if(current > 1)
         return;
 
-    log->trace("Task update: {}", static_cast<std::string>(*this));
+    log->trace("Task update: {}", toString());
     do {
         if(isDone())
             finish();
@@ -197,13 +197,13 @@ bool Task::sendCall(Sp<NodeInfo> node, Sp<Message> request, std::function<void(S
     modifyCallBeforeSubmit(call);
     inFlight[call->hash()] = call;
 
-    log->debug("Task#{} sending call to {}", getTaskId(), static_cast<std::string>(*node), request->getRemoteAddress().toString());
+    log->debug("Task#{} sending call to {}", getTaskId(), node->toString(), request->getRemoteAddress().toString());
     // asyncify since we're under a lock here
     dht.getServer().sendCall(call);
     return true;
 }
 
-Task::operator std::string() const {
+std::string Task::toString() const {
     std::stringstream ss;
     ss.str().reserve(1024);
 

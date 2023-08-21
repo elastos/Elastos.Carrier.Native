@@ -52,9 +52,9 @@ protected:
         auto value = future.get();
         std::cout << "----------------------------------------------" << std::endl;
         if (value)
-            std::cout << static_cast<std::string>(*value) << std::endl;
+            std::cout << value->toString() << std::endl;
         else
-            std::cout << " Not found value [" << static_cast<std::string>(id) << "]" << std::endl;
+            std::cout << " Not found value [" << id << "]" << std::endl;
         std::cout << "----------------------------------------------" << std::endl;
     };
 

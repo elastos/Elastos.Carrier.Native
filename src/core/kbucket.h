@@ -131,7 +131,7 @@ public:
         return prefix.compareTo(bucket->getPrefix());
     }
 
-    operator std::string() const;
+    std::string toString() const;
 
 //protected:
     void _put(Sp<KBucketEntry> newEntry);
