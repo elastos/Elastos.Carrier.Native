@@ -220,7 +220,7 @@ Sp<Message> Message::createMessage(int messageType) {
 }
 
 #ifdef MSG_PRINT_DETAIL
-Message::operator std::string() const {
+std::string Message::toString() const {
     std::stringstream ss;
     if (!name.empty())
         ss << "Name: " << name << "\n";
@@ -237,7 +237,7 @@ Message::operator std::string() const {
     return ss.str();
 }
 #else
-Message::operator std::string() const {
+std::string Message::toString() const {
     std::stringstream ss;
     ss.exceptions(std::ios_base::failbit | std::ios_base::badbit);
     ss.str().reserve(1500);

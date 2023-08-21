@@ -100,7 +100,7 @@ void RoutingTable::_modify(const std::vector<Sp<KBucket>>& toRemove, const std::
         list_removeAll(newBuckets, toRemove);
     if (!toAdd.empty())
         list_addAll(newBuckets, toAdd);
-    
+
     assert(newBuckets.size() != 0);
 
     auto sortKBucket = [](Sp<KBucket> a, Sp<KBucket> b) -> bool {
@@ -337,12 +337,15 @@ std::string RoutingTable::toString() const {
     std::string str {};
 
     auto buckets = getBuckets();
-    str.append("buckets: ").append(std::to_string(buckets.size())).append(" / entries: ").append(std::to_string(getNumBucketEntries()));
-    str.append(1, '\n');
-    for (auto& bucket : buckets) {
-        str.append(static_cast<std::string>(*bucket)).append(1, '\n');
-    }
+    str.append("buckets: ")
+        .append(std::to_string(buckets.size()))
+        .append(" / entries: ")
+        .append(std::to_string(getNumBucketEntries()))
+        .append(1, '\n');
 
+    for (auto& bucket : buckets) {
+        str.append(bucket->toString()).append(1, '\n');
+    }
     return str;
 }
 

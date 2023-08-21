@@ -55,10 +55,10 @@ protected:
         auto peers = future.get();
         std::cout << "----------------------------------------------" << std::endl;
         if (peers.empty()) {
-            std::cout<< " Not found peer [" << static_cast<std::string>(id) << "]" << std::endl;
+            std::cout<< " Not found peer [" << id << "]" << std::endl;
         } else {
-            for (auto& p : peers)
-                std::cout << static_cast<std::string>(p) << std::endl;
+            for (const auto& peer : peers)
+                std::cout << peer.toString() << std::endl;
         }
         std::cout << "----------------------------------------------" << std::endl;
     };

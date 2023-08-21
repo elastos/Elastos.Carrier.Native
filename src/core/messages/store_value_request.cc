@@ -102,9 +102,9 @@ void StoreValueRequest::toString(std::stringstream& ss) const {
     ss << "\nRequest: ";
 
     if (value->isMutable()) {
-        ss << "\n    PublicKey: " << static_cast<std::string>(publicKey.value());;
+        ss << "\n    PublicKey: " << publicKey.value().toString();;
         if (isEncrypted())
-            ss << "\n    Recipient: " << static_cast<std::string>(recipient.value());
+            ss << "\n    Recipient: " << recipient.value().toString();
         ss << "\n    Nonce:" << Hex::encode(nonce.value().blob());
         if (sequenceNumber >= 0)
             ss << "\n    SequenceNumber: " << std::to_string(sequenceNumber);
@@ -121,9 +121,9 @@ void StoreValueRequest::toString(std::stringstream& ss) const {
     ss << ",q:{";
 
     if (isMutable()) {
-        ss << ",k:" << static_cast<std::string>(publicKey.value());
+        ss << ",k:" << publicKey.value().toString();
         if (isEncrypted())
-            ss << ",rec:" << static_cast<std::string>(recipient.value());
+            ss << ",rec:" << recipient.value().toString();
         ss << ",n:" << Hex::encode(nonce.value().blob());
         if (sequenceNumber >= 0)
             ss << ",seq:" << std::to_string(sequenceNumber);

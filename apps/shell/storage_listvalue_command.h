@@ -38,8 +38,8 @@ protected:
 
         std::cout << "----------------------------------------------" << std::endl;
         if (!valueIds.empty()) {
-            for (auto& id : valueIds)
-                std::cout << static_cast<std::string>(id) << std::endl;
+            for (const auto& id : valueIds)
+                std::cout << id.toString() << std::endl;
 
             std::cout << "Total " << valueIds.size() << " values." << std::endl;
         } else {

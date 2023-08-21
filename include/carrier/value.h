@@ -155,8 +155,13 @@ public:
 
     bool isValid() const;
 
+    std::string toString() const;
+
     bool operator== (const Value& other) const;
-    operator std::string() const;
+
+    operator std::string() const {
+        return toString();
+    }
 
 private:
     Value(const Blob& publicKey, const Blob& privateKey, const Blob& recipient,

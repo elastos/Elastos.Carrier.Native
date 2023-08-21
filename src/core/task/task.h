@@ -120,7 +120,7 @@ public:
         return taskId - t.taskId;
     }
 
-    operator std::string() const;
+    std::string toString() const;
 
 protected:
     bool canDoRequest() const {

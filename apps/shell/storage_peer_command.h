@@ -44,8 +44,8 @@ protected:
         auto peers = storage->getPeer(peerid, 0);
         std::cout << "----------------------------------------------" << std::endl;
         if (!peers.empty()) {
-            for (auto& peer : peers)
-                std::cout << static_cast<std::string>(peer) << std::endl;
+            for (const auto& peer : peers)
+                std::cout << peer.toString() << std::endl;
             std::cout << "Total " << peers.size() << " peers." << std::endl;
         } else {
             std::cout << "Peer " << id << " not exists." << std::endl;

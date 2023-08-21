@@ -124,9 +124,12 @@ public:
         return std::memcmp(data(), other.data(), ID_BYTES);
     }
 
-    const std::string toHexString() const;
-    const std::string toBase58String() const;
-    const std::string toBinaryString() const;
+    std::string toHexString() const;
+    std::string toBase58String() const;
+    std::string toBinaryString() const;
+    std::string toString() const {
+        return toBase58String();
+    }
 
     bool operator==(const Id& other) const { return compareTo(other) == 0; }
     bool operator!=(const Id& other) const { return compareTo(other) != 0; }
@@ -143,10 +146,10 @@ public:
         return *this;
     }
 
-    operator std::string() const { return toBase58String(); }
-    operator bool() const {
-        return !std::all_of(bytes.cbegin(), bytes.cend(), [](uint8_t i){ return !i; });
+    operator std::string() const {
+        return toString();
     }
+
 
     friend std::ostream& operator<< (std::ostream& os, const Id& id);
 

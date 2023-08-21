@@ -189,7 +189,7 @@ void KBucket::_onSend(const Id& id) {
     }
 }
 
-KBucket::operator std::string() const {
+std::string KBucket::toString() const {
     std::stringstream ss;
     ss.str().reserve(1024);
 

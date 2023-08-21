@@ -68,6 +68,10 @@ public:
     bool operator==(const Prefix& prefix) const {
         return equals(prefix);
     }
+
+    operator std::string() const {
+        return toString();
+    }
 private:
     bool equals(const Prefix &prefix) const;
 

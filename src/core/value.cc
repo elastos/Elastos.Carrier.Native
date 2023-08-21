@@ -152,17 +152,17 @@ bool Value::operator==(const Value& other) const {
         data == other.data && sequenceNumber == other.sequenceNumber);
 }
 
-Value::operator std::string() const {
+std::string Value::toString() const {
     std::stringstream ss;
     ss.str().reserve(256);
 
     ss << "id:" << getId();
     if (isMutable()) {
-        ss << ",publicKey:" << static_cast<std::string>(publicKey.value());
+        ss << ",publicKey:" << publicKey.value().toString();
         ss << ",nonce: " << Hex::encode(nonce.value().blob());
     }
     if (isEncrypted())
-        ss << ",recipient:" << static_cast<std::string>(recipient.value());
+        ss << ",recipient:" << recipient.value().toString();
     if (isSigned())
         ss << ",sig:" << Hex::encode(signature.value());
 
