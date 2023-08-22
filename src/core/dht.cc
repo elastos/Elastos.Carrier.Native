@@ -666,7 +666,7 @@ Sp<Task> DHT::storeValue(const Value& value, std::function<void(std::list<Sp<Nod
     return task;
 }
 
-Sp<Task> DHT::findPeer(const Id& id, int expected, LookupOption option, std::function<void(std::list<PeerInfo>)> completeHandler) {
+Sp<Task> DHT::findPeer(const Id& id, int expected, LookupOption option, std::function<void(std::vector<PeerInfo>)> completeHandler) {
     // NOTICE: Concurrent threads adding to ArrayList
     //
     // There is no guaranteed behavior for what happens when add is
@@ -675,10 +675,10 @@ Sp<Task> DHT::findPeer(const Id& id, int expected, LookupOption option, std::fun
     // added fine. Most of the thread safety issues related to lists
     // deal with iteration while adding/removing.
     auto task = std::make_shared<PeerLookup>(this, id);
-    auto peers = std::make_shared<std::list<PeerInfo>>();
+    auto peers = std::make_shared<std::vector<PeerInfo>>();
 
-    task->setResultHandler([=](std::list<PeerInfo>& listOfPeers, Task* self){
-        peers->splice(peers->end(), listOfPeers);
+    task->setResultHandler([=](std::vector<PeerInfo>& listOfPeers, Task* self){
+        peers->insert(peers->end(), listOfPeers.begin(), listOfPeers.end());
 
         if (option != LookupOption::CONSERVATIVE && peers->size() >= expected) {
             self->cancel();

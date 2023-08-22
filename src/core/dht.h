@@ -144,7 +144,7 @@ public:
     Sp<Task> findNode(const Id& id, std::function<void(Sp<NodeInfo>)> completeHandler);
     Sp<Task> findValue(const Id& id, LookupOption option, std::function<void(Sp<Value>)> completeHandler);
     Sp<Task> storeValue(const Value& value, std::function<void(std::list<Sp<NodeInfo>>)> completeHandler);
-    Sp<Task> findPeer(const Id& id, int expected, LookupOption option, std::function<void(std::list<PeerInfo>)> completeHandler);
+    Sp<Task> findPeer(const Id& id, int expected, LookupOption option, std::function<void(std::vector<PeerInfo>)> completeHandler);
     Sp<Task> announcePeer(const PeerInfo& peer, std::function<void(std::list<Sp<NodeInfo>>)> completeHandler);
 
     void onTimeout(RPCCall* call);

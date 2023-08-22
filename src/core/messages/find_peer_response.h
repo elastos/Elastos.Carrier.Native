@@ -34,11 +34,11 @@ public:
     FindPeerResponse(int txid) : LookupResponse(Message::Method::FIND_PEER, txid) {}
     FindPeerResponse() : FindPeerResponse(0) {}
 
-    void setPeers(const std::list<PeerInfo>& peers) {
+    void setPeers(const std::vector<PeerInfo>& peers) {
         this->peers = peers;
     }
 
-    const std::list<PeerInfo>& getPeers() const {
+    const std::vector<PeerInfo>& getPeers() const {
         return peers;
     }
 
@@ -54,7 +54,7 @@ protected:
     void _toString(std::stringstream& ss) const override;
 
 private:
-    std::list<PeerInfo> peers {};
+    std::vector<PeerInfo> peers {};
 };
 
 }

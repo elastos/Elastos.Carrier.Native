@@ -41,13 +41,13 @@ public:
         return putValue(value, -1, persistent, true);
     }
     virtual void updateValueLastAnnounce(const Id& valueId) = 0;
-    virtual std::list<Value> getPersistentValues(uint64_t lastAnnounceBefore) = 0;
-    virtual std::list<Id> getAllValues() = 0;
+    virtual std::vector<Value> getPersistentValues(uint64_t lastAnnounceBefore) = 0;
+    virtual std::vector<Id> getAllValues() = 0;
 
-    virtual std::list<PeerInfo> getPeer(const Id& peerId, int maxPeers) = 0;
+    virtual std::vector<PeerInfo> getPeer(const Id& peerId, int maxPeers) = 0;
     virtual Sp<PeerInfo> getPeer(const Id& peerId, const Id& origin) = 0;
     virtual bool removePeer(const Id& peerId, const Id& origin) = 0;
-    virtual void putPeer(const std::list<PeerInfo>& peers) = 0;
+    virtual void putPeer(const std::vector<PeerInfo>& peers) = 0;
     virtual void putPeer(const PeerInfo& peer, bool persistent, bool updateLastAnnounce) = 0;
     void putPeer(const PeerInfo& peer, bool persistent) {
         return putPeer(peer, persistent, true);
@@ -56,8 +56,8 @@ public:
         return putPeer(peer, false, false);
     }
     virtual void updatePeerLastAnnounce(const Id& peerId, const Id& origin) = 0;
-    virtual std::list<PeerInfo> getPersistentPeers(uint64_t lastAnnounceBefore) = 0;
-    virtual std::list<Id> getAllPeers() = 0;
+    virtual std::vector<PeerInfo> getPersistentPeers(uint64_t lastAnnounceBefore) = 0;
+    virtual std::vector<Id> getAllPeers() = 0;
 
     virtual void close() = 0;
 };

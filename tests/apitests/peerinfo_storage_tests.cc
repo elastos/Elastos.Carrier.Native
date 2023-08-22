@@ -26,6 +26,7 @@
 #include <filesystem>
 #include <chrono>
 #include <thread>
+#include <algorithm>
 #include <carrier.h>
 
 #include "utils.h"
@@ -48,7 +49,7 @@ void PeerInfoStorageTests::tearDown() {
 
 void PeerInfoStorageTests::testPutAndGetPeer() {
     auto storage = SqliteStorage::open(path, scheduler);
-    std::map<Id, std::list<PeerInfo>> allPeers {};
+    std::map<Id, std::vector<PeerInfo>> allPeers {};
 
     std::list<Id> ids {};
     int basePort = 8000;
@@ -58,7 +59,7 @@ void PeerInfoStorageTests::testPutAndGetPeer() {
         auto keypair = Signature::KeyPair::random();
         auto peerId = Id(keypair.publicKey());
 
-        std::list<PeerInfo> peers = {};
+        std::vector<PeerInfo> peers = {};
         for (int j = 0; j < i; j++) {
             auto pi = PeerInfo::create(keypair, Id::random(), Id::random(), basePort + i);
             CPPUNIT_ASSERT(pi.getId() == peerId);
@@ -95,17 +96,17 @@ void PeerInfoStorageTests::testPutAndGetPeer() {
             return a.getOrigin().compareTo(b.getOrigin()) < 0;
         };
 
-        peers.sort(c);
-        ps.sort(c);
+        std::sort(peers.begin(), peers.end(), c);
+        std::sort(ps.begin(), ps.end(), c);
 
         for (int i = 0; i < peers.size(); i++)
-            CPPUNIT_ASSERT_EQUAL(list_get(peers, i), list_get(ps, i));
+            CPPUNIT_ASSERT(peers[i] == ps[i]);
 
         // limited
         ps = storage->getPeer(peerId, 16);
         CPPUNIT_ASSERT_EQUAL(std::min<size_t>(16, peers.size()), ps.size());
         for (auto& peer : ps)
-            CPPUNIT_ASSERT_EQUAL(list_get(peers, 0).getPort(), peer.getPort());
+            CPPUNIT_ASSERT(peers[0].getPort() == peer.getPort());
 
         for (auto& peer : peers) {
             auto pi = storage->getPeer(peer.getId(), peer.getOrigin());
@@ -153,14 +154,14 @@ void PeerInfoStorageTests::testPutAndGetPersistentPeer() {
     }
 
     auto ts = currentTimeMillis();
-    std::list<PeerInfo> peers = storage->getPersistentPeers(ts);
+    auto peers = storage->getPersistentPeers(ts);
     CPPUNIT_ASSERT(peers.size() == 128);
 
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
     std::cout << "\nUpdate the last announced for peers...";
     for (int i = 1; i <= 128; i++) {
-        auto peerId = list_get(peers, i - 1).getId();
+        auto peerId = peers[i-1].getId();
 
         if (i % 2 == 0)
             storage->updatePeerLastAnnounce(peerId, origin);

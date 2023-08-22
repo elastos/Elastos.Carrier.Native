@@ -338,8 +338,8 @@ Sp<Value> SqliteStorage::putValue(const Value& value, int expectedSeq, bool pers
     return old;
 }
 
-std::list<Id> SqliteStorage::getAllValues() {
-    std::list<Id> ids {};
+std::vector<Id> SqliteStorage::getAllValues() {
+    std::vector<Id> ids {};
 
     sqlite3_stmt* pStmt {nullptr};
     if (sqlite3_prepare_v2(sqlite_store, GET_VALUES.c_str(), strlen(GET_VALUES.c_str()), &pStmt, 0) != SQLITE_OK) {
@@ -354,15 +354,14 @@ std::list<Id> SqliteStorage::getAllValues() {
         int cNum = sqlite3_column_count(pStmt);
         for (int i = 0; i < cNum; i++) {
             const int cType = sqlite3_column_type(pStmt, i);
-            size_t len = 0;
-            const uint8_t* ptr = NULL;
+            size_t len {0};
+            const uint8_t* ptr {};
 
             if (cType == SQLITE_BLOB) {
                 len = sqlite3_column_bytes(pStmt, i);
                 ptr = (const uint8_t*)sqlite3_column_blob(pStmt, i);
 
-                auto id = Id({ptr, len});
-                ids.emplace_back(id);
+                ids.emplace_back(Blob(ptr, len));
             }
         }
     }
@@ -387,8 +386,8 @@ void SqliteStorage::updateValueLastAnnounce(const Id& valueId) {
     sqlite3_finalize(pStmt);
 }
 
-std::list<Value> SqliteStorage::getPersistentValues(uint64_t lastAnnounceBefore) {
-    std::list<Value> values {};
+std::vector<Value> SqliteStorage::getPersistentValues(uint64_t lastAnnounceBefore) {
+    std::vector<Value> values {};
     sqlite3_stmt* pStmt {nullptr};
     if (sqlite3_prepare_v2(sqlite_store, GET_PERSISTENT_VALUES.c_str(), strlen(GET_PERSISTENT_VALUES.c_str()), &pStmt, 0) != SQLITE_OK) {
         sqlite3_finalize(pStmt);
@@ -462,11 +461,11 @@ bool SqliteStorage::removeValue(const Id& valueId) {
     return ret;
 }
 
-std::list<PeerInfo> SqliteStorage::getPeer(const Id& peerId, int maxPeers) {
+std::vector<PeerInfo> SqliteStorage::getPeer(const Id& peerId, int maxPeers) {
     if (maxPeers <=0)
         maxPeers = 0x7fffffff;
 
-    std::list<PeerInfo> peers = {};
+    std::vector<PeerInfo> peers {};
     sqlite3_stmt *pStmt;
     if(sqlite3_prepare_v2(sqlite_store, SELECT_PEER.c_str(), strlen(SELECT_PEER.c_str()), &pStmt, 0) != SQLITE_OK) {
         sqlite3_finalize(pStmt);
@@ -514,8 +513,8 @@ std::list<PeerInfo> SqliteStorage::getPeer(const Id& peerId, int maxPeers) {
             }
         }
 
-        PeerInfo peer = PeerInfo::of(peerId.blob(), privateKey, nodeId, origin, port, alt, signature);
-        peers.push_back(peer);
+        auto peer = PeerInfo::of(peerId.blob(), privateKey, nodeId, origin, port, alt, signature);
+        peers.emplace_back(peer);
     }
     sqlite3_finalize(pStmt);
 
@@ -579,7 +578,7 @@ Sp<PeerInfo> SqliteStorage::getPeer(const Id& peerId, const Id& origin) {
     return nullptr;
 }
 
-void SqliteStorage::putPeer(const std::list<PeerInfo>& peers) {
+void SqliteStorage::putPeer(const std::vector<PeerInfo>& peers) {
     if (sqlite3_exec(sqlite_store, "BEGIN", 0, 0, 0) != 0)
         throw std::runtime_error("Open auto commit mode failed.");
 
@@ -653,8 +652,8 @@ void SqliteStorage::putPeer(const PeerInfo& peer, bool persistent, bool updateLa
     sqlite3_finalize(pStmt);
 }
 
-std::list<Id> SqliteStorage::getAllPeers() {
-    std::list<Id> ids {};
+std::vector<Id> SqliteStorage::getAllPeers() {
+    std::vector<Id> ids {};
 
     sqlite3_stmt* pStmt {nullptr};
     if (sqlite3_prepare_v2(sqlite_store, GET_PEERS.c_str(), strlen(GET_PEERS.c_str()), &pStmt, 0) != SQLITE_OK) {
@@ -676,8 +675,7 @@ std::list<Id> SqliteStorage::getAllPeers() {
                 len = sqlite3_column_bytes(pStmt, i);
                 ptr = sqlite3_column_blob(pStmt, i);
 
-                auto id = Id(Blob{ptr, len});
-                ids.emplace_back(id);
+                ids.emplace_back(Blob{ptr, len});
             }
         }
     }
@@ -703,8 +701,8 @@ void SqliteStorage::updatePeerLastAnnounce(const Id& peerId, const Id& origin) {
     sqlite3_finalize(pStmt);
 }
 
-std::list<PeerInfo> SqliteStorage::getPersistentPeers(uint64_t lastAnnounceBefore) {
-    std::list<PeerInfo> peers {};
+std::vector<PeerInfo> SqliteStorage::getPersistentPeers(uint64_t lastAnnounceBefore) {
+    std::vector<PeerInfo> peers {};
     sqlite3_stmt* pStmt {nullptr};
     if (sqlite3_prepare_v2(sqlite_store, GET_PERSISTENT_PEERS.c_str(), strlen(GET_PERSISTENT_PEERS.c_str()), &pStmt, 0) != SQLITE_OK) {
         sqlite3_finalize(pStmt);
