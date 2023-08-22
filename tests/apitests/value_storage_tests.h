@@ -27,14 +27,12 @@
 
 namespace test {
 
-class DataStorageTests : public CppUnit::TestFixture {
-    CPPUNIT_TEST_SUITE(DataStorageTests);
+class ValueStorageTests : public CppUnit::TestFixture {
+    CPPUNIT_TEST_SUITE(ValueStorageTests);
     CPPUNIT_TEST(testPutAndGetValue);
     CPPUNIT_TEST(testPutAndGetPersistentValue);
     CPPUNIT_TEST(testUpdateSignedValue);
     CPPUNIT_TEST(testUpdateEncryptedValue);
-    CPPUNIT_TEST(testPutAndGetPeer);
-    CPPUNIT_TEST(testPutAndGetPersistentPeer);
     CPPUNIT_TEST_SUITE_END();
 
  public:
@@ -45,19 +43,10 @@ class DataStorageTests : public CppUnit::TestFixture {
     void testPutAndGetPersistentValue();
     void testUpdateSignedValue();
     void testUpdateEncryptedValue();
-    void testPutAndGetPeer();
-    void testPutAndGetPersistentPeer();
 
 private:
     elastos::carrier::Scheduler scheduler {};
-
-    std::shared_ptr<Node> node1 = nullptr;
-    std::shared_ptr<Node> node2 = nullptr;
-
-    std::string path;
-    std::string path1;
-    std::string path2;
-    std::string path3;
+    std::string path {};
 };
 
 }  // namespace test
