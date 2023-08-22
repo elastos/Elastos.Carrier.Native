@@ -152,7 +152,7 @@ void FindPeerTests::testFindPeerResponseSize() {
     nodes6.push_back(std::make_shared<NodeInfo>(Id::random(), "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff", 65528));
 
 
-    std::list<PeerInfo> peers {};
+    std::vector<PeerInfo> peers {};
     std::vector<uint8_t> sig(64);
     Id pid = Id::random();
     for (int i = 0; i < 8; i++) {
@@ -195,7 +195,7 @@ void FindPeerTests::testFindPeerResponseSize2() {
     nodes6.push_back(std::make_shared<NodeInfo>(Id::random(), "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff", 65528));
 
 
-    std::list<PeerInfo> peers {};
+    std::vector<PeerInfo> peers {};
     std::vector<uint8_t> sig(64);
     Id pid = Id::random();
     for (int i = 0; i < 8; i++) {
@@ -228,7 +228,7 @@ void FindPeerTests::testFindPeerResponse4() {
     nodes4.push_back(std::make_shared<NodeInfo>(Id::random(), "192.168.1.4", 1234));
     nodes4.push_back(std::make_shared<NodeInfo>(Id::random(), "192.168.1.5", 1235));
 
-    std::list<PeerInfo> peers {};
+    std::vector<PeerInfo> peers {};
     std::vector<uint8_t> sig(64);
     Id pid = Id::random();
     for (int i = 0; i < 8; i++) {
@@ -278,7 +278,7 @@ void FindPeerTests::testFindPeerResponse6() {
     nodes6.push_back(std::make_shared<NodeInfo>(Id::random(), "2001:0db8:85a3:0000:0000:8a2e:0370:7334", 1234));
     nodes6.push_back(std::make_shared<NodeInfo>(Id::random(), "2001:0db8:85a3:0000:0000:8a2e:0370:7335", 1235));
 
-    std::list<PeerInfo> peers {};
+    std::vector<PeerInfo> peers {};
     std::vector<uint8_t> sig(64);
     Id pid = Id::random();
     for (int i = 0; i < 8; i++) {
@@ -335,7 +335,7 @@ void FindPeerTests::testFindPeerResponse46() {
     nodes6.push_back(std::make_shared<NodeInfo>(Id::random(), "2001:0db8:85a3:0000:0000:8a2e:0370:7334", 1234));
     nodes6.push_back(std::make_shared<NodeInfo>(Id::random(), "2001:0db8:85a3:0000:0000:8a2e:0370:7335", 1235));
 
-    std::list<PeerInfo> peers {};
+    std::vector<PeerInfo> peers {};
     std::vector<uint8_t> sig(64);
     Id pid = Id::random();
 

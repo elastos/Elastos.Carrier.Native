@@ -304,18 +304,18 @@ void Node::persistentAnnounce() {
 
     auto ts = currentTimeMillis() - Constants::MAX_VALUE_AGE +
             Constants::RE_ANNOUNCE_INTERVAL * 2;
-    std::list<Value> vs = storage->getPersistentValues(ts);
-    for (auto v : vs) {
-        log->debug("Re-announce the value: {}", v.getId().toString());
-        storage->updateValueLastAnnounce(v.getId());
-        futures.emplace_back(doStoreValue(v));
+    auto values = storage->getPersistentValues(ts);
+    for (auto& value : values) {
+        log->debug("Re-announce the value: {}", value.getId().toString());
+        storage->updateValueLastAnnounce(value.getId());
+        futures.emplace_back(doStoreValue(value));
     }
 
     ts = currentTimeMillis() - Constants::MAX_PEER_AGE +
             Constants::RE_ANNOUNCE_INTERVAL * 2;
 
-    std::list<PeerInfo> ps = storage->getPersistentPeers(ts);
-    for (auto p : ps) {
+    auto ps = storage->getPersistentPeers(ts);
+    for (auto& p : ps) {
         log->debug("Re-announce the peer: {}", p.getId().toString());
         storage->updatePeerLastAnnounce(p.getId(), p.getOrigin());
         futures.emplace_back(doAnnouncePeer(p));
@@ -339,16 +339,15 @@ void Node::getNodes(const Id& id, Sp<NodeInfo> node, std::function<void(std::lis
     else {
         dht6->getNodes(id, node, completeHandler);
     }
-
 }
 #endif
 
-std::future<std::list<Sp<NodeInfo>>> Node::findNode(const Id& id, LookupOption option) const {
+std::future<std::vector<Sp<NodeInfo>>> Node::findNode(const Id& id, LookupOption option) const {
     checkState(isRunning(), "Node not running");
     checkArgument(id != Id::MIN_ID, "Invalid peer id");
 
-    auto promise = std::make_shared<std::promise<std::list<Sp<NodeInfo>>>>();
-    auto results = std::make_shared<std::list<Sp<NodeInfo>>>();
+    auto promise = std::make_shared<std::promise<std::vector<Sp<NodeInfo>>>>();
+    auto results = std::make_shared<std::vector<Sp<NodeInfo>>>();
 
     if (option == LookupOption::ARBITRARY) {
         if (dht4 != nullptr) {
@@ -468,13 +467,13 @@ std::future<void> Node::doStoreValue(const Value& value) const {
     return promise->get_future();
 }
 
-std::future<std::list<PeerInfo>> Node::findPeer(const Id& id, int expected, LookupOption option) const {
+std::future<std::vector<PeerInfo>> Node::findPeer(const Id& id, int expected, LookupOption option) const {
     checkState(isRunning(), "Node not running");
     checkArgument(id != Id::MIN_ID, "Invalid peer id");
 
-    auto promise = std::make_shared<std::promise<std::list<PeerInfo>>>();
+    auto promise = std::make_shared<std::promise<std::vector<PeerInfo>>>();
     auto dedup_result = std::make_shared<std::set<PeerInfo>>();
-    auto results = std::make_shared<std::list<PeerInfo>>();
+    auto results = std::make_shared<std::vector<PeerInfo>>();
 
     auto peers = getStorage()->getPeer(id, expected);
     for (const auto& item : peers) {
@@ -498,7 +497,7 @@ std::future<std::list<PeerInfo>> Node::findPeer(const Id& id, int expected, Look
     // deal with iteration while adding/removing.
 
     auto completion = std::make_shared<std::atomic<int>>(0);
-    auto completeHandler = [=](std::list<PeerInfo> peers) {
+    auto completeHandler = [=](std::vector<PeerInfo> peers) {
         (*completion)++;
 
         for (const auto &item : peers) {

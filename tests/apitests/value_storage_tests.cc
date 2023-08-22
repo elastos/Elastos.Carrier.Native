@@ -108,7 +108,7 @@ void ValueStorageTests::testPutAndGetPersistentValue() {
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     std::cout << "\nUpdate the last announced for values..." << std::endl;
     for (int i = 1; i <= 128; i++) {
-        Id valueId = list_get(values, i - 1).getId();
+        Id valueId = values[i-1].getId();
 
         if (i % 2 == 0)
             storage->updateValueLastAnnounce(valueId);

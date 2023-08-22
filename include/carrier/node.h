@@ -91,7 +91,7 @@ public:
         return status == NodeStatus::Running;
     }
 
-    std::future<std::list<Sp<NodeInfo>>> findNode(const Id& id) const {
+    std::future<std::vector<Sp<NodeInfo>>> findNode(const Id& id) const {
         return findNode(id, defaultLookupOption);
     }
 
@@ -99,7 +99,7 @@ public:
         return findValue(id, defaultLookupOption);
     }
 
-    std::future<std::list<PeerInfo>> findPeer(const Id &id, int expectedNum) const {
+    std::future<std::vector<PeerInfo>> findPeer(const Id &id, int expectedNum) const {
         return findPeer(id, expectedNum, defaultLookupOption);
     }
 
@@ -108,10 +108,10 @@ public:
     void getNodes(const Id& id, Sp<NodeInfo> node, std::function<void(std::list<Sp<NodeInfo>>)> completeHandler) const;
 #endif
 
-    std::future<std::list<Sp<NodeInfo>>> findNode(const Id& id, LookupOption option) const;
+    std::future<std::vector<Sp<NodeInfo>>> findNode(const Id& id, LookupOption option) const;
     std::future<Sp<Value>> findValue(const Id& id, LookupOption option) const;
     std::future<void> storeValue(const Value& value, bool persistent = false) const;
-    std::future<std::list<PeerInfo>> findPeer(const Id &id, int expectedNum, LookupOption option) const;
+    std::future<std::vector<PeerInfo>> findPeer(const Id &id, int expectedNum, LookupOption option) const;
     std::future<void> announcePeer(const PeerInfo& peer, bool persistent = false) const;
 
     Sp<DataStorage> getStorage() const {
