@@ -54,9 +54,8 @@ list(APPEND APITESTS_SOURCES
     value_store_tests.cc
     value_storage_tests.cc
     peerinfo_tests.cc
-    peerinfo_announce_tests.cc
     peerinfo_storage_tests.cc
-    announce_find_peer_tests.cc
+    peer_tests.cc
     node_tests.cc
 )
 

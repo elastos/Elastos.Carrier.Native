@@ -22,29 +22,30 @@
 
 #pragma once
 
-#include <memory>
-#include <carrier.h>
-
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
+#include <carrier/node.h>
 
 namespace test {
 
-class PeerInfoAnnounceTests : public CppUnit::TestFixture {
-    CPPUNIT_TEST_SUITE(PeerInfoAnnounceTests);
-    CPPUNIT_TEST(testAnnounceAndFind);
+class PeerTests : public CppUnit::TestFixture {
+    CPPUNIT_TEST_SUITE(PeerTests);
+    CPPUNIT_TEST(testPeer1);
+    CPPUNIT_TEST(testPeer2);
     CPPUNIT_TEST_SUITE_END();
 
  public:
     void setUp();
     void tearDown();
 
-    void testAnnounceAndFind();
+    void testPeer1();
+    void testPeer2();
 
 private:
     std::shared_ptr<Node> node1 {};
     std::shared_ptr<Node> node2 {};
     std::shared_ptr<Node> node3 {};
+    std::shared_ptr<Node> proxy {};
 };
 
 }  // namespace test

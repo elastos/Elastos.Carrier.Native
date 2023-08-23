@@ -54,7 +54,7 @@ void PeerInfoStorageTests::testPutAndGetPeer() {
     std::list<Id> ids {};
     int basePort = 8000;
 
-    std::cout << "Writing peers...";
+    std::cout << std::endl << "Writing peers...";
     for (int i = 1; i <= 64; i++) {
         auto keypair = Signature::KeyPair::random();
         auto peerId = Id(keypair.publicKey());
@@ -141,7 +141,7 @@ void PeerInfoStorageTests::testPutAndGetPersistentPeer() {
     uint16_t basePort = 8000;
     std::vector<uint8_t> sig(64);
 
-    std::cout << "Writing peers...";
+    std::cout << std::endl << "Writing peers...";
     for (int i = 1; i <= 256; i++) {
         auto peer = PeerInfo::create(Id::random(), origin, basePort + i);
 
@@ -170,7 +170,7 @@ void PeerInfoStorageTests::testPutAndGetPersistentPeer() {
     peers = storage->getPersistentPeers(ts);
     CPPUNIT_ASSERT(peers.size() == 64);
 
-    std::cout << "\nReading values...";
+    std::cout << std::endl << "Reading values...";
     for (int i = 1; i <= 256; i++) {
         auto peerId = peerIds.front();
         auto peer = storage->getPeer(peerId, origin);
