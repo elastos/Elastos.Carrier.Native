@@ -33,7 +33,7 @@
 
 #include "connection.h"
 #include "activeproxy.h"
-#include "packetflag.h"
+#include "packettype.h"
 #include "exceptions.h"
 #include "utils/log.h"
 
@@ -389,7 +389,7 @@ void ProxyConnection::sendAuthenticateRequest(const uint8_t* data, size_t size) 
     *(uint16_t*)ptr = htons(size);
     ptr += sizeof(uint16_t);
     // flag
-    *ptr++ = PacketFlag::auth();
+    *ptr++ = PacketType::auth();
     // node id
     std::memcpy(ptr, nodeId.data(), nodeId.size());
     ptr += nodeId.size();
@@ -462,7 +462,7 @@ void ProxyConnection::sendAttachRequest(const uint8_t* data, size_t size) noexce
     *(uint16_t*)ptr = htons(size);
     ptr += sizeof(uint16_t);
     // flag
-    *ptr++ = PacketFlag::attach();
+    *ptr++ = PacketType::attach();
     // node id
     std::memcpy(ptr, nodeId.data(), nodeId.size());
     ptr += nodeId.size();
@@ -515,7 +515,7 @@ void ProxyConnection::sendPingRequest() noexcept
     *(uint16_t*)ptr = htons(size);
     ptr += sizeof(uint16_t);
     // flag
-    *ptr++ = PacketFlag::ping();
+    *ptr++ = PacketType::ping();
     // random padding
     Random::buffer(ptr, padding);
 
@@ -568,7 +568,7 @@ void ProxyConnection::sendConnectResponse(bool success) noexcept
     *(uint16_t*)ptr = htons(size);
     ptr += sizeof(uint16_t);
     // flag
-    *ptr++ = PacketFlag::connectAck();
+    *ptr++ = PacketType::connectAck();
     // success?
     *ptr++ = randomBoolean(success);
     // random padding
@@ -625,7 +625,7 @@ void ProxyConnection::sendDisconnectRequest() noexcept
     *(uint16_t*)ptr = htons(size);
     ptr += sizeof(uint16_t);
     // flag
-    *ptr++ = PacketFlag::disconnect();
+    *ptr++ = PacketType::disconnect();
     // random padding
     Random::buffer(ptr, padding);
 
@@ -669,7 +669,7 @@ void ProxyConnection::sendDataRequest(const uint8_t* data, size_t _size) noexcep
     *(uint16_t*)ptr = htons(size);
     ptr += sizeof(uint16_t);
     // flag
-    *ptr++ = PacketFlag::data();
+    *ptr++ = PacketType::data();
     // encrypted: data
     Blob _cipher{ptr, _size + CryptoBox::MAC_BYTES};
     const Blob _plain{data, _size};
@@ -792,13 +792,12 @@ void ProxyConnection::onRelayRead(const uint8_t* data, size_t size) noexcept
 void ProxyConnection::processRelayPacket(const uint8_t* packet, size_t size) noexcept
 {
     uint8_t flag = *(packet + sizeof(uint16_t));
-    bool ack = PacketFlag::isAck(flag);
-    uint8_t type = PacketFlag::getType(flag);
+    PacketType type = PacketType::valueOf(flag);
 
     // log->trace("Connection {} got packet from server {}: type={}, ack={}, size={}",
     //        proxy.serverEndpoint(), id, type, ack, size);
 
-    if (type == PacketFlag::ERR) {
+    if (type == PacketType::ERROR) {
         size_t len = size - PACKET_HEADER_BYTES - CryptoBox::MAC_BYTES;
         uint8_t* plain = (uint8_t*)alloca(len);
         Blob _plain{plain, len};
@@ -822,54 +821,54 @@ void ProxyConnection::processRelayPacket(const uint8_t* packet, size_t size) noe
         return;
 
     case ConnectionState::Authenticating:
-        if (ack && type == PacketFlag::AUTH) {
+        if (type == PacketType::AUTH_ACK) {
             onAuthenticateResponse(packet, size);
             return;
         } else {
             log->error("Connection {} got a wrong packet type: {}(0x{:x}), AUTH acknowledge expected.",
-                            id,  PacketFlag::getTypeString(type), flag);
+                            id,  type.toString(), flag);
             close();
             return;
         }
         break;
 
     case ConnectionState::Attaching:
-        if (ack && type == PacketFlag::ATTACH) {
+        if (type == PacketType::ATTACH_ACK) {
             onAttachResponse(packet, size);
             return;
         } else {
             log->error("Connection {} got a wrong packet type: {}(0x{:x}), ATTACH acknowledge expected.",
-                            id,  PacketFlag::getTypeString(type), flag);
+                            id,  type.toString(), flag);
             close();
             return;
         }
         break;
 
     case ConnectionState::Idling:
-        if (ack && type == PacketFlag::PING) {
+        if (type == PacketType::PING_ACK) {
             onPingResponse(packet, size);
             return;
-        } else if (!ack && type == PacketFlag::CONNECT) {
+        } else if (type == PacketType::CONNECT) {
             onConnectRequest(packet, size);
             return;
         } else {
             log->error("Connection {} got a wrong packet type: {}(0x{:x}), PING acknowledge or CONNECT expected.",
-                            id,  PacketFlag::getTypeString(type), flag);
+                            id,  type.toString(), flag);
             close();
             return;
         }
         break;
 
     case ConnectionState::Relaying:
-        if (type == PacketFlag::DATA) {
+        if (type == PacketType::DATA) {
             onDataRequest(packet, size);
             return;
-        } else if (!ack && type == PacketFlag::DISCONNECT) {
+        } else if (type == PacketType::DISCONNECT) {
             onDisconnectRequest(packet, size);
             return;
         } else {
             log->error("Connection {} got a wrong packet type: {}(0x{:x}), DATA or DISCONNECT expected.",
-                            id,  PacketFlag::getTypeString(type), flag);
+                            id,  type.toString(), flag);
             close();
             return;
         }
