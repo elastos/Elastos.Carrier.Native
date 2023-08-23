@@ -44,20 +44,20 @@ list(APPEND APITESTS_SOURCES
     messages/find_peer_tests.cc
     messages/error_message_tests.cc
     task/closest_candidates_tests.cc
+    log_tests.cc
+    crypto_tests.cc
+    address_tests.cc
     id_tests.cc
+    prefix_tests.cc
+    nodeinfo_tests.cc
     value_tests.cc
     value_store_tests.cc
     value_storage_tests.cc
-    nodeinfo_tests.cc
     peerinfo_tests.cc
     peerinfo_announce_tests.cc
     peerinfo_storage_tests.cc
-    prefix_tests.cc
-    crypto_tests.cc
-    log_tests.cc
     announce_find_peer_tests.cc
-    address_tests.cc
-    node_api_tests.cc
+    node_tests.cc
 )
 
 set(LIBS
