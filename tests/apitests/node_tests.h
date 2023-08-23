@@ -24,26 +24,29 @@
 
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
-#include <carrier/node.h>
+#include <carrier.h>
 
 namespace test {
 
-class NodeApiTester : public CppUnit::TestFixture {
-    CPPUNIT_TEST_SUITE(NodeApiTester);
-    CPPUNIT_TEST(testSelfNodes);
+class NodeTests : public CppUnit::TestFixture {
+    CPPUNIT_TEST_SUITE(NodeTests);
+    CPPUNIT_TEST(testFindNode);
+    CPPUNIT_TEST(testFindValue);
+    CPPUNIT_TEST(testFindPeer);
     CPPUNIT_TEST_SUITE_END();
 
 public:
     void setUp();
     void tearDown();
-    void testSelfNodes();
+
+    void testFindNode();
+    void testFindValue();
+    void testFindPeer();
 
 private:
-    std::shared_ptr<Node> node1 = nullptr;
-    std::shared_ptr<Node> node2 = nullptr;
-    std::shared_ptr<Node> node3 = nullptr;
-
-    std::string dataDir {};
+    std::shared_ptr<Node> node1 {};
+    std::shared_ptr<Node> node2 {};
+    std::shared_ptr<Node> node3 {};
 };
 
 }  // namespace test
