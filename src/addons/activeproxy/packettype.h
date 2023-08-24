@@ -131,11 +131,6 @@ public:
         return (flag & ACK_MASK) != 0;
     }
 
-    // uint8_t value() {
-    //     // [min, max]
-    //     return Random::uint8(max - min + 1) + min;
-    // }
-
     bool isAck() {
 		return e & ACK_MASK;
 	}

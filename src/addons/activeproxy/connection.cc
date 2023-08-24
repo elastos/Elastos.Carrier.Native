@@ -148,11 +148,11 @@ std::string ProxyConnection::status() const noexcept
 
 void ProxyConnection::close() noexcept
 {
-    if (state == ConnectionState::Closing || state == ConnectionState::Closed)
+    if (state == ConnectionState::Closed)
         return;
 
     ConnectionState old = state;
-    state = ConnectionState::Closing;
+    state = ConnectionState::Closed;
 
     log->debug("Connection {} is closing...", id);
 
@@ -195,7 +195,6 @@ void ProxyConnection::close() noexcept
     }
 
     onClosed();
-    state = ConnectionState::Closed;
 }
 
 int ProxyConnection::connectServer() noexcept
@@ -346,7 +345,7 @@ static inline size_t randomPadding(void)
  */
 void ProxyConnection::sendAuthenticateRequest(const uint8_t* data, size_t size) noexcept
 {
-    if (state == ConnectionState::Closing || state == ConnectionState::Closed)
+    if (state == ConnectionState::Closed)
         return;
 
     state = ConnectionState::Authenticating;
@@ -432,7 +431,7 @@ void ProxyConnection::sendAuthenticateRequest(const uint8_t* data, size_t size) 
  */
 void ProxyConnection::sendAttachRequest(const uint8_t* data, size_t size) noexcept
 {
-    if (state == ConnectionState::Closing || state == ConnectionState::Closed)
+    if (state == ConnectionState::Closed)
         return;
 
     state = ConnectionState::Attaching;
@@ -502,7 +501,7 @@ void ProxyConnection::sendAttachRequest(const uint8_t* data, size_t size) noexce
  */
 void ProxyConnection::sendPingRequest() noexcept
 {
-    if (state == ConnectionState::Closing || state == ConnectionState::Closed)
+    if (state == ConnectionState::Closed)
         return;
 
     size_t padding = randomPadding();
@@ -554,7 +553,7 @@ static uint8_t randomBoolean(bool v)
  */
 void ProxyConnection::sendConnectResponse(bool success) noexcept
 {
-    if (state == ConnectionState::Closing || state == ConnectionState::Closed)
+    if (state == ConnectionState::Closed)
         return;
 
     size_t padding = randomPadding();
@@ -612,7 +611,7 @@ void ProxyConnection::sendConnectResponse(bool success) noexcept
  */
 void ProxyConnection::sendDisconnectRequest() noexcept
 {
-    if (state == ConnectionState::Closing || state == ConnectionState::Closed)
+    if (state == ConnectionState::Closed)
         return;
 
     size_t padding = randomPadding();
@@ -657,7 +656,7 @@ void ProxyConnection::sendDisconnectRequest() noexcept
  */
 void ProxyConnection::sendDataRequest(const uint8_t* data, size_t _size) noexcept
 {
-    if (state == ConnectionState::Closing || state == ConnectionState::Closed)
+    if (state == ConnectionState::Closed)
         return;
 
     size_t size = PACKET_HEADER_BYTES + CryptoBox::MAC_BYTES + _size;
@@ -811,71 +810,33 @@ void ProxyConnection::processRelayPacket(const uint8_t* packet, size_t size) noe
         return;
     }
 
-    switch (state) {
-    case ConnectionState::Initializing:
-    case ConnectionState::Connecting:
-    case ConnectionState::Closed:
-        assert(!"should not receive any data when connecting or closed.");
-        log->error("Connection {} got a packet when connecting or closed.", id);
+    if (!state.accept(type)) {
+        log->error("Connection {} got wrong {} packet in {} state", id, type.toString(), state.toString());
         close();
         return;
+    }
 
-    case ConnectionState::Authenticating:
-        if (type == PacketType::AUTH_ACK) {
-            onAuthenticateResponse(packet, size);
-            return;
-        } else {
-            log->error("Connection {} got a wrong packet type: {}(0x{:x}), AUTH acknowledge expected.",
-                            id,  type.toString(), flag);
-            close();
-            return;
-        }
-        break;
+    switch (type) {
+    case PacketType::AUTH_ACK:
+        return onAuthenticateResponse(packet, size);
 
-    case ConnectionState::Attaching:
-        if (type == PacketType::ATTACH_ACK) {
-            onAttachResponse(packet, size);
-            return;
-        } else {
-            log->error("Connection {} got a wrong packet type: {}(0x{:x}), ATTACH acknowledge expected.",
-                            id,  type.toString(), flag);
-            close();
-            return;
-        }
-        break;
+    case PacketType::ATTACH_ACK:
+        return onAttachResponse(packet, size);
 
-    case ConnectionState::Idling:
-        if (type == PacketType::PING_ACK) {
-            onPingResponse(packet, size);
-            return;
-        } else if (type == PacketType::CONNECT) {
-            onConnectRequest(packet, size);
-            return;
-        } else {
-            log->error("Connection {} got a wrong packet type: {}(0x{:x}), PING acknowledge or CONNECT expected.",
-                            id,  type.toString(), flag);
-            close();
-            return;
-        }
-        break;
+    case PacketType::PING_ACK:
+        return onPingResponse(packet, size);
 
-    case ConnectionState::Relaying:
-        if (type == PacketType::DATA) {
-            onDataRequest(packet, size);
-            return;
-        } else if (type == PacketType::DISCONNECT) {
-            onDisconnectRequest(packet, size);
-            return;
-        } else {
-            log->error("Connection {} got a wrong packet type: {}(0x{:x}), DATA or DISCONNECT expected.",
-                            id,  type.toString(), flag);
-            close();
-            return;
-        }
-        break;
-    case ConnectionState::Closing:
+    case PacketType::CONNECT:
+        return onConnectRequest(packet, size);
+
+    case PacketType::DATA:
+        return onDataRequest(packet, size);
+
+    case PacketType::DISCONNECT:
+        return onDisconnectRequest(packet, size);
+
     default:
-        break;
+		log->error("INTERNAL ERROR: Connection {} got wrong {} packet in {} state", id, type.toString(), state.toString());
     }
 }
 
@@ -1101,7 +1062,7 @@ void ProxyConnection::openUpstream() noexcept
 
 void ProxyConnection::closeUpstream(bool force) noexcept
 {
-    if (state == ConnectionState::Closing || state == ConnectionState::Closed)
+    if (state == ConnectionState::Closed)
         return;
 
     log->debug("Connection {} closing upstream {}", id, proxy.upstreamEndpoint());
