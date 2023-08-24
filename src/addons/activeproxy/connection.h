@@ -27,6 +27,7 @@
 #include <functional>
 
 #include "carrier.h"
+#include "packettype.h"
 
 namespace elastos {
 namespace carrier {
@@ -35,15 +36,60 @@ namespace activeproxy {
 
 class ActiveProxy;
 
-enum class ConnectionState {
-    Connecting = 0,
-    Initializing,
-    Authenticating,
-    Attaching,
-    Idling,
-    Relaying,
-    Closing,
-    Closed
+class ConnectionState {
+public:
+    enum Enum : uint8_t {
+        Connecting = 0,
+        Initializing,
+        Authenticating,
+        Attaching,
+        Idling,
+        Relaying,
+        Disconnecting,
+        Closed
+    };
+
+    constexpr ConnectionState() = delete;
+    constexpr ConnectionState(Enum e) : e(e) {};
+
+    // Allows comparisons with Enum constants.
+    constexpr operator Enum() const noexcept {
+        return e;
+    }
+
+    // Needed to prevent if(e)
+    explicit operator bool() const = delete;
+
+    bool accept(PacketType type) const noexcept {
+        switch (e) {
+            case Connecting: return type == PacketType::PING_ACK;
+            case Initializing: return false;
+            case Authenticating: return type == PacketType::AUTH_ACK;
+            case Attaching: return type == PacketType::ATTACH_ACK;
+            case Idling: return type == PacketType::PING_ACK || type == PacketType::CONNECT;
+            case Relaying: return type == PacketType::DATA || type == PacketType::DISCONNECT;
+            case Disconnecting: return type == PacketType::DISCONNECT || type == PacketType::DISCONNECT_ACK ||
+						type == PacketType::DATA;
+            case Closed: return false;
+        }
+    }
+
+    std::string toString() const noexcept {
+        switch (e) {
+            case Connecting: return "Connecting";
+            case Initializing: return "Initializing";
+            case Authenticating: return "Authenticating";
+            case Attaching: return "Attaching";
+            case Idling: return "Idling";
+            case Relaying: return "Relaying";
+            case Disconnecting: return "Disconnecting";
+            case Closed: return "Closed";
+        }
+    }
+
+private:
+
+    Enum e {};
 };
 
 class ProxyConnection {
