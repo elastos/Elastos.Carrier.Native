@@ -118,6 +118,10 @@ public:
         return random(DISCONNECT_MIN, DISCONNECT_MAX);
     }
 
+    static uint8_t disconnectAck() {
+        return random(DISCONNECT_MIN, DISCONNECT_MAX) | ACK_MASK;
+    }
+
     static uint8_t data() {
         return random(DATA_MIN, DATA_MAX);
     }
@@ -134,6 +138,23 @@ public:
     bool isAck() {
 		return e & ACK_MASK;
 	}
+
+    uint8_t value() const noexcept {
+        switch (e) {
+            case AUTH: return auth();
+            case AUTH_ACK: return authAck();
+            case ATTACH: return attach();
+            case ATTACH_ACK: return attachAck();
+            case PING: return ping();
+            case PING_ACK: return pingAck();
+            case CONNECT: return connect();
+            case CONNECT_ACK: return connectAck();
+            case DISCONNECT: return disconnect();
+            case DISCONNECT_ACK: return disconnectAck();
+            case DATA: return data();
+            case ERROR: return error();
+        }
+    }
 
     static inline PacketType valueOf(uint8_t value) {
         bool ack = (value & ACK_MASK) != 0;

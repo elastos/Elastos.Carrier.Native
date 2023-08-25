@@ -35,7 +35,9 @@ namespace carrier {
 namespace activeproxy {
 
 class ActiveProxy;
+class ProxyConnection;
 
+using WriteCallback = std::function<void(ProxyConnection*)>;
 class ConnectionState {
 public:
     enum Enum : uint8_t {
@@ -67,7 +69,7 @@ public:
             case Authenticating: return type == PacketType::AUTH_ACK;
             case Attaching: return type == PacketType::ATTACH_ACK;
             case Idling: return type == PacketType::PING_ACK || type == PacketType::CONNECT;
-            case Relaying: return type == PacketType::DATA || type == PacketType::DISCONNECT;
+            case Relaying: return type == PacketType::PING_ACK || type == PacketType::DATA || type == PacketType::DISCONNECT;
             case Disconnecting: return type == PacketType::DISCONNECT || type == PacketType::DISCONNECT_ACK ||
 						type == PacketType::DATA;
             case Closed: return false;
@@ -88,7 +90,6 @@ public:
     }
 
 private:
-
     Enum e {};
 };
 
@@ -155,7 +156,9 @@ protected:
     void sendPingRequest() noexcept;
     void sendConnectResponse(bool success) noexcept;
     void sendDisconnectRequest() noexcept;
+    void sendDisconnectResponse() noexcept;
     void sendDataRequest(const uint8_t* data, size_t size) noexcept;
+    void sendRelayPacket(PacketType type, uint8_t* payload = nullptr, size_t size = 0, WriteCallback handler = nullptr) noexcept;
 
     void onChallenge(const uint8_t* data, size_t size) noexcept;
     void onRelayRead(const uint8_t* data, size_t size) noexcept;
@@ -166,10 +169,12 @@ protected:
     void onPingResponse(const uint8_t* packet, size_t size) const noexcept;
     void onConnectRequest(const uint8_t* packet, size_t size) noexcept;
     void onDisconnectRequest(const uint8_t* packet, size_t size) noexcept;
+    void onDisconnectResponse(const uint8_t* packet, size_t size) noexcept;
     void onDataRequest(const uint8_t* packet, size_t size) noexcept;
 
     void openUpstream() noexcept;
-    void closeUpstream(bool force = false) noexcept;
+    void closeUpstream() noexcept;
+    void uvCloseUpstream(ProxyConnection* pc) noexcept;
     void startReadUpstream() noexcept;
 
     void onAuthorized(const CryptoBox::PublicKey& serverPk, uint16_t port) noexcept {
@@ -212,6 +217,8 @@ private:
     uv_tcp_t relay { 0 };
     uv_tcp_t upstream { 0 };
     bool upstreamPaused { false };
+    std::atomic_bool upstreamClosed {true};
+    std::atomic_uint disconnectConfirms {0};
 
     std::vector<uint8_t> stickyBuffer {};
 
