@@ -48,6 +48,10 @@ namespace carrier {
         id = Id(json.get_binary());
     }
 
+    inline void from_json(const nlohmann::json& json, std::optional<Id>& id) {
+        id = Id(json.get_binary());
+    }
+
     void to_json(nlohmann::json& json, const PeerInfo& pi);
     void from_json(const nlohmann::json& json, PeerInfo& pi);
 

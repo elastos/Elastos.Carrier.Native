@@ -53,18 +53,19 @@ public:
 
     void setPeer(const PeerInfo& peer) {
         peerId = peer.getId();
-        nodeId = peer.getNodeId();
+        if (peer.isDelegated())
+            nodeId = peer.getNodeId();
+
         port = peer.getPort();
         if (peer.hasAlternativeURL())
             alternativeURL = peer.getAlternativeURL();
+
         signature = peer.getSignature();
     }
 
     PeerInfo getPeer() {
-        if (nodeId == Id::MIN_ID)
-            nodeId = getId();
-
-        return PeerInfo::of(peerId.blob(), {}, nodeId.blob(), getId().blob(), port, alternativeURL, signature);
+        const Id& _nodeId = nodeId.has_value() ? nodeId.value() : getId();
+        return PeerInfo::of(peerId.blob(), {}, _nodeId.blob(), getId().blob(), port, alternativeURL, signature);
     }
 
     const Id& getTarget() const {
@@ -81,7 +82,7 @@ protected:
 private:
     int token;
     Id peerId;
-    Id nodeId; // Optional, only for the delegated peers
+    std::optional<Id> nodeId {};
     uint16_t port;
     std::string alternativeURL {};
     std::vector<uint8_t> signature {};
