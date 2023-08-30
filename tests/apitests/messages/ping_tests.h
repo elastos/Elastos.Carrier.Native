@@ -30,19 +30,19 @@
 namespace test {
 class PingTests : public MessageTests, public CppUnit::TestFixture {
     CPPUNIT_TEST_SUITE(PingTests);
-    CPPUNIT_TEST(testPingRequestSize);
-    CPPUNIT_TEST(testPingRequest);
-    CPPUNIT_TEST(testPingResponseSize);
-    CPPUNIT_TEST(testPingResponse);
+    CPPUNIT_TEST(testPingRequest1);
+    CPPUNIT_TEST(testPingRequest2);
+    CPPUNIT_TEST(testPingResponse1);
+    CPPUNIT_TEST(testPingResponse2);
     CPPUNIT_TEST_SUITE_END();
 
 public:
-    void setUp();
-    void tearDown();
+    void setUp() {}
+    void tearDown() {}
 
-    void testPingRequestSize();
-    void testPingRequest();
-    void testPingResponseSize();
-    void testPingResponse();
+    void testPingRequest1();
+    void testPingRequest2();
+    void testPingResponse1();
+    void testPingResponse2();
 };
 }

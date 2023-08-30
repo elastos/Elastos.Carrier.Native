@@ -62,7 +62,6 @@ void AnnouncePeerTests::testAnnouncePeerRequestSize2() {
     msg.setPeer(peer);
 
     auto bin = msg.serialize();
-    printMessage(static_cast<Message>(msg), bin);
     CPPUNIT_ASSERT(bin.size() <= msg.estimateSize());
 }
 

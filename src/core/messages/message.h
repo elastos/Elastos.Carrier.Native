@@ -104,6 +104,10 @@ public:
         RESPONSE    = 0x40
     };
 
+    Message() = delete;
+    Message(const Message&) = delete;
+
+
     Method getMethod() const {
         return ofMethod(type);
     }
@@ -197,8 +201,6 @@ protected:
     explicit Message(Type _type, Method _method, int _txid = 0)
         : type((int)_type | (int)_method), txid(_txid), version(0) {}
 
-    // explicit Message(const Message&) = delete;
-
     virtual void parse(const std::string& fieldName, nlohmann::json& object) {}
     virtual void toString(std::stringstream& ss) const {}
     virtual void serializeInternal(nlohmann::json& root) const;
@@ -217,7 +219,7 @@ private:
     Id id;
     Id remoteId;
 
-    RPCCall* associatedCall = nullptr;
+    RPCCall* associatedCall {};
 
     int type {0};
     int txid {0};

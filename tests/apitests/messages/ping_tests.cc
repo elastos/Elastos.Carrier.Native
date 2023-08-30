@@ -30,75 +30,82 @@
 namespace test {
 CPPUNIT_TEST_SUITE_REGISTRATION(PingTests);
 
-void PingTests::setUp() {
-}
-
-void PingTests::testPingRequestSize() {
-    auto msg = PingRequest();
-    msg.setId(Id::random());
-    msg.setTxid(0xF8901234);
-    msg.setVersion(VERSION);
-
-    auto serialized = msg.serialize();
-    CPPUNIT_ASSERT(serialized.size() <= msg.estimateSize());
-}
-
-void PingTests::testPingRequest() {
-    auto id = Id::random();
+void PingTests::testPingRequest1() {
+    auto nodeId = Id::random();
     int txid = Utils::getRandomInteger(62);
 
     auto msg = PingRequest();
-    msg.setId(id);
+    msg.setId(nodeId);
+    msg.setTxid(txid);
+    msg.setVersion(VERSION);
+
+    CPPUNIT_ASSERT(msg.getType() == Message::Type::REQUEST);
+    CPPUNIT_ASSERT(msg.getMethod() == Message::Method::PING);
+    CPPUNIT_ASSERT(msg.getId() == nodeId);
+    CPPUNIT_ASSERT(msg.getTxid() == txid);
+    CPPUNIT_ASSERT(msg.getVersion() == VERSION);
+    CPPUNIT_ASSERT(msg.estimateSize() >= msg.serialize().size());
+}
+
+void PingTests::testPingRequest2() {
+    auto nodeId = Id::random();
+    int txid = Utils::getRandomInteger(62);
+
+    auto msg = PingRequest();
+    msg.setId(nodeId);
     msg.setTxid(txid);
     msg.setVersion(VERSION);
 
     auto serialized = msg.serialize();
-    CPPUNIT_ASSERT(serialized.size() <= msg.estimateSize());
-
     auto parsed = Message::parse(serialized.data(), serialized.size());
-    parsed->setId(id);
+    parsed->setId(nodeId);
     auto _msg = std::static_pointer_cast<PingRequest>(parsed);
 
-    CPPUNIT_ASSERT(Message::Type::REQUEST == _msg->getType());
-    CPPUNIT_ASSERT(Message::Method::PING == _msg->getMethod());
-    CPPUNIT_ASSERT(id == _msg->getId());
-    CPPUNIT_ASSERT(txid == _msg->getTxid());
-    CPPUNIT_ASSERT(VERSION_STR == _msg->getReadableVersion());
+    CPPUNIT_ASSERT(_msg->getType() == Message::Type::REQUEST);
+    CPPUNIT_ASSERT(_msg->getMethod() == Message::Method::PING);
+    CPPUNIT_ASSERT(_msg->getId() == nodeId);
+    CPPUNIT_ASSERT(_msg->getTxid() == txid);
+    CPPUNIT_ASSERT(_msg->getVersion() == VERSION);
+    CPPUNIT_ASSERT(_msg->getReadableVersion() == VERSION_STR);
 }
 
-void
-PingTests::testPingResponseSize() {
+void PingTests::testPingResponse1() {
+    auto nodeId = Id::random();
+    int txid = Utils::getRandomInteger(62);
+    int version = Utils::getRandomInteger(100);
+
     auto msg = PingResponse();
-    msg.setId(Id::random());
-    msg.setTxid(0x78901234);
-    msg.setVersion(VERSION);
+    msg.setId(nodeId);
+    msg.setTxid(txid);
+    msg.setVersion(version);
 
-    auto serialized = msg.serialize();
-    CPPUNIT_ASSERT(serialized.size() <= msg.estimateSize());
+    CPPUNIT_ASSERT(msg.getType() == Message::Type::RESPONSE);
+    CPPUNIT_ASSERT(msg.getMethod() == Message::Method::PING);
+    CPPUNIT_ASSERT(msg.getId() == nodeId);
+    CPPUNIT_ASSERT(msg.getTxid() == txid);
+    CPPUNIT_ASSERT(msg.getVersion() == version);
+    CPPUNIT_ASSERT(msg.estimateSize() >= msg.serialize().size());
 }
 
-void
-PingTests::testPingResponse() {
-    auto id = Id::random();
-    int txid = Utils::getRandomInteger(62);;
+void PingTests::testPingResponse2() {
+    auto nodeId = Id::random();
+    int txid = Utils::getRandomInteger(62);
+    int version = Utils::getRandomInteger(100);
 
     auto msg = PingResponse(txid);
-    msg.setId(id);
+    msg.setId(nodeId);
+    msg.setVersion(version);
 
     auto serialized = msg.serialize();
-    CPPUNIT_ASSERT(serialized.size() <= msg.estimateSize());
-
     auto parsed = Message::parse(serialized.data(), serialized.size());
-    parsed->setId(id);
+    parsed->setId(nodeId);
     auto _msg = std::static_pointer_cast<PingResponse>(parsed);
 
-    CPPUNIT_ASSERT(Message::Type::RESPONSE == _msg->getType());
-    CPPUNIT_ASSERT(Message::Method::PING == _msg->getMethod());
-    CPPUNIT_ASSERT(id == _msg->getId());
-    CPPUNIT_ASSERT(txid == _msg->getTxid());
-    CPPUNIT_ASSERT(0 == _msg->getVersion());
+    CPPUNIT_ASSERT(_msg->getType() == Message::Type::RESPONSE);
+    CPPUNIT_ASSERT(_msg->getMethod() == Message::Method::PING);
+    CPPUNIT_ASSERT(_msg->getId() == nodeId);
+    CPPUNIT_ASSERT(_msg->getTxid() == txid);
+    CPPUNIT_ASSERT(_msg->getVersion() == version);
 }
 
-void PingTests::tearDown() {
-}
 }
