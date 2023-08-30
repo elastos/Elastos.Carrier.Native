@@ -24,8 +24,9 @@
 #include <sstream>
 
 #include "crypto/hex.h"
-#include "announce_peer_request.h"
+#include "message_error.h"
 #include "serializers.h"
+#include "announce_peer_request.h"
 
 namespace elastos {
 namespace carrier {
@@ -50,7 +51,7 @@ void AnnouncePeerRequest::serializeInternal(nlohmann::json& root) const {
 
 void AnnouncePeerRequest::parse(const std::string& fieldName, nlohmann::json& object) {
     if (fieldName != Message::KEY_REQUEST || !object.is_object())
-        throw std::invalid_argument("Invalid " + std::to_string((int)getMethod()) + "reqeust message");
+        throw MessageError("Invalid " + std::to_string((int)getMethod()) + "reqeust message");
 
     for (const auto& [key, value] : object.items()) {
         if (key == Message::KEY_REQ_TARGET)
@@ -66,7 +67,7 @@ void AnnouncePeerRequest::parse(const std::string& fieldName, nlohmann::json& ob
         else if(key == Message::KEY_REQ_TOKEN)
             value.get_to(token);
         else
-            throw std::invalid_argument("Invalid message with unkown key: " + key);
+            throw MessageError("Invalid message with unkown key: " + key);
     }
 }
 

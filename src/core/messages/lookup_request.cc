@@ -22,6 +22,7 @@
 
 #include <sstream>
 
+#include "message_error.h"
 #include "serializers.h"
 #include "lookup_request.h"
 
@@ -51,7 +52,7 @@ void LookupRequest::serializeInternal(nlohmann::json& root) const {
 
 void LookupRequest::parse(const std::string& fieldName, nlohmann::json& object) {
     if (fieldName != Message::KEY_REQUEST || !object.is_object())
-        throw std::invalid_argument("Invalid request message");
+        throw MessageError("Invalid request message");
 
     for (const auto& [key, value]: object.items()) {
         if (key == Message::KEY_REQ_TARGET) {

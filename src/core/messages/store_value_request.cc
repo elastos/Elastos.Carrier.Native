@@ -23,6 +23,7 @@
 #include <sstream>
 
 #include "crypto/hex.h"
+#include "message_error.h"
 #include "serializers.h"
 #include "store_value_request.h"
 
@@ -72,7 +73,7 @@ void StoreValueRequest::serializeInternal(nlohmann::json& root) const {
 
 void StoreValueRequest::parse(const std::string& fieldName, nlohmann::json& object) {
     if (fieldName != Message::KEY_REQUEST || !object.is_object())
-        throw std::invalid_argument("Invalid request message");
+        throw MessageError("Invalid request message");
 
     for (const auto& [key, object] : object.items()) {
         if (key == Message::KEY_REQ_PUBLICKEY) {
@@ -92,7 +93,7 @@ void StoreValueRequest::parse(const std::string& fieldName, nlohmann::json& obje
         } else if (key == Message::KEY_RES_VALUE) {
             value = object.get_binary();
         } else {
-            throw std::invalid_argument("Unknown field: " + key);
+            throw MessageError("Unknown field: " + key);
         }
     }
 }

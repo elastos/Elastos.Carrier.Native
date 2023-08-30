@@ -20,28 +20,19 @@
  * SOFTWARE.
  */
 
-#include "message_error.h"
-#include "find_value_request.h"
+#pragma once
+
+#include <string>
+#include <stdexcept>
 
 namespace elastos {
 namespace carrier {
 
-void FindValueRequest::_serialize(nlohmann::json& object) const {
-    if (sequenceNumber >= 0)
-        object[Message::KEY_RES_SEQ] = sequenceNumber;
-}
-
-void FindValueRequest::_parse(const std::string& fieldName, nlohmann::json& object) {
-    if (fieldName != Message::KEY_RES_SEQ)
-        throw MessageError(std::string("Unknown field: ") + fieldName);
-
-    object.get_to(sequenceNumber);
-}
-
-void FindValueRequest::_toString(std::stringstream& ss) const {
-    if (sequenceNumber >= 0)
-        ss << ",seq:" << std::to_string(sequenceNumber);
-}
+class MessageError : public std::runtime_error {
+public:
+    MessageError(const std::string& message = "Invalid error message"):
+        std::runtime_error(message) {}
+};
 
 } // namespace carrier
 } // namespace elastos
