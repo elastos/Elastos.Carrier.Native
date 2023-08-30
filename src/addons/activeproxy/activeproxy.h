@@ -53,7 +53,7 @@ public:
         return isRunning();
     }
 
-    const std::string& getServerHost() const noexcept {
+    const std::string& serverHostName() const noexcept {
         return serverHost;
     }
 
@@ -61,12 +61,16 @@ public:
         return serverName;
     }
 
-    const std::string& upstreamEndpoint() const noexcept {
-        return upstreamName;
-    }
-
     const SocketAddress& serverAddress() const noexcept {
         return serverAddr;
+    }
+
+    const Id& serverNodeId() const noexcept {
+        return serverId;
+    }
+
+    const std::string& upstreamEndpoint() const noexcept {
+        return upstreamName;
     }
 
     const SocketAddress& upstreamAddress() const noexcept {
@@ -82,10 +86,6 @@ public:
 
     uv_loop_t* getLoop() noexcept {
         return &loop;
-    }
-
-    const Sp<Node>& getNode() {
-        return node;
     }
 
     const Id& getNodeId() const noexcept {
@@ -104,16 +104,8 @@ public:
         return true;
     }
 
-    const Id& getServerId() const noexcept {
-        return serverId;
-    }
-
     uint16_t getRelayPort() const noexcept {
         return relayPort;
-    }
-
-    const std::optional<Signature::KeyPair>& getPeerKeypair() const noexcept {
-        return peerKeypair;
     }
 
     const std::string& getDomainName() const noexcept {
@@ -154,6 +146,10 @@ public:
         return node->decrypt(serverId, cipher);
     }
 
+    std::vector<uint8_t> signWithNode(const Blob& data) const {
+        return node->sign(data);
+    }
+
     const std::string& getLogLevel() const {
         return logLevel;
     }
@@ -161,29 +157,28 @@ public:
 protected:
     void onStop() noexcept;
     void onIteration() noexcept;
-    void _connect() noexcept;
     void connect() noexcept;
     void idleCheck() noexcept;
+    void healthCheck() noexcept;
+
     bool needsNewConnection() const noexcept;
+
+    void announcePeer() noexcept;
 
 private:
     Sp<Node> node;
 
     CryptoBox::KeyPair sessionKey;
-
     std::optional<CryptoBox::PublicKey> serverPk {};
     CryptoBox box;
-
-    uint16_t relayPort;
 
     Id serverId {};
     std::string serverHost {};
     int serverPort {0};
     std::string serverName {};
     SocketAddress serverAddr {};
-    uint32_t serverFails  {0};
-    Id peerId {};
     std::string domainName {};
+    uint16_t relayPort;
 
     std::string upstreamHost;
     int upstreamPort;
@@ -195,26 +190,30 @@ private:
     uv_async_t stopHandle { 0 };
     uv_idle_t idleHandle { 0 };
 
-    uv_timer_t reconnectTimer { 0 };
-    uint32_t reconnectInterval { 0 };
+    uint64_t lastConnectTimestamp { 0 };
+    uint32_t serverFails  {0};
+    uint32_t reconnectDelay { 0 };
 
-    uv_timer_t idleCheckTimer { 0 };
-    uint64_t idleTimestamp;
+    uint64_t idleTimestamp { UINT64_MAX };
 
-    bool running { false };
-    bool first { false };
+    uint64_t lastIdleCheckTimestamp { 0 };
+    uint64_t lastHealthCheckTimestamp { 0 };
+    uint64_t lastAnnouncePeerTimestamp { 0 };
+
+    std::optional<Signature::KeyPair> peerKeypair {};
+    std::optional<PeerInfo> peer {};
 
     uint32_t maxConnections { 8 };
     uint32_t inFlights { 0 };
-
     std::vector<ProxyConnection*> connections;
+
+    bool running { false };
+    bool first { false };
 
     std::thread runner;
 
     std::promise<void> startPromise {};
     std::promise<void> stopPromise {};
-
-    std::optional<Signature::KeyPair> peerKeypair {};
 
     std::string logLevel {};
 };

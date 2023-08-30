@@ -77,82 +77,24 @@ public:
     // Needed to prevent if(e)
     explicit operator bool() const = delete;
 
-    static uint8_t random(uint8_t min, uint8_t max) {
-        // [min, max]
-        return Random::uint8(max - min + 1) + min;
-    }
-
-    static uint8_t auth() {
-        return random(AUTH_MIN, AUTH_MAX);
-    }
-
-    static uint8_t authAck() {
-        return random(AUTH_MIN, AUTH_MAX) | ACK_MASK;
-    }
-
-    static uint8_t attach() {
-        return random(ATTACH_MIN, ATTACH_MAX);
-    }
-
-    static uint8_t attachAck() {
-        return random(ATTACH_MIN, ATTACH_MAX) | ACK_MASK;
-    }
-
-    static uint8_t ping() {
-        return random(PING_MIN, PING_MAX);
-    }
-
-    static uint8_t pingAck() {
-        return random(PING_MIN, PING_MAX) | ACK_MASK;
-    }
-
-    static uint8_t connect() {
-        return random(CONNECT_MIN, CONNECT_MAX);
-    }
-
-    static uint8_t connectAck() {
-        return random(CONNECT_MIN, CONNECT_MAX) | ACK_MASK;
-    }
-
-    static uint8_t disconnect() {
-        return random(DISCONNECT_MIN, DISCONNECT_MAX);
-    }
-
-    static uint8_t disconnectAck() {
-        return random(DISCONNECT_MIN, DISCONNECT_MAX) | ACK_MASK;
-    }
-
-    static uint8_t data() {
-        return random(DATA_MIN, DATA_MAX);
-    }
-
-    static uint8_t error() {
-        return random(ERROR_MIN, ERROR_MAX) | ACK_MASK;
-    }
-
-
-    static bool isAck(uint8_t flag) {
-        return (flag & ACK_MASK) != 0;
-    }
-
     bool isAck() {
 		return e & ACK_MASK;
 	}
 
     uint8_t value() const noexcept {
         switch (e) {
-            case AUTH: return auth();
-            case AUTH_ACK: return authAck();
-            case ATTACH: return attach();
-            case ATTACH_ACK: return attachAck();
-            case PING: return ping();
-            case PING_ACK: return pingAck();
-            case CONNECT: return connect();
-            case CONNECT_ACK: return connectAck();
-            case DISCONNECT: return disconnect();
-            case DISCONNECT_ACK: return disconnectAck();
-            case DATA: return data();
-            case ERROR: return error();
+            case AUTH: return random(AUTH_MIN, AUTH_MAX);
+            case AUTH_ACK: return random(AUTH_MIN, AUTH_MAX) | ACK_MASK;
+            case ATTACH: return random(ATTACH_MIN, ATTACH_MAX);
+            case ATTACH_ACK: return random(ATTACH_MIN, ATTACH_MAX) | ACK_MASK;
+            case PING: return random(PING_MIN, PING_MAX);
+            case PING_ACK: return random(PING_MIN, PING_MAX) | ACK_MASK;
+            case CONNECT: return random(CONNECT_MIN, CONNECT_MAX);
+            case CONNECT_ACK: return random(CONNECT_MIN, CONNECT_MAX) | ACK_MASK;
+            case DISCONNECT: return random(DISCONNECT_MIN, DISCONNECT_MAX);
+            case DISCONNECT_ACK: return random(DISCONNECT_MIN, DISCONNECT_MAX) | ACK_MASK;
+            case DATA: return random(DATA_MIN, DATA_MAX);
+            case ERROR: return random(ERROR_MIN, ERROR_MAX) | ACK_MASK;
         }
     }
 
@@ -212,10 +154,14 @@ public:
         }
     }
 
+protected:
+    static inline uint8_t random(uint8_t min, uint8_t max) {
+        // [min, max]
+        return Random::uint8(max - min + 1) + min;
+    }
+
 private:
-
     Enum e {};
-
 };
 
 } // namespace activeproxy
