@@ -41,8 +41,11 @@ namespace activeproxy {
 using Logger = elastos::carrier::Logger;
 
 static std::shared_ptr<Logger> log;
-static const uint32_t IDLE_CHECK_INTERVAL = 60000;  // 1 minute
+
+static const uint32_t IDLE_CHECK_INTERVAL = 60000;  // 60 seconds
 static const uint32_t MAX_IDLE_TIME = 300000;       // 3 minutes
+static const uint32_t RE_ANNOUNCE_INTERVAL = 60 * 60 * 1000; // 1 hour
+static const uint32_t HEALTH_CHECK_INTERVAL = 10000;  // 10 seconds
 
 std::future<void> ActiveProxy::initialize(Sp<Node> node, const std::map<std::string, std::any>& configure) {
     log = Logger::get("AcriveProxy");
@@ -59,42 +62,52 @@ std::future<void> ActiveProxy::initialize(Sp<Node> node, const std::map<std::str
         throw std::invalid_argument("Addon ActiveProxy's configure item has error: missing upstreamPort!");
 
     upstreamHost = std::any_cast<std::string>(configure.at("upstreamHost"));
-    if (upstreamHost == "LOCAL-IP4-ADDRESS")
-        upstreamHost = getLocalIPv4();
-    else if (upstreamHost == "LOCAL-IP6-ADDRESS")
-        upstreamHost = getLocalIPv6();
     upstreamPort = (uint16_t)std::any_cast<int64_t>(configure.at("upstreamPort"));
     if (upstreamHost.empty() || upstreamPort == 0)
         throw std::invalid_argument("Addon ActiveProxy's configure item has error: empty upstreamHost or upstreamPort is not allowed");
 
     if (configure.count("serverPeerId")) {
-        std::string strId = std::any_cast<std::string>(configure.at("serverPeerId"));
+        auto id = std::any_cast<std::string>(configure.at("serverPeerId"));
+        auto peerId = Id(id);
 
-        log->info("Addon ActiveProxy finding peer...");
-        auto future = node->findPeer(Id(strId), 1);
+        log->info("Addon ActiveProxy finding peer {} ...", id);
+        auto future = node->findPeer(peerId, 8);
         auto peers = future.get();
         if (peers.empty())
-            throw std::invalid_argument("Addon ActiveProxy can't find a server peer: " + strId + "!");
+            throw std::invalid_argument("Addon ActiveProxy can't find a server peer: " + id + "!");
 
-        auto peer = peers.front();
-        serverPort = peer.getPort();
-        serverId = peer.getNodeId();
+        bool found = false;
+        for (auto peer : peers) {
+            serverPort = peer.getPort();
+            serverId = peer.getNodeId();
 
-        log->info("Addon ActiveProxy finding node...");
-        auto future2 = node->findNode(serverId);
-        auto nodes = future2.get();
-        if (nodes.empty())
-            throw std::invalid_argument("Addon ActiveProxy can't find node: " + serverId.toBase58String() + "!");
-        auto ni = nodes.front();
-        serverHost = ni->getAddress().host();
-    }
-    else if (configure.count("serverId") && configure.count("serverHost") && configure.count("serverPort")) {
-        std::string strId = std::any_cast<std::string>(configure.at("serverId"));
-        serverId = Id(strId);
+            log->info("Addon ActiveProxy finding node...");
+            auto future2 = node->findNode(serverId);
+            auto nodes = future2.get();
+            if (nodes.empty())
+                throw std::invalid_argument("Addon ActiveProxy can't find node: " + serverId.toString() + "!");
+
+            for (auto node : nodes) {
+                serverHost = node->getAddress().host();
+
+                // TODO: check the service availability
+                found = true;
+                break;
+            }
+
+            if (found)
+                break;
+        }
+
+        if (!found)
+            throw std::invalid_argument("Addon ActiveProxy can't find available service for peer: " + id + "!");
+    } else if (configure.count("serverId") && configure.count("serverHost") && configure.count("serverPort")) {
+        // TODO: to be remove
+        std::string id = std::any_cast<std::string>(configure.at("serverId"));
+        serverId = Id(id);
         serverHost = std::any_cast<std::string>(configure.at("serverHost"));
         serverPort = (uint16_t)std::any_cast<int64_t>(configure.at("serverPort"));
-    }
-    else {
+    } else {
         throw std::invalid_argument("Addon ActiveProxy's configure item has error: missing serverPeerId!");
     }
 
@@ -141,13 +154,6 @@ void ActiveProxy::onStop() noexcept
     log->info("Addon ActiveProxy is on-stopping...");
     running = false;
 
-    if (reconnectTimer.data)
-        uv_timer_stop(&reconnectTimer);
-    uv_close((uv_handle_t*)&reconnectTimer, nullptr);
-
-    uv_timer_stop(&idleCheckTimer);
-    uv_close((uv_handle_t*)&idleCheckTimer, nullptr);
-
     uv_idle_stop(&idleHandle);
     uv_close((uv_handle_t*)&idleHandle, nullptr);
 
@@ -169,8 +175,8 @@ bool ActiveProxy::needsNewConnection() const noexcept
     if (connections.size() >= maxConnections)
         return false;
 
-    // connecting or reconnecting
-    if (reconnectTimer.data) // TODO: checkme!!! ugly timer status checking
+    // reconnect delay after connect to server failed
+    if (reconnectDelay && uv_now(&loop) - lastConnectTimestamp < reconnectDelay)
         return false;
 
     if (connections.empty() || inFlights == connections.size())
@@ -191,21 +197,37 @@ void ActiveProxy::onIteration() noexcept
     if (needsNewConnection()) {
         connect();
     }
+
+    auto now = uv_now(&loop);
+    if (now - lastIdleCheckTimestamp >= IDLE_CHECK_INTERVAL) {
+        lastIdleCheckTimestamp = now;
+        idleCheck();
+    }
+
+    if (now - lastHealthCheckTimestamp >= HEALTH_CHECK_INTERVAL) {
+        lastHealthCheckTimestamp = now;
+        healthCheck();
+    }
+
+    if (peer.has_value() && now - lastAnnouncePeerTimestamp >= RE_ANNOUNCE_INTERVAL) {
+        lastAnnouncePeerTimestamp = now;
+        announcePeer();
+    }
 }
 
 void ActiveProxy::idleCheck() noexcept
 {
+    auto now = uv_now(&loop);
+
     // Dump the current status: should change the log level to debug later
     log->info("Addon ActiveProxy STATUS dump: Connections = {}, inFlights = {}, idle = {}",
             connections.size(), inFlights,
-            idleTimestamp == MAX_IDLE_TIME ? 0 : (uv_now(&loop) - idleTimestamp) / 1000);
+            idleTimestamp == UINT64_MAX ? 0 : (now - idleTimestamp) / 1000);
+
     for (const auto& c: connections)
         log->info("Addon ActiveProxy STATUS dump: {}", c->status());
 
-    if (idleTimestamp == UINT64_MAX)
-        return;
-
-    if ((uv_now(&loop) - idleTimestamp) < MAX_IDLE_TIME)
+    if (idleTimestamp == UINT64_MAX || (now - idleTimestamp) < MAX_IDLE_TIME)
         return;
 
     if (inFlights != 0 || connections.size() <= 1)
@@ -219,6 +241,12 @@ void ActiveProxy::idleCheck() noexcept
     }
 
     connections.resize(1);
+}
+
+void ActiveProxy::healthCheck() noexcept
+{
+    for (const auto& c: connections)
+        c->periodicCheck();
 }
 
 void ActiveProxy::start()
@@ -258,25 +286,9 @@ void ActiveProxy::start()
         throw networking_error(uv_strerror(rc));
     }
 
-    uv_timer_init(&loop, &idleCheckTimer); // always success
-    idleCheckTimer.data = this;
-    rc = uv_timer_start(&idleCheckTimer, [](uv_timer_t* handle) {
-        ActiveProxy* self = (ActiveProxy*)handle->data;
-        self->idleCheck();
-    }, IDLE_CHECK_INTERVAL, IDLE_CHECK_INTERVAL);
-    if (rc < 0) {
-        log->error("Addon ActiveProxy failed to start the idle check timer({}): {}", rc, uv_strerror(rc));
-        uv_idle_stop(&idleHandle);
-        uv_close((uv_handle_t*)&idleHandle, nullptr);
-        uv_close((uv_handle_t*)&stopHandle, nullptr);
-        uv_close((uv_handle_t*)&idleCheckTimer, nullptr);
-        uv_loop_close(&loop);
-        throw networking_error(uv_strerror(rc));
-    }
-
-    uv_timer_init(&loop, &reconnectTimer); // always success
-
-    idleTimestamp = UINT64_MAX;
+    auto now = uv_now(&loop);
+    lastIdleCheckTimestamp = now;
+    lastHealthCheckTimestamp = now;
 
     // Start the loop in thread
     runner = std::thread([&]() {
@@ -290,15 +302,10 @@ void ActiveProxy::start()
             uv_idle_stop(&idleHandle);
             uv_close((uv_handle_t*)&idleHandle, nullptr);
             uv_close((uv_handle_t*)&stopHandle, nullptr);
-            uv_timer_stop(&idleCheckTimer);
-            uv_close((uv_handle_t*)&idleCheckTimer, nullptr);
-            uv_close((uv_handle_t*)&reconnectTimer, nullptr);
             uv_loop_close(&loop);
-            try {
-                throw networking_error(uv_strerror(rc));
-            } catch(...) {
-                startPromise.set_exception(std::current_exception());
-            }
+
+            auto exp = std::make_exception_ptr(networking_error(uv_strerror(rc)));
+            startPromise.set_exception(exp);
         }
 
         running = false;
@@ -325,46 +332,33 @@ void ActiveProxy::connect() noexcept
 {
     assert(running);
 
-    if (serverFails == 0) {
-        _connect();
-        return;
-    }
-
-    reconnectInterval = (1 << (serverFails <= 6 ? serverFails : 6)) * 1000;
-    log->info("Addon ActiveProxy tried to reconnect after {} seconeds.", reconnectInterval / 1000);
-    reconnectTimer.data = this;
-    auto rc = uv_timer_start(&reconnectTimer, [](uv_timer_t* handle) {
-        ActiveProxy* self = (ActiveProxy*)handle->data;
-        handle->data = nullptr; // For timer status checking
-        uv_timer_stop(handle);
-        self->_connect();
-    }, reconnectInterval, 0);
-    if (rc < 0) {
-        log->error("Addon ActiveProxy failed to start the reconnect timer({}): {}", rc, uv_strerror(rc));
-        reconnectInterval = 0;
-    }
-}
-
-void ActiveProxy::_connect() noexcept
-{
     log->debug("Addon ActiveProxy tried to create a new connectoin.");
 
     ProxyConnection* connection = new ProxyConnection {*this};
     connections.push_back(connection);
 
-    connection->onAuthorized([this](ProxyConnection* c, const CryptoBox::PublicKey& serverPk, uint16_t port) {
+    connection->onAuthorized([this](ProxyConnection* c, const CryptoBox::PublicKey& serverPk, uint16_t port, bool domainEnabled) {
         this->serverPk = serverPk;
         this->relayPort = port;
 
         this->box = CryptoBox{serverPk, this->sessionKey.privateKey() };
+
+        if (peerKeypair.has_value()) {
+            std::string domain = domainEnabled ? domainName : "";
+            peer = PeerInfo::create(peerKeypair.value(), serverId, node->getId(), port, domain);
+            // will announce the peer in the next libuv iteration
+        }
     });
 
     connection->onOpened([this](ProxyConnection* c) {
         serverFails = 0;
+        reconnectDelay = 0;
     });
 
     connection->onOpenFailed([this](ProxyConnection* c) {
         serverFails++;
+        if (reconnectDelay < 64)
+            reconnectDelay = (1 << serverFails) * 1000;
     });
 
     connection->onClosed([this](ProxyConnection* c) {
@@ -392,11 +386,19 @@ void ActiveProxy::_connect() noexcept
             idleTimestamp = uv_now(&loop);
     });
 
-    if (connection->connectServer() < 0)  {
-        serverFails++;
-        connections.pop_back();
-        connection->unref();
-    }
+    lastConnectTimestamp = uv_now(&loop);
+    connection->connectServer();
+}
+
+void ActiveProxy::announcePeer() noexcept
+{
+    if (!peer.has_value())
+        return;
+
+    log->info("Announce peer {} : {}", peer.value().getId().toBase58String(),
+        peer.value().toString());
+
+    node->announcePeer(peer.value());
 }
 
 } // namespace activeproxy

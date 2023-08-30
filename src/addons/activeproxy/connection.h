@@ -41,8 +41,7 @@ using WriteCallback = std::function<void(ProxyConnection*)>;
 class ConnectionState {
 public:
     enum Enum : uint8_t {
-        Connecting = 0,
-        Initializing,
+        Initializing = 0,
         Authenticating,
         Attaching,
         Idling,
@@ -64,21 +63,34 @@ public:
 
     bool accept(PacketType type) const noexcept {
         switch (e) {
-            case Connecting: return type == PacketType::PING_ACK;
-            case Initializing: return false;
-            case Authenticating: return type == PacketType::AUTH_ACK;
-            case Attaching: return type == PacketType::ATTACH_ACK;
-            case Idling: return type == PacketType::PING_ACK || type == PacketType::CONNECT;
-            case Relaying: return type == PacketType::PING_ACK || type == PacketType::DATA || type == PacketType::DISCONNECT;
-            case Disconnecting: return type == PacketType::DISCONNECT || type == PacketType::DISCONNECT_ACK ||
+            case Initializing:
+                // type-less challenge
+                return false;
+
+            case Authenticating:
+                return type == PacketType::AUTH_ACK;
+
+            case Attaching:
+                return type == PacketType::ATTACH_ACK;
+
+            case Idling:
+                return type == PacketType::PING_ACK || type == PacketType::CONNECT;
+
+            case Relaying:
+                return type == PacketType::PING_ACK || type == PacketType::DATA ||
+                        type == PacketType::DISCONNECT;
+
+            case Disconnecting:
+                return type == PacketType::DISCONNECT || type == PacketType::DISCONNECT_ACK ||
 						type == PacketType::DATA;
-            case Closed: return false;
+
+            case Closed:
+                return false;
         }
     }
 
     std::string toString() const noexcept {
         switch (e) {
-            case Connecting: return "Connecting";
             case Initializing: return "Initializing";
             case Authenticating: return "Authenticating";
             case Attaching: return "Attaching";
@@ -96,7 +108,7 @@ private:
 class ProxyConnection {
 public:
     using AuthorizedHandle = std::function<void(ProxyConnection*,
-            const CryptoBox::PublicKey&, uint16_t)>;
+            const CryptoBox::PublicKey&, uint16_t, bool)>;
     using StatusHandler = std::function<void(ProxyConnection*)>;
 
     ProxyConnection(ActiveProxy& server) noexcept;
@@ -147,9 +159,10 @@ public:
         return *this;
     }
 
+    void periodicCheck() noexcept;
+
 protected:
     void establish() noexcept;
-    void keepAlive() noexcept;
 
     void sendAuthenticateRequest(const uint8_t* challenge, size_t size) noexcept;
     void sendAttachRequest(const uint8_t* data, size_t size) noexcept;
@@ -174,12 +187,12 @@ protected:
 
     void openUpstream() noexcept;
     void closeUpstream() noexcept;
-    void uvCloseUpstream(ProxyConnection* pc) noexcept;
+    void closeUpstream2() noexcept;
     void startReadUpstream() noexcept;
 
-    void onAuthorized(const CryptoBox::PublicKey& serverPk, uint16_t port) noexcept {
+    void onAuthorized(const CryptoBox::PublicKey& serverPk, uint16_t port, bool domainEnabled) noexcept {
         if (authorizedHandle)
-            authorizedHandle(this, serverPk, port);
+            authorizedHandle(this, serverPk, port, domainEnabled);
     }
 
     void onOpened() noexcept {
@@ -212,7 +225,7 @@ private:
     uint32_t refCount { 1 };
 
     ActiveProxy& proxy;
-    ConnectionState state { ConnectionState::Connecting };
+    ConnectionState state { ConnectionState::Initializing };
 
     uv_tcp_t relay { 0 };
     uv_tcp_t upstream { 0 };
@@ -222,7 +235,6 @@ private:
 
     std::vector<uint8_t> stickyBuffer {};
 
-    uv_timer_t keepAliveTimer { 0 };
     uint64_t keepAliveTimestamp { 0 };
 
     AuthorizedHandle authorizedHandle;
