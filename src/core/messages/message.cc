@@ -34,6 +34,7 @@
 #include "find_peer_response.h"
 #include "find_value_response.h"
 #include "store_value_response.h"
+#include "message_error.h"
 
 namespace elastos {
 namespace carrier {
@@ -92,7 +93,7 @@ Message::Type Message::ofType(int messageType) {
     int type = messageType & MSG_TYPE_MASK;
     auto it = typeMap.find(type);
     if (it == typeMap.end())
-        throw std::invalid_argument("Invalid Type: " + std::to_string(type));
+        throw std::invalid_argument("Invalid message type: " + std::to_string(type));
 
     return it->second;
 }
@@ -111,7 +112,7 @@ Message::Method Message::ofMethod(int messageType) {
     int method = messageType & MSG_METHOD_MASK;
     auto it = methodMap.find(method);
     if (it == methodMap.end())
-        throw std::invalid_argument("Invalid method: " + std::to_string(method));
+        throw MessageError("Invalid message method: " + std::to_string(method));
 
     return it->second;
 }
@@ -156,11 +157,11 @@ const std::string& Message::getMethodString() const {
 Sp<Message> Message::parse(const uint8_t* buf, size_t buflen) {
     auto root = nlohmann::json::from_cbor(std::vector<uint8_t>{buf, buf + buflen});
     if (!root.is_object())
-        throw std::runtime_error("Invalid message: not a CBOR object");
+        throw MessageError("Invalid message: not a CBOR object");
 
     auto type = root.find(KEY_TYPE);
     if (type == root.end()) {
-        throw std::runtime_error("Invalid message: missing type field");
+        throw MessageError("Invalid message: missing type field");
     }
 
     auto message = Message::createMessage(type->get<uint8_t>());
@@ -201,20 +202,20 @@ Sp<Message> Message::createMessage(int messageType) {
     case Type::REQUEST: {
         auto reqCreator = reqFactory.find(method);
         if (reqCreator == reqFactory.end())
-            throw std::invalid_argument("Invalid request method: " + std::to_string(static_cast<int>(method)));
+            throw MessageError("Invalid request method: " + std::to_string(static_cast<int>(method)));
         return reqCreator->second();
     }
     case Type::RESPONSE: {
         auto rspCreator = rspFactory.find(method);
         if (rspCreator == rspFactory.end())
-            throw std::invalid_argument("Invalid response method: " + std::to_string(static_cast<int>(method)));
+            throw MessageError("Invalid response method: " + std::to_string(static_cast<int>(method)));
         return rspCreator->second();
     }
     case Type::ERR: {
         return std::make_shared<ErrorMessage>(method);
     }
     default: {
-        throw std::invalid_argument("INTERNAL ERROR: should never happen.");
+        throw MessageError("INTERNAL ERROR: should never happen.");
     }
     }
 }

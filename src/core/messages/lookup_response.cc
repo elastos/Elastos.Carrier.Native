@@ -22,6 +22,7 @@
 
 #include <sstream>
 
+#include "message_error.h"
 #include "lookup_response.h"
 #include "serializers.h"
 
@@ -35,7 +36,7 @@ const std::list<Sp<NodeInfo>>& LookupResponse::getNodes(DHT::Type type) const {
     case DHT::Type::IPV6:
         return getNodes6();
     default:
-        throw std::invalid_argument("Invalid DHT type");
+        throw MessageError("Invalid DHT type");
     }
 }
 
@@ -74,7 +75,7 @@ void LookupResponse::serializeInternal(nlohmann::json& root) const {
 
 void LookupResponse::parse(const std::string& fieldName, nlohmann::json& object) {
     if (fieldName != KEY_RESPONSE || !object.is_object())
-        throw std::invalid_argument("Invalid lookup response message");
+        throw MessageError("Invalid lookup response message");
 
     for (const auto& [key, value] : object.items()) {
         if (key == KEY_RES_NODES4) {
@@ -100,7 +101,7 @@ void LookupResponse::serializeNodes(nlohmann::json& object, const std::string& f
 
 void LookupResponse::parseNodes(const nlohmann::json &object, std::list<Sp<NodeInfo>>& nodes) {
     if (!object.is_array())
-        throw std::invalid_argument("Invalid response nodes message");
+        throw MessageError("Invalid response nodes message");
 
     for (const auto& elem : object) {
         nodes.emplace_back(std::make_shared<NodeInfo>(elem.get<NodeInfo>()));

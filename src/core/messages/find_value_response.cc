@@ -23,6 +23,7 @@
 #include <nlohmann/json.hpp>
 
 #include "crypto/hex.h"
+#include "message_error.h"
 #include "message.h"
 #include "serializers.h"
 #include "find_value_response.h"
@@ -81,7 +82,7 @@ void FindValueResponse::_parse(const std::string& fieldName, nlohmann::json& obj
     } else if (fieldName == Message::KEY_RES_VALUE) {
         value = object.get_binary();
     } else {
-        throw std::invalid_argument("Unknown field: " + fieldName);
+        throw MessageError("Unknown field: " + fieldName);
     }
 }
 

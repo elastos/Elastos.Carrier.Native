@@ -22,6 +22,7 @@
 
 #include <sstream>
 
+#include "message_error.h"
 #include "error_message.h"
 
 namespace elastos {
@@ -38,7 +39,7 @@ void ErrorMessage::serializeInternal(nlohmann::json& root) const {
 
 void ErrorMessage::parse(const std::string& fieldName, nlohmann::json& object) {
     if (fieldName != Message::KEY_ERROR || !object.is_object())
-        throw std::invalid_argument("Invalid request message");
+        throw MessageError("Invalid request message");
 
     for (const auto& [key, value]: object.items()) {
         if (key == Message::KEY_ERR_CODE) {
@@ -46,7 +47,7 @@ void ErrorMessage::parse(const std::string& fieldName, nlohmann::json& object) {
         } else if(key == Message::KEY_ERR_MESSAGE) {
             value.get_to(message);
         } else {
-            throw std::invalid_argument("Invalid " + getMethodString() + " request message");
+            throw MessageError("Invalid " + getMethodString() + " request message");
         }
     }
 }

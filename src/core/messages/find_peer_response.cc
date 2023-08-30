@@ -23,6 +23,7 @@
 #include <sstream>
 
 #include "serializers.h"
+#include "message_error.h"
 #include "find_peer_response.h"
 
 namespace elastos {
@@ -30,16 +31,15 @@ namespace carrier {
 
 int FindPeerResponse::estimateSize() const {
     int size = LookupResponse::estimateSize();
+    if (peers.empty())
+        return size;
 
-    if (!peers.empty()) {
-        size += (2 + 2 + 2 + Id::BYTES);
-        for (const auto&  pi : peers) {
-            size += (2 + 2 + Id::BYTES + 1 + sizeof(uint16_t) + 2 + Signature::BYTES);
-            size += pi.isDelegated() ? 2 + Id::BYTES : 1;
-            size += pi.hasAlternativeURL() ? 2 + strlen(pi.getAlternativeURL().c_str()) : 1;
-        }
+    size += (2 + 2 + 2 + Id::BYTES);
+    for (const auto&  pi : peers) {
+        size += (2 + 2 + Id::BYTES + 1 + sizeof(uint16_t) + 2 + Signature::BYTES);
+        size += pi.isDelegated() ? 2 + Id::BYTES : 1;
+        size += pi.hasAlternativeURL() ? 2 + strlen(pi.getAlternativeURL().c_str()) : 1;
     }
-
     return size;
 }
 
@@ -71,10 +71,10 @@ void FindPeerResponse::_serialize(nlohmann::json& json) const {
 
 void FindPeerResponse::_parse(const std::string& fieldName, nlohmann::json& object) {
     if (!object.is_array())
-        throw std::invalid_argument("Invalid response peers message");
+        throw MessageError("Invalid response peers message");
 
     if (fieldName != KEY_RES_PEERS)
-        throw std::invalid_argument("invalid find peer response message");
+        throw MessageError("invalid find peer response message");
 
     Blob peerId {};
     for (nlohmann::json::iterator it = object.begin(); it != object.end(); ++it) {
