@@ -42,10 +42,10 @@ using Logger = elastos::carrier::Logger;
 
 static std::shared_ptr<Logger> log;
 
-static const uint32_t IDLE_CHECK_INTERVAL = 60000;  // 60 seconds
-static const uint32_t MAX_IDLE_TIME = 300000;       // 3 minutes
-static const uint32_t RE_ANNOUNCE_INTERVAL = 60 * 60 * 1000; // 1 hour
-static const uint32_t HEALTH_CHECK_INTERVAL = 10000;  // 10 seconds
+static const uint32_t IDLE_CHECK_INTERVAL = 60 * 1000;          // 60 seconds
+static const uint32_t MAX_IDLE_TIME = 5 * 60 * 1000;            // 5 minutes
+static const uint32_t RE_ANNOUNCE_INTERVAL = 60 * 60 * 1000;    // 1 hour
+static const uint32_t HEALTH_CHECK_INTERVAL = 10 * 1000;        // 10 seconds
 
 std::future<void> ActiveProxy::initialize(Sp<Node> node, const std::map<std::string, std::any>& configure) {
     log = Logger::get("AcriveProxy");
@@ -227,6 +227,11 @@ void ActiveProxy::onIteration() noexcept
 
 void ActiveProxy::idleCheck() noexcept
 {
+    if (connections.size() == 0 && serverPk.has_value()) {
+        serverPk.reset();
+        return;
+    }
+
     auto now = uv_now(&loop);
 
     // Dump the current status: should change the log level to debug later
