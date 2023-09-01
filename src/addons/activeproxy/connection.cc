@@ -114,6 +114,8 @@ struct ShutdownRequest {
 ProxyConnection::ProxyConnection(ActiveProxy& proxy) noexcept :
         id(lastConnectionId++), proxy(proxy)
 {
+    keepAliveTimestamp = uv_now(proxy.getLoop());
+
     log = Logger::get("ProxyConnection");
     log->setLevel(proxy.getLogLevel());
 
