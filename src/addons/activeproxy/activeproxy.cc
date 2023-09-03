@@ -122,6 +122,9 @@ std::future<void> ActiveProxy::initialize(Sp<Node> node, const std::map<std::str
     if (configure.count("domainName"))
         domainName = std::any_cast<std::string>(configure.at("domainName"));
 
+    if (configure.count("maxConnections"))
+        maxConnections = (uint32_t)std::any_cast<int64_t>(configure.at("maxConnections"));
+
     //init data
     this->node = node;
 
