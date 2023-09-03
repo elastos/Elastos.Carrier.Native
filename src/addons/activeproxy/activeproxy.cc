@@ -220,6 +220,11 @@ void ActiveProxy::onIteration() noexcept
 
 void ActiveProxy::idleCheck() noexcept
 {
+    if (connections.size() == 0 && serverPk.has_value()) {
+        serverPk.reset();
+        return;
+    }
+
     auto now = uv_now(&loop);
 
     // Dump the current status: should change the log level to debug later
