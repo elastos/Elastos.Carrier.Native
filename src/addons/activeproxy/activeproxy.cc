@@ -81,7 +81,7 @@ std::future<void> ActiveProxy::initialize(Sp<Node> node, const std::map<std::str
             serverPort = peer.getPort();
             serverId = peer.getNodeId();
 
-            log->info("Addon ActiveProxy finding node...");
+            log->info("Addon ActiveProxy finding node {} ...", serverId.toString());
             auto future2 = node->findNode(serverId);
             auto nodes = future2.get();
             if (nodes.empty())
@@ -92,6 +92,7 @@ std::future<void> ActiveProxy::initialize(Sp<Node> node, const std::map<std::str
 
                 // TODO: check the service availability
                 found = true;
+                log->info("Addon ActiveProxy server host: {}", node->getAddress().toString());
                 break;
             }
 
