@@ -203,7 +203,7 @@ private:
     std::optional<Signature::KeyPair> peerKeypair {};
     std::optional<PeerInfo> peer {};
 
-    uint32_t maxConnections { 8 };
+    uint32_t maxConnections { 16 };
     uint32_t inFlights { 0 };
     std::vector<ProxyConnection*> connections;
 
