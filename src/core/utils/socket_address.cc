@@ -270,7 +270,7 @@ bool SocketAddress::isMulticast() const
 {
     switch (ss.ss_family) {
     case AF_INET:
-        return (inaddr4()->s_addr & 0xf0000000) == 0xe0000000;
+        return *(uint8_t*)&inaddr4()->s_addr == 0xe0;
     case AF_INET6:
         return IN6_IS_ADDR_MULTICAST(inaddr6());
     default:

@@ -58,6 +58,7 @@ AddressTests::testGlobalUnicastMatcher() {
 
 void
 AddressTests::testIsBogon() {
+    CPPUNIT_ASSERT(false == SocketAddress("47.101.142.224", 1234).isBogon());
     CPPUNIT_ASSERT(false == SocketAddress("151.101.2.132", 1234).isBogon());
     CPPUNIT_ASSERT(SocketAddress("192.168.1.1", 1234).isBogon());
     CPPUNIT_ASSERT(SocketAddress("10.0.0.1", 1234).isBogon());
