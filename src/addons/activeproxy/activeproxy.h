@@ -161,7 +161,7 @@ protected:
     void idleCheck() noexcept;
     void healthCheck() noexcept;
 
-    bool needsNewConnection() const noexcept;
+    bool needsNewConnection() noexcept;
 
     void announcePeer() noexcept;
 
