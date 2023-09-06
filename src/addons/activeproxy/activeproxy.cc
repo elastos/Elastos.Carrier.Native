@@ -174,7 +174,7 @@ void ActiveProxy::onStop() noexcept
     stopPromise.set_value();
 }
 
-bool ActiveProxy::needsNewConnection() const noexcept
+bool ActiveProxy::needsNewConnection() noexcept
 {
     if (connections.size() >= maxConnections)
         return false;
@@ -183,7 +183,13 @@ bool ActiveProxy::needsNewConnection() const noexcept
     if (reconnectDelay && uv_now(&loop) - lastConnectTimestamp < reconnectDelay)
         return false;
 
-    if (connections.empty() || inFlights == connections.size())
+    if (connections.empty()) {
+        if (serverPk.has_value())
+            serverPk.reset();
+        return true;
+    }
+
+    if (inFlights == connections.size())
         return true;
 
     // TODO: other conditions?
@@ -221,11 +227,6 @@ void ActiveProxy::onIteration() noexcept
 
 void ActiveProxy::idleCheck() noexcept
 {
-    if (connections.size() == 0 && serverPk.has_value()) {
-        serverPk.reset();
-        return;
-    }
-
     auto now = uv_now(&loop);
 
     // Dump the current status: should change the log level to debug later
@@ -406,6 +407,9 @@ void ActiveProxy::announcePeer() noexcept
 
     log->info("Announce peer {} : {}", peer.value().getId().toBase58String(),
         peer.value().toString());
+
+    log->info("-**- ActiveProxy: server: {}, port: {}, domain: {} -**- ",
+        serverHost, peer.value().getPort(), domainName);
 
     node->announcePeer(peer.value());
 }
