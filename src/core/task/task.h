@@ -51,7 +51,7 @@ public:
 
     Task(DHT* _dht, const std::string& taskName): dht(*_dht) {
         taskId = nextTaskId++;
-        log = Logger::get(taskName);
+        log = Logger::get(taskName + "-" + std::to_string(taskId) );
     }
 
     ~Task() {
