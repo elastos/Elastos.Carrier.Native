@@ -408,8 +408,12 @@ void ActiveProxy::announcePeer() noexcept
     log->info("Announce peer {} : {}", peer.value().getId().toBase58String(),
         peer.value().toString());
 
-    log->info("-**- ActiveProxy: server: {}, port: {}, domain: {} -**- ",
-        serverHost, peer.value().getPort(), domainName);
+    if (peer.value().hasAlternativeURL())
+        log->info("-**- ActiveProxy: server: {}, port: {}, domain: {} -**-",
+            serverHost, peer.value().getPort(), peer.value().getAlternativeURL());
+    else
+        log->info("-**- ActiveProxy: server: {}, port: {} -**-",
+            serverHost, peer.value().getPort());
 
     node->announcePeer(peer.value());
 }
