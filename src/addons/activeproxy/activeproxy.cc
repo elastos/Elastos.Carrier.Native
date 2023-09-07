@@ -185,7 +185,7 @@ bool ActiveProxy::needsNewConnection() noexcept
 
     if (connections.empty()) {
         if (serverPk.has_value())
-            serverPk.reset();
+            reset();
         return true;
     }
 
