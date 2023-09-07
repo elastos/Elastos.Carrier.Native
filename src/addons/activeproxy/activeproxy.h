@@ -165,6 +165,23 @@ protected:
 
     void announcePeer() noexcept;
 
+    void reset() noexcept {
+        sessionKey = CryptoBox::KeyPair();
+        serverPk.reset();
+
+        lastConnectTimestamp = 0;
+        serverFails = 0;
+        reconnectDelay = 0;
+
+        idleTimestamp = UINT64_MAX;
+
+        lastIdleCheckTimestamp = 0;
+        lastHealthCheckTimestamp = 0;
+        lastAnnouncePeerTimestamp = 0;
+
+        inFlights = 0;
+    }
+
 private:
     Sp<Node> node;
 
