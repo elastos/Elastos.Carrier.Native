@@ -158,9 +158,10 @@ void ActiveProxy::onStop() noexcept
     log->info("Addon ActiveProxy is on-stopping...");
     running = false;
 
-    uv_idle_stop(&idleHandle);
-    uv_close((uv_handle_t*)&idleHandle, nullptr);
-
+    uv_prepare_stop(&prepareHandle);
+    uv_timer_stop(&timerHandle);
+    uv_close((uv_handle_t*)&prepareHandle, nullptr);
+    uv_close((uv_handle_t*)&timerHandle, nullptr);
     uv_close((uv_handle_t*)&stopHandle, nullptr);
 
     // close all connections
@@ -282,15 +283,15 @@ void ActiveProxy::start()
     stopHandle.data = this;
 
     // init the idle/iteration handle
-    uv_idle_init(&loop, &idleHandle); // always success
-    idleHandle.data = this;
-    rc = uv_idle_start(&idleHandle, [](uv_idle_t* handle) {
+    uv_prepare_init(&loop, &prepareHandle); // always success
+    prepareHandle.data = this;
+    rc = uv_prepare_start(&prepareHandle, [](uv_prepare_t* handle) {
         ActiveProxy* ap = (ActiveProxy*)handle->data;
         ap->onIteration();
     });
     if (rc < 0) {
         log->error("Addon ActiveProxy failed to start the iteration handle({}): {}", rc, uv_strerror(rc));
-        uv_close((uv_handle_t*)&idleHandle, nullptr);
+        uv_close((uv_handle_t*)&prepareHandle, nullptr);
         uv_close((uv_handle_t*)&stopHandle, nullptr);
         uv_loop_close(&loop);
         throw networking_error(uv_strerror(rc));
@@ -299,6 +300,21 @@ void ActiveProxy::start()
     auto now = uv_now(&loop);
     lastIdleCheckTimestamp = now;
     lastHealthCheckTimestamp = now;
+
+    uv_timer_init(&loop, &timerHandle);
+    timerHandle.data = this;
+    rc = uv_timer_start(&timerHandle, [](uv_timer_t* handle) {
+        ActiveProxy* ap = (ActiveProxy*)handle->data;
+        ap->onIteration();
+    }, HEALTH_CHECK_INTERVAL, HEALTH_CHECK_INTERVAL);
+    if (rc < 0) {
+        log->error("Addon ActiveProxy failed to start timer ({}): {}", rc, uv_strerror(rc));
+        uv_prepare_stop(&prepareHandle);
+        uv_close((uv_handle_t*)&prepareHandle, nullptr);
+        uv_close((uv_handle_t*)&stopHandle, nullptr);
+        uv_loop_close(&loop);
+        throw networking_error(uv_strerror(rc));
+    }
 
     // Start the loop in thread
     runner = std::thread([&]() {
@@ -309,8 +325,10 @@ void ActiveProxy::start()
         if (rc < 0) {
             log->error("Addon ActiveProxy failed to start the event loop({}): {}", rc, uv_strerror(rc));
             running = false;
-            uv_idle_stop(&idleHandle);
-            uv_close((uv_handle_t*)&idleHandle, nullptr);
+            uv_prepare_stop(&prepareHandle);
+            uv_timer_stop(&timerHandle);
+            uv_close((uv_handle_t*)&prepareHandle, nullptr);
+            uv_close((uv_handle_t*)&timerHandle, nullptr);
             uv_close((uv_handle_t*)&stopHandle, nullptr);
             uv_loop_close(&loop);
 
