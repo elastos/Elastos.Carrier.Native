@@ -24,7 +24,7 @@
 #include <cstdlib>
 #include <csignal>
 #include <chrono>
-#include <thread>
+#include <future>
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
@@ -41,7 +41,7 @@
 using namespace std::chrono_literals;
 using namespace elastos::carrier;
 
-static bool broke = false;
+std::promise<void> quitBarrier;
 ApplicationLock lock;
 
 struct Options {
@@ -163,7 +163,7 @@ static void stop(Sp<Node> node)
 
 static void signal_handler(int sig)
 {
-    broke = true;
+    quitBarrier.set_value();
 }
 
 static void setupSignals()
@@ -216,9 +216,8 @@ int main(int argc, char *argv[])
         std::exit(-1);
     }
 
-    while (!broke)
-        std::this_thread::sleep_for(1000ms);
-
+    quitBarrier.get_future().wait();
     stop(node);
+
     return 0;
 }
