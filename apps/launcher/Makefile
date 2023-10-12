@@ -18,6 +18,7 @@ meerkat-deb-package:
 		cp $(SOURCE_DIR)/debian/scripts/carrier-meerkat debian/etc/init.d/carrier-meerkat; \
 		mkdir -p debian/var/lib/carrier-meerkat; \
 		mkdir -p debian/var/lib/carrier-meerkat/db; \
+		mkdir -p debian/var/log/carrier-meerkat; \
 		mkdir -p debian/DEBIAN; \
 		cp $(SOURCE_DIR)/debian/control/* debian/DEBIAN; \
 		dpkg-deb --build debian carrier-meerkat.deb; \
