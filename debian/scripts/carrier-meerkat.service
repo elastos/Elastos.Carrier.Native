@@ -3,8 +3,8 @@ Description=Carrier MeerKat Daemon
 After=network-online.target
 
 [Service]
-Type=forking
-RuntimeDirectory=carrier-launcher
+Type=simple
+RuntimeDirectory=carrier-meerkat
 RuntimeDirectoryMode=755
 PIDFile=/var/run/carrier-meerkat/carrier-meerkat.pid
 WorkingDirectory=/var/lib/carrier-meerkat
